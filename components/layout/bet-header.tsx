@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MobileDrawer } from '@/components/layout';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 interface BetHeaderProps {
   title: string;
@@ -14,6 +16,7 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSaldo, setShowSaldo] = useState(false);
+  const { saldo, saldoBonus, loading, refresh } = useUserBalance();
 
   const handleBack = () => {
     if (onBack) {
@@ -46,18 +49,26 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
 
       {/* Balance Bar */}
       <div className="flex items-center justify-between bg-[#E5A220] px-4 py-2">
-        <button className="flex h-8 w-8 items-center justify-center">
-          <RefreshCw className="h-5 w-5 text-black" />
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="flex h-8 w-8 items-center justify-center"
+        >
+          {loading ? (
+            <Loader2 className="h-5 w-5 text-zinc-900 animate-spin" />
+          ) : (
+            <RefreshCw className="h-5 w-5 text-zinc-900" />
+          )}
         </button>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-black">
-            R$ {showSaldo ? '150,00' : '*******'} | {showSaldo ? '25,50' : '*******'}
+          <span className="font-bold text-zinc-900">
+            R$ {showSaldo ? formatCurrencyCompact(saldo) : '*******'} | {showSaldo ? formatCurrencyCompact(saldoBonus) : '*******'}
           </span>
           <button onClick={() => setShowSaldo(!showSaldo)}>
             {showSaldo ? (
-              <Eye className="h-5 w-5 text-black" />
+              <Eye className="h-5 w-5 text-zinc-900" />
             ) : (
-              <EyeOff className="h-5 w-5 text-black" />
+              <EyeOff className="h-5 w-5 text-zinc-900" />
             )}
           </button>
         </div>

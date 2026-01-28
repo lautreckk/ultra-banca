@@ -12,8 +12,8 @@ export default async function ModalidadePage({ params }: ModalidadePageProps) {
   return (
     <div className="py-6">
       <div className="px-4 mb-6">
-        <h1 className="text-xl font-bold text-gray-900">COLOCAÇÕES</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-xl font-bold text-zinc-900">COLOCAÇÕES</h1>
+        <p className="text-sm text-zinc-600 mt-1">
           {modalidadeInfo?.nome || modalidade} - {modalidadeInfo ? formatMultiplicador(modalidadeInfo.multiplicador) : ''}
         </p>
       </div>

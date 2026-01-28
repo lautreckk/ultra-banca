@@ -32,7 +32,7 @@ export function ModalityList({ baseHref, tipoJogo = 'loterias', className }: Mod
 
           return (
             <div key={categoria.id} className="mb-2">
-              <div className="bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-600 uppercase tracking-wide">
+              <div className="bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-700 uppercase tracking-wide">
                 {categoria.nome}
               </div>
               <div className="divide-y divide-[var(--color-border)]">
@@ -76,9 +76,9 @@ function ModalityItem({ modalidade, baseHref }: ModalityItemProps) {
       href={`${baseHref}/${modalidade.id}`}
       className="flex h-14 items-center justify-between px-4 min-h-[44px] transition-colors duration-200 active:bg-gray-50"
     >
-      <span className="font-medium text-gray-800">{modalidade.nome}</span>
+      <span className="font-semibold text-zinc-800">{modalidade.nome}</span>
       <div className="flex items-center gap-2">
-        <span className="font-semibold text-[var(--color-accent-blue)]">
+        <span className="font-bold text-blue-600">
           {formatMultiplicador(modalidade.multiplicador)}
         </span>
         <ChevronRight className="h-5 w-5 text-gray-400" />

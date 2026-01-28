@@ -46,9 +46,9 @@ export function PlacementList({ baseHref, multiplicadorBase = 800, className }: 
               href={`${baseHref}/${colocacao.id}`}
               className="flex h-14 items-center justify-between px-4 min-h-[44px] transition-colors duration-200 active:bg-gray-50"
             >
-              <span className="font-medium text-gray-800">{colocacao.nome}</span>
+              <span className="font-semibold text-zinc-800">{colocacao.nome}</span>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-[var(--color-accent-blue)]">
+                <span className="font-bold text-blue-600">
                   {formatMultiplicador(multiplicadorEfetivo)}
                 </span>
                 <ChevronRight className="h-5 w-5 text-gray-400" />
