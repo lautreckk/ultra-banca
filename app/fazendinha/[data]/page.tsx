@@ -81,7 +81,7 @@ export default function FazendinhaBichosPage({ params }: FazendinhaBichosPagePro
                   return (
                     <span
                       key={numero}
-                      className="inline-flex items-center gap-1 bg-[#1A202C] text-white px-2 py-1 rounded-md text-sm"
+                      className="inline-flex items-center gap-1 bg-zinc-900 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
                     >
                       {bicho?.emoji} {bicho?.nome}
                     </span>
@@ -97,7 +97,7 @@ export default function FazendinhaBichosPage({ params }: FazendinhaBichosPagePro
           <button
             onClick={handleContinue}
             disabled={selectedBichos.length === 0}
-            className="w-full rounded-lg bg-[#1A202C] py-3 font-bold text-white disabled:opacity-50"
+            className="w-full rounded-xl bg-zinc-900 py-3.5 font-bold text-white disabled:opacity-50 transition-colors hover:bg-zinc-800"
           >
             Continuar com {selectedBichos.length} {selectedBichos.length === 1 ? 'bicho' : 'bichos'}
           </button>

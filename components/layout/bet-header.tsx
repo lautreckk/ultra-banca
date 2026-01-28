@@ -28,8 +28,8 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
 
   return (
     <>
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
+      {/* Header - Dark for contrast */}
+      <header className="sticky top-0 z-40 bg-zinc-900 px-4">
         <div className="flex h-12 items-center justify-between">
           <button
             onClick={handleBack}

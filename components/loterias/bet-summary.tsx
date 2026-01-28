@@ -104,7 +104,7 @@ export function BetSummary({
           </button>
           <button
             onClick={onAvancar}
-            className="h-12 bg-[#1A202C] rounded-lg font-semibold text-white"
+            className="h-12 bg-zinc-900 rounded-lg font-semibold text-white"
           >
             Avançar
           </button>

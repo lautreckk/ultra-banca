@@ -95,13 +95,13 @@ export function ValueSelector({
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => onModeSelect('todos')}
-            className="h-12 bg-[#1A202C] rounded-lg font-semibold text-white"
+            className="h-12 bg-zinc-900 rounded-lg font-semibold text-white"
           >
             Todos
           </button>
           <button
             onClick={() => onModeSelect('cada')}
-            className="h-12 bg-[#1A202C] rounded-lg font-semibold text-white"
+            className="h-12 bg-zinc-900 rounded-lg font-semibold text-white"
           >
             Cada
           </button>

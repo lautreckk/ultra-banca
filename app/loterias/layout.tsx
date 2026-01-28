@@ -33,9 +33,9 @@ export default function LoteriasLayout({
 
   return (
     <div className="min-h-screen bg-gray-300 flex justify-center">
-      <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl">
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
+      <div className="w-full max-w-md bg-zinc-50 min-h-screen shadow-xl flex flex-col">
+        {/* Header - Dark for contrast */}
+        <header className="sticky top-0 z-40 bg-zinc-900 px-4">
           <div className="flex h-12 items-center justify-between">
             <button
               onClick={handleBack}
@@ -53,7 +53,7 @@ export default function LoteriasLayout({
           </div>
         </header>
 
-        {/* Balance Bar */}
+        {/* Balance Bar - Golden */}
         <div className="flex items-center justify-between bg-[#E5A220] px-4 py-2">
           <button
             onClick={refresh}
@@ -80,8 +80,8 @@ export default function LoteriasLayout({
           </div>
         </div>
 
-        {/* Content - with light background for contrast */}
-        <div className="flex-1 bg-white">
+        {/* Content - Light background */}
+        <div className="flex-1 bg-zinc-50">
           {children}
         </div>
 

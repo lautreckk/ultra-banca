@@ -156,10 +156,10 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
   // Render palpite input step
   if (step === 'palpite') {
     return (
-      <div className="min-h-screen bg-[#1A202C]">
+      <div className="min-h-screen bg-zinc-50">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
-        <div className="bg-white min-h-screen">
+        <div className="bg-zinc-50 min-h-screen">
           {/* Info Header */}
           <div className="px-4 pt-4">
             {/* LOTERIAS | CENTENA row */}
@@ -207,7 +207,7 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
                 {palpites.map((palpite) => (
                   <span
                     key={palpite}
-                    className="inline-flex items-center gap-2 bg-[#1A202C] text-white px-3 py-2 rounded-lg text-sm font-medium"
+                    className="inline-flex items-center gap-2 bg-zinc-900 text-white px-3 py-2 rounded-lg text-sm font-medium"
                   >
                     {palpite}
                     <button
@@ -226,7 +226,7 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
           <div className="px-4 grid grid-cols-2 gap-3">
             <button
               onClick={handleSurpresinha}
-              className="h-12 bg-[#1A202C] rounded-xl font-semibold text-white"
+              className="h-12 bg-zinc-900 rounded-xl font-semibold text-white"
             >
               Surpresinha
             </button>
@@ -246,7 +246,7 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
   // Render value selection step
   if (step === 'valor') {
     return (
-      <div className="min-h-screen bg-[#1A202C]">
+      <div className="min-h-screen bg-zinc-50">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <ValueSelector
@@ -263,7 +263,7 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
   // Render bet summary step
   if (step === 'resumo') {
     return (
-      <div className="min-h-screen bg-[#1A202C]">
+      <div className="min-h-screen bg-zinc-50">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <BetSummary
@@ -281,7 +281,7 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
 
   // Render lottery selection step
   return (
-    <div className="min-h-screen bg-[#1A202C]">
+    <div className="min-h-screen bg-zinc-50">
       <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
       <LotterySelector

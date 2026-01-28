@@ -26,9 +26,9 @@ export function PageLayout({
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-40 flex h-12 items-center justify-between bg-[#1A202C] px-4">
+    <div className="min-h-screen bg-zinc-50">
+      {/* Header - Dark for contrast */}
+      <header className="sticky top-0 z-40 flex h-12 items-center justify-between bg-zinc-900 px-4">
         {showBack ? (
           <button
             onClick={() => router.back()}

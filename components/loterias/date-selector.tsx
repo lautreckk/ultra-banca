@@ -28,12 +28,12 @@ export function DateSelector({
           <Link
             key={dateStr}
             href={`${baseHref}/${dateStr}`}
-            className="flex min-h-[80px] flex-col items-center justify-center rounded-lg bg-[var(--color-surface)] p-4 transition-all duration-200 active:scale-[0.98]"
+            className="flex min-h-[80px] flex-col items-center justify-center rounded-xl bg-white border border-zinc-200 shadow-sm p-4 transition-all duration-200 hover:shadow-md hover:border-zinc-300 active:scale-[0.98]"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white font-bold text-lg text-[var(--color-surface)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-900 font-bold text-lg text-white">
               {dayNumber}
             </div>
-            <span className="mt-2 text-sm font-semibold uppercase text-white">
+            <span className="mt-2 text-sm font-semibold uppercase text-zinc-700">
               {dayName}
             </span>
           </Link>

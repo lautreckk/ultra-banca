@@ -19,12 +19,12 @@ export default function FazendinhaPage() {
               <Link
                 key={date.value}
                 href={`/fazendinha/${date.value}`}
-                className="flex flex-col items-center justify-center bg-[#1A202C] rounded-lg py-6 px-4 min-h-[100px] transition-transform active:scale-[0.98]"
+                className="flex flex-col items-center justify-center bg-white border border-zinc-200 shadow-sm rounded-xl py-6 px-4 min-h-[100px] transition-all hover:shadow-md hover:border-zinc-300 active:scale-[0.98]"
               >
-                <span className="text-2xl font-bold text-white border-2 border-white rounded px-3 py-1">
+                <span className="text-2xl font-bold text-white bg-zinc-900 rounded-lg px-3 py-1">
                   {date.day}
                 </span>
-                <span className="text-white font-semibold mt-2 uppercase tracking-wide">
+                <span className="text-zinc-700 font-semibold mt-2 uppercase tracking-wide">
                   {index === 0 ? 'HOJE' : date.weekday}
                 </span>
               </Link>

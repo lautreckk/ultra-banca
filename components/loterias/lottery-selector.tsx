@@ -101,9 +101,9 @@ export function LotterySelector({
                     className={cn(
                       'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
                       allSelected
-                        ? 'bg-[#1A202C] border-[#1A202C]'
+                        ? 'bg-zinc-900 border-zinc-900'
                         : someSelected
-                        ? 'border-[#1A202C] bg-gray-100'
+                        ? 'border-zinc-900 bg-gray-100'
                         : 'border-gray-300'
                     )}
                   >
@@ -183,7 +183,7 @@ export function LotterySelector({
         </button>
         <button
           onClick={onBack}
-          className="w-full h-12 bg-[#1A202C] rounded-lg font-semibold text-white"
+          className="w-full h-12 bg-zinc-900 rounded-lg font-semibold text-white"
         >
           Voltar
         </button>
