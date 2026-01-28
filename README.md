@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Banca Forte - PWA Clone
 
-## Getting Started
+Clone mobile-first do app de apostas "Banca Forte" usando Next.js 14 + Tailwind CSS + Supabase.
 
-First, run the development server:
+## Como Executar
 
 ```bash
+cd /Users/lautreck/Desktop/Ultra\ Banca/ultra-banca
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estrutura do Projeto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+ultra-banca/
+├── app/
+│   ├── (auth)/           # Login, Cadastro
+│   ├── (app)/            # Dashboard, Loterias, Resultados, etc.
+│   └── api/scraper/      # API de scraping
+├── components/
+│   ├── ui/               # Button, Input, Card, Badge, Drawer
+│   ├── layout/           # Header, BalanceDisplay, MobileDrawer
+│   ├── dashboard/        # GameCard, ActionButton, WinnerBanner
+│   ├── loterias/         # DateSelector, ModalityList, BetInput
+│   ├── auth/             # LoginForm, RegisterForm
+│   └── shared/           # LoadingSpinner, EmptyState
+├── lib/
+│   ├── constants/        # bichos, modalidades, colocacoes, horarios
+│   ├── supabase/         # client, server, middleware
+│   ├── scraper/          # resultado-facil.ts
+│   └── utils/            # cn, formatCurrency, formatDate, maskCPF
+├── stores/
+│   └── bet-store.ts      # Zustand store para carrinho
+└── types/                # auth, bet, result
+```
 
-## Learn More
+## Paleta de Cores
 
-To learn more about Next.js, take a look at the following resources:
+| Cor | Hex | Uso |
+|-----|-----|-----|
+| Amarelo/Ouro | `#D4A84B` | Botoes primarios, destaques |
+| Preto | `#000000` | Fundo login, cards escuros |
+| Branco | `#FFFFFF` | Fundo dashboard, textos |
+| Teal | `#5FBDBD` | Card Recarga PIX |
+| Laranja | `#E67E22` | Textos de destaque |
+| Azul | `#3498DB` | Multiplicadores, links |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Paginas Implementadas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/login` - Tela de login
+- `/cadastro` - Tela de cadastro
+- `/` - Dashboard principal
+- `/loterias` - Selecao de tipo de jogo
+- `/loterias/[tipo]` - Selecao de data
+- `/loterias/[tipo]/[data]` - Modalidades
+- `/loterias/[tipo]/[data]/[modalidade]` - Colocacoes
+- `/loterias/[tipo]/[data]/[modalidade]/[colocacao]` - Palpite + Horarios
+- `/apostas` - Carrinho de apostas
+- `/resultados` - Lista de resultados
+- `/recarga-pix` - Recarga via PIX
+- `/saques` - Solicitacao de saque
+- `/premiadas` - Apostas ganhas
+- `/relatorios` - Estatisticas
+- `/fazendinha` - Selecao de bichos
 
-## Deploy on Vercel
+## Proximos Passos
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Configurar Supabase (`.env.local`)
+2. Criar tabelas no banco (ver `data.blueprint`)
+3. Adicionar imagens reais para icones PWA
+4. Conectar autenticacao real
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Blueprints de Referencia
+
+- `/Users/lautreck/Desktop/Ultra Banca/structure.blueprint`
+- `/Users/lautreck/Desktop/Ultra Banca/ui.blueprint`
+- `/Users/lautreck/Desktop/Ultra Banca/data.blueprint`

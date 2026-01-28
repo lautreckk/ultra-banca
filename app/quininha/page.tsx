@@ -1,0 +1,87 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+
+// Generate next 6 days
+function getNextDays(): { date: Date; dayNum: number; dayName: string }[] {
+  const days = [];
+  const dayNames = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
+
+  for (let i = 0; i < 6; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    days.push({
+      date,
+      dayNum: date.getDate(),
+      dayName: dayNames[date.getDay()],
+    });
+  }
+  return days;
+}
+
+export default function QuininhaPage() {
+  const router = useRouter();
+  const days = getNextDays();
+
+  const handleSelectDay = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    router.push(`/quininha/${dateStr}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#1A202C]">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
+        <div className="flex h-12 items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="flex h-10 w-10 items-center justify-center"
+          >
+            <ChevronLeft className="h-6 w-6 text-white" />
+          </button>
+          <span className="text-sm font-bold text-white">TIPO DE JOGO</span>
+          <button className="flex h-10 w-10 items-center justify-center">
+            <Menu className="h-5 w-5 text-white" />
+          </button>
+        </div>
+      </header>
+
+      {/* Balance Bar */}
+      <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
+        <RefreshCw className="h-5 w-5 text-white" />
+        <div className="flex items-center gap-2">
+          <span className="text-white font-medium">R$ ******* | *******</span>
+          <EyeOff className="h-5 w-5 text-white" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-[#E5A220] mb-1" style={{ fontFamily: 'serif' }}>
+          QUININHA
+        </h1>
+        <p className="text-gray-400 text-sm mb-6">
+          SELECIONE O DIA DO SORTEIO
+        </p>
+
+        {/* Days Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {days.map((day, index) => (
+            <button
+              key={index}
+              onClick={() => handleSelectDay(day.date)}
+              className="bg-[#2D3748] rounded-lg p-6 flex flex-col items-center justify-center hover:bg-[#3D4758] transition-colors"
+            >
+              <div className="bg-white rounded-lg w-14 h-14 flex items-center justify-center mb-2">
+                <span className="text-2xl font-bold text-gray-900">{day.dayNum}</span>
+              </div>
+              <span className="text-white font-bold text-sm">{day.dayName}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

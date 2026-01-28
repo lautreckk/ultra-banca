@@ -1,26 +1,112 @@
 @import "tailwindcss";
 
+/* Custom Font - Barao */
+@font-face {
+  font-family: 'BaraoFont';
+  src: url('/fonts/barao-font.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* === CORES PRIMARIAS === */
+  --color-primary: #D4A84B;
+  --color-primary-dark: #B8923F;
+  --color-primary-foreground: #1A1A1A;
+
+  /* === CORES DE FUNDO (Zinc Palette - Linear/Vercel Style) === */
+  --color-background: #09090b; /* zinc-950 */
+  --color-background-light: #FFFFFF;
+  --color-surface: #18181b; /* zinc-900 */
+  --color-surface-elevated: #27272a; /* zinc-800 */
+  --color-surface-light: #F5F5F5;
+
+  /* === CORES SECUNDARIAS (Desaturated) === */
+  --color-accent-teal: #2dd4bf; /* teal-400 */
+  --color-accent-orange: #fb923c; /* orange-400 */
+  --color-accent-red: #f87171; /* red-400 */
+  --color-accent-blue: #60a5fa; /* blue-400 */
+  --color-accent-green: #4ade80; /* green-400 */
+
+  /* === TEXTO === */
+  --color-text-primary: #fafafa; /* zinc-50 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-muted: #71717a; /* zinc-500 */
+  --color-text-inverse: #09090b;
+
+  /* === BORDAS === */
+  --color-border: #e4e4e7; /* zinc-200 */
+  --color-border-dark: #27272a; /* zinc-800 */
+  --color-border-subtle: #3f3f46; /* zinc-700 */
+
+  /* === SAFE AREAS === */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-surface: var(--color-surface);
+  --color-surface-light: var(--color-surface-light);
+  --color-accent-teal: var(--color-accent-teal);
+  --color-accent-orange: var(--color-accent-orange);
+  --color-accent-red: var(--color-accent-red);
+  --color-accent-blue: var(--color-accent-blue);
+  --color-accent-green: var(--color-accent-green);
+  --color-border: var(--color-border);
+  --font-sans: var(--font-poppins), 'Poppins', 'Inter', 'Roboto', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), 'Poppins', 'Inter', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* Remove hover effects on touch devices */
+@media (hover: none) {
+  button:hover,
+  a:hover {
+    background-color: inherit;
+  }
+}
+
+/* Safe area padding utilities */
+.pt-safe {
+  padding-top: var(--safe-area-top);
+}
+
+.pb-safe {
+  padding-bottom: var(--safe-area-bottom);
+}
+
+/* Touch target minimum */
+.min-h-touch {
+  min-height: 44px;
+}
+
+/* Active states for mobile */
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+
+/* Custom scrollbar for mobile feel */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Input autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset;
+  -webkit-text-fill-color: white;
 }
