@@ -18,8 +18,7 @@ export default function WashPayConfigPage() {
 
   const [config, setConfig] = useState({
     ativo: false,
-    client_id: '',
-    client_secret: '',
+    api_key: '',
     base_url: 'https://washpay.com.br',
   });
 
@@ -41,8 +40,7 @@ export default function WashPayConfigPage() {
         if (data) {
           setConfig({
             ativo: data.ativo,
-            client_id: data.client_id || '',
-            client_secret: data.client_secret || '',
+            api_key: data.client_id || '', // WashPay usa apenas API Key (pk_...)
             base_url: (data.config?.base_url as string) || 'https://washpay.com.br',
           });
         }
@@ -65,8 +63,8 @@ export default function WashPayConfigPage() {
     try {
       const result = await updateGatewayConfig('washpay', {
         ativo: config.ativo,
-        client_id: config.client_id,
-        client_secret: config.client_secret,
+        client_id: config.api_key, // WashPay usa apenas API Key (pk_...)
+        client_secret: null, // WashPay não usa secret key
         config: {
           base_url: config.base_url,
           sandbox: false,
@@ -186,26 +184,12 @@ export default function WashPayConfigPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">API Key (pk_...)</label>
-            <Input
-              type="text"
-              value={config.client_id}
-              onChange={(e) => setConfig({ ...config, client_id: e.target.value })}
-              placeholder="pk_live_xxxxxxxxxxxxxxxx"
-              className="bg-gray-700 border-gray-600 text-white font-mono text-sm"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Chave pública obtida no painel da WashPay
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Secret Key (sk_...)</label>
             <div className="relative">
               <Input
                 type={showSecret ? 'text' : 'password'}
-                value={config.client_secret}
-                onChange={(e) => setConfig({ ...config, client_secret: e.target.value })}
-                placeholder="sk_live_xxxxxxxxxxxxxxxx"
+                value={config.api_key}
+                onChange={(e) => setConfig({ ...config, api_key: e.target.value })}
+                placeholder="pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 className="bg-gray-700 border-gray-600 text-white pr-10 font-mono text-sm"
               />
               <button
@@ -217,7 +201,7 @@ export default function WashPayConfigPage() {
               </button>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              Chave secreta - nunca compartilhe!
+              API Key obtida no painel da WashPay (mantenha segura, não compartilhe!)
             </p>
           </div>
 
@@ -227,9 +211,12 @@ export default function WashPayConfigPage() {
               type="url"
               value={config.base_url}
               onChange={(e) => setConfig({ ...config, base_url: e.target.value })}
-              placeholder="https://api.xtracky.com"
+              placeholder="https://washpay.com.br"
               className="bg-gray-700 border-gray-600 text-white"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Use a URL padrão ou configure o Host Configurado do seu painel WashPay
+            </p>
           </div>
         </div>
       </div>
