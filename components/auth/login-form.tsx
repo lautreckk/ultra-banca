@@ -36,26 +36,35 @@ export function LoginForm() {
 
     try {
       const email = cpfToEmail(cpf);
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
       if (authError) {
+        console.error('Auth error:', authError);
         setError('CPF ou senha incorretos');
+        setLoading(false);
         return;
       }
 
+      if (!data.session) {
+        console.error('No session returned');
+        setError('Erro ao criar sessão. Tente novamente.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Login success, redirecting...');
+
       // Rastrear login para auditoria (não bloqueia o redirecionamento)
-      trackLogin().catch(() => {
-        // Ignora erros de tracking - não deve impedir o login
-      });
+      trackLogin().catch(() => {});
 
       // Força reload completo para o middleware verificar a sessão
-      window.location.href = '/';
-    } catch {
+      window.location.replace('/');
+    } catch (err) {
+      console.error('Login catch error:', err);
       setError('Erro ao entrar. Tente novamente.');
-    } finally {
       setLoading(false);
     }
   };
