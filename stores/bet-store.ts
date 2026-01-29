@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { BetItem, BetSelection, TipoJogo } from '@/types/bet';
+import { getSubLoteriaById } from '@/lib/constants';
 
 interface BetStore {
   items: BetItem[];
@@ -124,11 +125,35 @@ export const useBetStore = create<BetStore>()(
 
       toggleLoteria: (loteriaId) =>
         set((state) => {
-          const loterias = state.currentSelection.loterias.includes(loteriaId)
+          const isRemoving = state.currentSelection.loterias.includes(loteriaId);
+          const loterias = isRemoving
             ? state.currentSelection.loterias.filter((l) => l !== loteriaId)
             : [...state.currentSelection.loterias, loteriaId];
+
+          // Also update horarios based on the loteria's horario
+          const subLoteria = getSubLoteriaById(loteriaId);
+          let horarios = [...state.currentSelection.horarios];
+
+          if (subLoteria?.horario) {
+            if (isRemoving) {
+              // Only remove if no other loteria uses the same horario
+              const otherLoteriasWithSameHorario = loterias.some((l) => {
+                const other = getSubLoteriaById(l);
+                return other?.horario === subLoteria.horario;
+              });
+              if (!otherLoteriasWithSameHorario) {
+                horarios = horarios.filter((h) => h !== subLoteria.horario);
+              }
+            } else {
+              // Add horario if not already present
+              if (!horarios.includes(subLoteria.horario)) {
+                horarios = [...horarios, subLoteria.horario];
+              }
+            }
+          }
+
           return {
-            currentSelection: { ...state.currentSelection, loterias },
+            currentSelection: { ...state.currentSelection, loterias, horarios },
           };
         }),
 

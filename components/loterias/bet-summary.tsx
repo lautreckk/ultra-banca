@@ -9,7 +9,6 @@ interface BetSummaryProps {
   palpites: string[];
   valorUnitario: number;
   onRemoveBet?: () => void;
-  onValendo: () => void;
   onMaisApostas: () => void;
   onAvancar: () => void;
   className?: string;
@@ -21,7 +20,6 @@ export function BetSummary({
   palpites,
   valorUnitario,
   onRemoveBet,
-  onValendo,
   onMaisApostas,
   onAvancar,
   className,
@@ -89,26 +87,18 @@ export function BetSummary({
       {/* Action Buttons */}
       <div className="p-4 space-y-3">
         <button
-          onClick={onValendo}
+          onClick={onAvancar}
           className="w-full h-12 bg-[#E5A220] rounded-lg font-semibold text-white"
         >
-          Valendo
+          Selecionar Loterias
         </button>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={onMaisApostas}
-            className="h-12 bg-[#E5A220] rounded-lg font-semibold text-white"
-          >
-            Mais Apostas
-          </button>
-          <button
-            onClick={onAvancar}
-            className="h-12 bg-zinc-900 rounded-lg font-semibold text-white"
-          >
-            Avançar
-          </button>
-        </div>
+        <button
+          onClick={onMaisApostas}
+          className="w-full h-12 bg-zinc-900 rounded-lg font-semibold text-white"
+        >
+          + Mais Apostas
+        </button>
       </div>
     </div>
   );

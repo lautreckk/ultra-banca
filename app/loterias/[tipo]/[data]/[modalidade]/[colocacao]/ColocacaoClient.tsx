@@ -112,27 +112,6 @@ export function ColocacaoClient({
     setStep('resumo');
   };
 
-  const handleValendo = () => {
-    if (palpites.length === 0) return;
-
-    // Extrai horários das loterias selecionadas
-    const horarios = getHorariosFromLotteries(selectedLotteries);
-
-    addItem({
-      tipo: tipo as TipoJogo,
-      data,
-      modalidade,
-      colocacao,
-      palpites,
-      horarios,
-      loterias: selectedLotteries,
-      valorUnitario,
-      multiplicador: multiplicadorEfetivo,
-    });
-
-    router.push('/apostas/finalizar');
-  };
-
   const handleMaisApostas = () => {
     router.push(`/loterias/${tipo}/${data}`);
   };
@@ -306,7 +285,6 @@ export function ColocacaoClient({
           colocacao={colocacaoInfo?.nome || colocacao}
           palpites={palpites}
           valorUnitario={valorUnitario}
-          onValendo={handleValendo}
           onMaisApostas={handleMaisApostas}
           onAvancar={() => setStep('loterias')}
         />

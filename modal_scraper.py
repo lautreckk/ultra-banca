@@ -256,6 +256,72 @@ def verificar_premios(data: Optional[str] = None) -> dict:
     data_verificar = data or datetime.now().strftime("%Y-%m-%d")
     print(f"=== Verificando prêmios para {data_verificar} ===")
 
+    # Mapeamento de ID de loteria para banca (para matching com resultados)
+    LOTERIA_TO_BANCA = {
+        # RIO DE JANEIRO
+        "rj_pt_09": ("RIO/FEDERAL", "09:20"), "rj_ptm_11": ("RIO/FEDERAL", "11:00"),
+        "rj_pt_14": ("RIO/FEDERAL", "14:20"), "rj_ptv_16": ("RIO/FEDERAL", "16:00"),
+        "rj_ptn_18": ("RIO/FEDERAL", "18:20"), "rj_coruja_21": ("RIO/FEDERAL", "21:20"),
+        # BAHIA
+        "ba_10": ("BAHIA", "10:00"), "ba_12": ("BAHIA", "12:00"), "ba_15": ("BAHIA", "15:00"),
+        "ba_19": ("BAHIA", "19:00"), "ba_20": ("BAHIA", "20:00"), "ba_21": ("BAHIA", "21:00"),
+        "ba_maluca_10": ("BAHIA", "10:00"), "ba_maluca_12": ("BAHIA", "12:00"),
+        "ba_maluca_15": ("BAHIA", "15:00"), "ba_maluca_19": ("BAHIA", "19:00"),
+        "ba_maluca_20": ("BAHIA", "20:00"), "ba_maluca_21": ("BAHIA", "21:00"),
+        # GOIÁS
+        "go_07": ("LOOK/GOIAS", "07:00"), "go_09": ("LOOK/GOIAS", "09:00"),
+        "go_11": ("LOOK/GOIAS", "11:00"), "go_14": ("LOOK/GOIAS", "14:00"),
+        "go_16": ("LOOK/GOIAS", "16:00"), "go_18": ("LOOK/GOIAS", "18:00"),
+        "go_21": ("LOOK/GOIAS", "21:00"), "go_23": ("LOOK/GOIAS", "23:00"),
+        # CEARÁ
+        "ce_11": ("LOTECE", "11:00"), "ce_12": ("LOTECE", "12:00"),
+        "ce_14": ("LOTECE", "14:00"), "ce_15": ("LOTECE", "15:45"), "ce_19": ("LOTECE", "19:00"),
+        # PERNAMBUCO (LOTEP)
+        "pe_09": ("LOTEP", "09:20"), "pe_09b": ("LOTEP", "09:30"), "pe_09c": ("LOTEP", "09:40"),
+        "pe_10": ("LOTEP", "10:00"), "pe_11": ("LOTEP", "11:00"), "pe_12": ("LOTEP", "12:40"),
+        "pe_12b": ("LOTEP", "12:45"), "pe_14": ("LOTEP", "14:00"), "pe_15": ("LOTEP", "15:40"),
+        "pe_15b": ("LOTEP", "15:45"), "pe_17": ("LOTEP", "17:00"), "pe_18": ("LOTEP", "18:30"),
+        "pe_19": ("LOTEP", "19:00"), "pe_19b": ("LOTEP", "19:30"), "pe_20": ("LOTEP", "20:00"),
+        "pe_21": ("LOTEP", "21:00"),
+        # PARAÍBA
+        "pb_09": ("PARAIBA", "09:45"), "pb_10": ("PARAIBA", "10:45"), "pb_12": ("PARAIBA", "12:45"),
+        "pb_15": ("PARAIBA", "15:45"), "pb_18": ("PARAIBA", "18:00"), "pb_19": ("PARAIBA", "19:05"),
+        "pb_20": ("PARAIBA", "20:00"), "pb_lotep_10": ("PARAIBA", "10:45"),
+        "pb_lotep_12": ("PARAIBA", "12:45"), "pb_lotep_15": ("PARAIBA", "15:45"),
+        "pb_lotep_18": ("PARAIBA", "18:00"),
+        # SÃO PAULO
+        "sp_08": ("SAO-PAULO", "08:00"), "sp_10": ("SAO-PAULO", "10:00"),
+        "sp_12": ("SAO-PAULO", "12:00"), "sp_13": ("SAO-PAULO", "13:00"),
+        "sp_15": ("SAO-PAULO", "15:30"), "sp_17": ("SAO-PAULO", "17:00"),
+        "sp_18": ("SAO-PAULO", "18:00"), "sp_19": ("SAO-PAULO", "19:00"),
+        "sp_ptn_20": ("SAO-PAULO", "20:00"),
+        # MINAS GERAIS
+        "mg_12": ("MINAS-GERAIS", "12:00"), "mg_13": ("MINAS-GERAIS", "13:00"),
+        "mg_15": ("MINAS-GERAIS", "15:00"), "mg_19": ("MINAS-GERAIS", "19:00"),
+        "mg_21": ("MINAS-GERAIS", "21:00"),
+        # DISTRITO FEDERAL (LBR)
+        "df_00": ("LBR/BRASILIA", "00:40"), "df_07": ("LBR/BRASILIA", "07:30"),
+        "df_08": ("LBR/BRASILIA", "08:30"), "df_10": ("LBR/BRASILIA", "10:00"),
+        "df_12": ("LBR/BRASILIA", "12:40"), "df_13": ("LBR/BRASILIA", "13:00"),
+        "df_15": ("LBR/BRASILIA", "15:00"), "df_17": ("LBR/BRASILIA", "17:00"),
+        "df_18": ("LBR/BRASILIA", "18:40"), "df_19": ("LBR/BRASILIA", "19:00"),
+        "df_20": ("LBR/BRASILIA", "20:40"), "df_22": ("LBR/BRASILIA", "22:00"),
+        "df_23": ("LBR/BRASILIA", "23:00"),
+        # NACIONAL
+        "nac_12": ("NACIONAL", "12:00"), "nac_15": ("NACIONAL", "15:00"),
+        "nac_17": ("NACIONAL", "17:00"), "nac_21": ("NACIONAL", "21:00"),
+        # RIO GRANDE DO NORTE
+        "rn_08": ("RIO-GRANDE-NORTE", "08:30"), "rn_11": ("RIO-GRANDE-NORTE", "11:45"),
+        "rn_16": ("RIO-GRANDE-NORTE", "16:45"), "rn_18": ("RIO-GRANDE-NORTE", "18:30"),
+        # RIO GRANDE DO SUL
+        "rs_14": ("RIO-GRANDE-SUL", "14:00"), "rs_18": ("RIO-GRANDE-SUL", "18:00"),
+        # SERGIPE
+        "se_10": ("SERGIPE", "10:00"), "se_13": ("SERGIPE", "13:00"),
+        "se_14": ("SERGIPE", "14:00"), "se_16": ("SERGIPE", "16:00"), "se_19": ("SERGIPE", "19:00"),
+        # PARANÁ
+        "pr_14": ("PARANA", "14:00"), "pr_18": ("PARANA", "18:00"),
+    }
+
     # Funções auxiliares
     def extrair_digitos(premio: str, modalidade: str) -> str:
         """Extrai os dígitos relevantes do prêmio baseado na modalidade"""
@@ -391,6 +457,7 @@ def verificar_premios(data: Optional[str] = None) -> dict:
             modalidade = aposta.get("modalidade", "milhar")
             colocacao = aposta.get("colocacao", "1_5_premio")
             horarios = aposta.get("horarios", [])
+            loterias = aposta.get("loterias", [])
             valor_unitario = Decimal(str(aposta.get("valor_unitario", 0)))
             multiplicador = Decimal(str(aposta.get("multiplicador", 1)))
 
@@ -399,24 +466,76 @@ def verificar_premios(data: Optional[str] = None) -> dict:
 
             total_matches = 0
             aposta_verificacoes = []
+            resultados_verificados = []
 
-            # Verificar cada horário apostado
-            for horario in horarios:
-                # Buscar resultado para este horário
-                resultado = resultados_index.get(horario)
+            print(f"Verificando aposta {aposta['id']}: {len(palpites)} palpites, {len(loterias)} loterias, {len(horarios)} horários")
 
-                # Fallback: tentar por hora cheia se não encontrar exato
-                if not resultado:
-                    hora_cheia = horario.split(":")[0] + ":00"
-                    candidatos = resultados_por_hora.get(hora_cheia, [])
-                    for candidato in candidatos:
-                        if horarios_coincidem(horario, candidato['horario']):
-                            resultado = candidato
-                            break
+            # Caso sem loterias nem horarios - aposta inválida, manter pendente
+            if not loterias and not horarios:
+                print(f"  AVISO: Aposta {aposta['id']} sem loterias nem horários - mantendo pendente")
+                continue
 
-                if not resultado:
-                    # Ainda não encontrou, pode ser que o resultado ainda não saiu
-                    continue
+            # Se temos loterias, usar elas para buscar resultados específicos
+            if loterias:
+                for loteria_id in loterias:
+                    lot_info = LOTERIA_TO_BANCA.get(loteria_id)
+                    if not lot_info:
+                        continue
+
+                    banca, horario = lot_info
+                    # Buscar resultado específico por banca + horário
+                    key = f"{horario}_{banca}"
+                    resultado = resultados_index.get(key)
+
+                    # Fallback: tentar com tolerância de horário
+                    if not resultado:
+                        for r in resultados:
+                            if r.get('banca') == banca and horarios_coincidem(horario, r.get('horario', '')):
+                                resultado = r
+                                break
+
+                    if resultado and resultado['id'] not in resultados_verificados:
+                        resultados_verificados.append(resultado['id'])
+
+                        # Verificar palpites contra este resultado
+                        for palpite in palpites:
+                            palpite_str = str(palpite).zfill(len(str(palpite)))
+                            for pos in posicoes:
+                                premio_key = f"premio_{pos}"
+                                premio_valor = resultado.get(premio_key)
+                                if not premio_valor:
+                                    continue
+                                digitos_resultado = extrair_digitos(premio_valor, modalidade)
+                                if palpite_str == digitos_resultado:
+                                    total_matches += 1
+                                    aposta_verificacoes.append({
+                                        "aposta_id": aposta["id"],
+                                        "resultado_id": resultado["id"],
+                                        "palpite": palpite_str,
+                                        "premio_posicao": pos,
+                                        "premio_numero": premio_valor,
+                                        "ganhou": True,
+                                    })
+                                    print(f"  MATCH! Palpite {palpite_str} = Premio {pos} ({premio_valor}) - {banca} {horario}")
+
+            # FALLBACK: Se não tem loterias, usar horarios (comportamento antigo)
+            elif horarios:
+                for horario in horarios:
+                    # Buscar resultado para este horário
+                    resultado = resultados_index.get(horario)
+
+                    # Fallback: tentar por hora cheia se não encontrar exato
+                    if not resultado:
+                        hora_cheia = horario.split(":")[0] + ":00"
+                        candidatos = resultados_por_hora.get(hora_cheia, [])
+                        for candidato in candidatos:
+                            if horarios_coincidem(horario, candidato['horario']):
+                                resultado = candidato
+                                break
+
+                    if not resultado:
+                        # Ainda não encontrou, pode ser que o resultado ainda não saiu
+                        continue
 
                 # Verificar cada palpite contra cada posição permitida
                 for palpite in palpites:
@@ -477,32 +596,56 @@ def verificar_premios(data: Optional[str] = None) -> dict:
                     verificacoes.append(v)
 
             else:
-                # Verificar se todos os horários já foram sorteados
-                horarios_com_resultado = sum(1 for h in horarios if h in resultados_index)
+                # Verificar se todos os resultados já foram sorteados
+                todos_resultados_verificados = False
 
-                if horarios_com_resultado == len(horarios):
-                    # Todos os horários já saíram e não ganhou
+                if loterias:
+                    # Contar quantas loterias já tem resultado
+                    loterias_com_resultado = 0
+                    for loteria_id in loterias:
+                        lot_info = LOTERIA_TO_BANCA.get(loteria_id)
+                        if lot_info:
+                            banca, horario = lot_info
+                            key = f"{horario}_{banca}"
+                            if resultados_index.get(key):
+                                loterias_com_resultado += 1
+                            else:
+                                # Tentar com tolerância de horário
+                                for r in resultados:
+                                    if r.get('banca') == banca and horarios_coincidem(horario, r.get('horario', '')):
+                                        loterias_com_resultado += 1
+                                        break
+
+                    todos_resultados_verificados = loterias_com_resultado == len(loterias) and len(loterias) > 0
+                    print(f"  Aposta {aposta['id']}: {loterias_com_resultado}/{len(loterias)} loterias com resultado")
+
+                elif horarios:
+                    horarios_com_resultado = sum(1 for h in horarios if h in resultados_index)
+                    todos_resultados_verificados = horarios_com_resultado == len(horarios) and len(horarios) > 0
+                    print(f"  Aposta {aposta['id']}: {horarios_com_resultado}/{len(horarios)} horários com resultado")
+
+                if todos_resultados_verificados:
+                    # Todos os resultados já saíram e não ganhou
                     perderam += 1
                     supabase.table("apostas").update({
                         "status": "perdeu",
                         "premio_valor": 0
                     }).eq("id", aposta["id"]).execute()
+                    print(f"  Aposta {aposta['id']} marcada como PERDEU")
 
                     # Registrar verificação negativa
-                    for horario in horarios:
-                        resultado = resultados_index.get(horario)
-                        if resultado:
-                            for palpite in palpites:
-                                verificacoes.append({
-                                    "aposta_id": aposta["id"],
-                                    "resultado_id": resultado["id"],
-                                    "palpite": str(palpite),
-                                    "premio_posicao": None,
-                                    "premio_numero": None,
-                                    "ganhou": False,
-                                    "premio_calculado": 0
-                                })
-                # else: manter como pendente, ainda faltam horários
+                    for palpite in palpites:
+                        verificacoes.append({
+                            "aposta_id": aposta["id"],
+                            "resultado_id": resultados_verificados[0] if resultados_verificados else None,
+                            "palpite": str(palpite),
+                            "premio_posicao": None,
+                            "premio_numero": None,
+                            "ganhou": False,
+                            "premio_calculado": 0
+                        })
+                else:
+                    print(f"  Aposta {aposta['id']} mantida como PENDENTE - aguardando resultados")
 
         except Exception as e:
             erros.append(f"Aposta {aposta.get('id')}: {str(e)}")
