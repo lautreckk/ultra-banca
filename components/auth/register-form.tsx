@@ -98,22 +98,23 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
       });
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
+        if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
           setError('CPF ja cadastrado');
         } else {
+          console.error('Signup error:', authError);
           setError('Erro ao criar conta. Tente novamente.');
         }
         return;
       }
 
       // Rastrear cadastro para auditoria (não bloqueia o fluxo)
-      // A sessão pode não estar sincronizada no servidor ainda
       trackSignup().catch(() => {
         // Silently ignore tracking errors - signup already succeeded
       });
 
-      // Com confirmacao de email desabilitada, usuario ja esta logado
-      router.push('/');
+      // Redirecionar para login com mensagem de sucesso
+      // Isso evita problemas com SSL/cookies em produção
+      router.push('/login?cadastro=sucesso');
       router.refresh();
     } catch (err) {
       console.error('Signup error:', err);
