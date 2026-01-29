@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 // =============================================
 // GATEWAY CONFIG
@@ -258,6 +259,9 @@ export async function updateModalidade(
   if (error) {
     return { success: false, error: error.message };
   }
+
+  // Invalidar cache das páginas de loterias para refletir alterações
+  revalidatePath('/loterias');
 
   return { success: true };
 }

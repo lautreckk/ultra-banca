@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
+import { executeTrigger } from './evolution';
 
 // =============================================
 // DEPOSITS
@@ -137,6 +138,27 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
       .update({ status: 'PENDING', paid_at: null })
       .eq('id', depositId);
     return { success: false, error: 'Erro ao atualizar saldo do usuário' };
+  }
+
+  // Disparar gatilho de depósito (WhatsApp)
+  try {
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('nome, telefone')
+      .eq('id', deposit.user_id)
+      .single();
+
+    if (userProfile?.telefone) {
+      await executeTrigger('deposito', {
+        nome: userProfile.nome || 'Cliente',
+        telefone: userProfile.telefone,
+        valor: Number(deposit.valor),
+        saldo: newBalance
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao disparar gatilho de depósito:', error);
+    // Não falha a operação se o gatilho falhar
   }
 
   return { success: true };
@@ -291,6 +313,26 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
       timestamp: new Date().toISOString(),
     },
   });
+
+  // Disparar gatilho de saque (WhatsApp)
+  try {
+    const { data: userProfileWithPhone } = await supabase
+      .from('profiles')
+      .select('nome, telefone')
+      .eq('id', withdrawal.user_id)
+      .single();
+
+    if (userProfileWithPhone?.telefone) {
+      await executeTrigger('saque', {
+        nome: userProfileWithPhone.nome || 'Cliente',
+        telefone: userProfileWithPhone.telefone,
+        valor: Number(withdrawal.valor_liquido)
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao disparar gatilho de saque:', error);
+    // Não falha a operação se o gatilho falhar
+  }
 
   return { success: true };
 }

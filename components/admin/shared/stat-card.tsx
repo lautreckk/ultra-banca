@@ -38,13 +38,14 @@ interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon?: string | LucideIcon;
+  icon?: string | LucideIcon | React.ReactNode;
   trend?: {
     value: number;
     label: string;
   };
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary';
   className?: string;
+  loading?: boolean;
 }
 
 // Glass/Border style - Linear/Vercel aesthetic
@@ -54,6 +55,7 @@ const variantStyles = {
   warning: 'bg-amber-500/5 border border-amber-500/20',
   danger: 'bg-red-500/5 border border-red-500/20',
   info: 'bg-cyan-500/5 border border-cyan-500/20',
+  primary: 'bg-cyan-500/5 border border-cyan-500/20',
 };
 
 const iconVariantStyles = {
@@ -62,6 +64,7 @@ const iconVariantStyles = {
   warning: 'bg-amber-500/10 text-amber-400',
   danger: 'bg-red-500/10 text-red-400',
   info: 'bg-cyan-500/10 text-cyan-400',
+  primary: 'bg-cyan-500/10 text-cyan-400',
 };
 
 const valueVariantStyles = {
@@ -70,6 +73,7 @@ const valueVariantStyles = {
   warning: 'text-amber-400',
   danger: 'text-red-400',
   info: 'text-cyan-400',
+  primary: 'text-cyan-400',
 };
 
 export function StatCard({
@@ -80,12 +84,16 @@ export function StatCard({
   trend,
   variant = 'default',
   className,
+  loading = false,
 }: StatCardProps) {
-  // Suporta tanto string (nome do ícone) quanto componente LucideIcon diretamente
+  // Suporta string (nome do ícone), componente LucideIcon, ou ReactNode diretamente
+  const isReactNode = icon && typeof icon !== 'string' && typeof icon !== 'function';
   const Icon = icon
     ? typeof icon === 'string'
       ? iconMap[icon]
-      : icon
+      : typeof icon === 'function'
+        ? icon
+        : null
     : null;
 
   return (
@@ -99,10 +107,14 @@ export function StatCard({
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-xs md:text-sm font-medium text-zinc-400 uppercase tracking-wider truncate">{title}</p>
-          <p className={cn(
-            'mt-2 md:mt-3 text-2xl md:text-3xl font-bold truncate',
-            valueVariantStyles[variant]
-          )}>{value}</p>
+          {loading ? (
+            <div className="mt-2 md:mt-3 h-8 w-20 bg-zinc-800 rounded animate-pulse" />
+          ) : (
+            <p className={cn(
+              'mt-2 md:mt-3 text-2xl md:text-3xl font-bold truncate',
+              valueVariantStyles[variant]
+            )}>{value}</p>
+          )}
           {subtitle && (
             <p className="mt-1 text-xs text-zinc-500 truncate">{subtitle}</p>
           )}
@@ -118,14 +130,14 @@ export function StatCard({
             </p>
           )}
         </div>
-        {Icon && (
+        {(Icon || isReactNode) && (
           <div
             className={cn(
               'p-2.5 md:p-3 rounded-xl ml-3 flex-shrink-0',
               iconVariantStyles[variant]
             )}
           >
-            <Icon className="h-5 w-5 md:h-6 md:w-6" />
+            {isReactNode ? icon : Icon && <Icon className="h-5 w-5 md:h-6 md:w-6" />}
           </div>
         )}
       </div>

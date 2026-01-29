@@ -2,6 +2,10 @@ import { PlacementList } from '@/components/loterias';
 import { getModalidadeById, formatMultiplicador } from '@/lib/constants';
 import { getModalidadeByCodigo } from '@/lib/actions/modalidades';
 
+// Forçar revalidação a cada request para pegar alterações do admin
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface ModalidadePageProps {
   params: Promise<{ tipo: string; data: string; modalidade: string }>;
 }

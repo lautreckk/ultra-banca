@@ -1,6 +1,10 @@
 import { ModalityList } from '@/components/loterias';
 import { getModalidadesAtivas } from '@/lib/actions/modalidades';
 
+// Forçar revalidação a cada request para pegar alterações do admin
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface DataPageProps {
   params: Promise<{ tipo: string; data: string }>;
 }
