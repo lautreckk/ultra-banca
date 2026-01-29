@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 export interface UserProfile {
   id: string;
@@ -203,6 +203,59 @@ export async function updateUserBalance(
 
   if (error) {
     return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export interface UpdateUserProfileData {
+  cpf?: string;
+  saldo?: number;
+  saldoBonus?: number;
+  newPassword?: string;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: UpdateUserProfileData
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  // Atualizar dados na tabela profiles (CPF, saldo, saldo_bonus)
+  const profileUpdates: Record<string, unknown> = {};
+
+  if (data.cpf !== undefined) {
+    profileUpdates.cpf = data.cpf;
+  }
+  if (data.saldo !== undefined) {
+    profileUpdates.saldo = data.saldo;
+  }
+  if (data.saldoBonus !== undefined) {
+    profileUpdates.saldo_bonus = data.saldoBonus;
+  }
+
+  if (Object.keys(profileUpdates).length > 0) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update(profileUpdates)
+      .eq('id', userId);
+
+    if (profileError) {
+      return { success: false, error: `Erro ao atualizar perfil: ${profileError.message}` };
+    }
+  }
+
+  // Atualizar senha usando o cliente Admin com Service Role Key
+  if (data.newPassword) {
+    const adminClient = createAdminClient();
+    const { error: passwordError } = await adminClient.auth.admin.updateUserById(
+      userId,
+      { password: data.newPassword }
+    );
+
+    if (passwordError) {
+      return { success: false, error: `Erro ao atualizar senha: ${passwordError.message}` };
+    }
   }
 
   return { success: true };

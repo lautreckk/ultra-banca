@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { getUsers, getUserById, updateUserBalance, type UserProfile } from '@/lib/admin/actions/users';
-import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone } from 'lucide-react';
+import { getUsers, getUserById, updateUserProfile, type UserProfile, type UpdateUserProfileData } from '@/lib/admin/actions/users';
+import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -11,35 +11,90 @@ interface EditModalProps {
   user: UserProfile | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userId: string, saldo: number, saldoBonus: number) => Promise<void>;
+  onSave: (userId: string, data: UpdateUserProfileData) => Promise<void>;
 }
 
 function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
+  const [cpf, setCpf] = useState('');
   const [saldo, setSaldo] = useState('');
   const [saldoBonus, setSaldoBonus] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (user) {
+      setCpf(user.cpf);
       setSaldo(user.saldo.toFixed(2));
       setSaldoBonus(user.saldo_bonus.toFixed(2));
+      setNewPassword('');
+      setConfirmPassword('');
+      setError('');
     }
   }, [user]);
 
   if (!isOpen || !user) return null;
 
+  const formatCPFInput = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '');
+    // Limita a 11 dígitos
+    return numbers.slice(0, 11);
+  };
+
+  const formatCPFDisplay = (cpf: string) => {
+    const numbers = cpf.replace(/\D/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+  };
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPFInput(e.target.value);
+    setCpf(formatted);
+  };
+
   const handleSave = async () => {
+    setError('');
+
+    // Validar CPF (deve ter 11 dígitos)
+    const cpfNumbers = cpf.replace(/\D/g, '');
+    if (cpfNumbers.length !== 11) {
+      setError('CPF deve ter 11 dígitos');
+      return;
+    }
+
+    // Validar senha (se fornecida)
+    if (newPassword) {
+      if (newPassword.length < 6) {
+        setError('A senha deve ter pelo menos 6 caracteres');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError('As senhas não coincidem');
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
-      await onSave(user.id, parseFloat(saldo) || 0, parseFloat(saldoBonus) || 0);
+      const data: UpdateUserProfileData = {
+        cpf: cpfNumbers,
+        saldo: parseFloat(saldo) || 0,
+        saldoBonus: parseFloat(saldoBonus) || 0,
+      };
+
+      if (newPassword) {
+        data.newPassword = newPassword;
+      }
+
+      await onSave(user.id, data);
       onClose();
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const formatCPF = (cpf: string) => {
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   return (
@@ -48,9 +103,9 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-[#1f2937] rounded-xl shadow-2xl border border-zinc-800/50">
+      <div className="relative w-full max-w-md bg-[#1f2937] rounded-xl shadow-2xl border border-zinc-800/50 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800/50">
+        <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 sticky top-0 bg-[#1f2937] z-10">
           <h2 className="text-lg font-semibold text-white">Editar Usuário</h2>
           <button
             onClick={onClose}
@@ -70,15 +125,36 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
               </div>
               <div>
                 <p className="font-medium text-white">{user.nome}</p>
-                <p className="text-sm text-zinc-400">{formatCPF(user.cpf)}</p>
+                {user.telefone && (
+                  <div className="flex items-center gap-1 text-sm text-zinc-400">
+                    <Phone className="h-3 w-3" />
+                    <span>{user.telefone}</span>
+                  </div>
+                )}
               </div>
             </div>
-            {user.telefone && (
-              <div className="flex items-center gap-2 text-sm text-zinc-400">
-                <Phone className="h-4 w-4" />
-                <span>{user.telefone}</span>
-              </div>
-            )}
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* CPF */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">CPF</label>
+            <div className="relative">
+              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                type="text"
+                value={formatCPFDisplay(cpf)}
+                onChange={handleCPFChange}
+                placeholder="000.000.000-00"
+                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+              />
+            </div>
           </div>
 
           {/* Saldo */}
@@ -111,8 +187,43 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
             </div>
           </div>
 
+          {/* Divider */}
+          <div className="border-t border-zinc-700 my-4" />
+
+          {/* Nova Senha */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">Nova Senha (deixe vazio para não alterar)</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha"
+                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+              />
+            </div>
+          </div>
+
+          {/* Confirmar Senha */}
+          {newPassword && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">Confirmar Nova Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirme a nova senha"
+                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="bg-zinc-800/50 rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-white">{user.total_apostas}</p>
               <p className="text-xs text-zinc-400">Apostas</p>
@@ -125,7 +236,7 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-4 border-t border-zinc-800/50">
+        <div className="flex gap-3 p-4 border-t border-zinc-800/50 sticky bottom-0 bg-[#1f2937]">
           <Button
             variant="outline"
             className="flex-1 border-zinc-800 text-zinc-300 hover:bg-zinc-800"
@@ -257,10 +368,12 @@ export default function AdminClientesPage() {
     window.location.href = `/admin/clientes/${user.id}`;
   };
 
-  const handleSaveUser = async (userId: string, saldo: number, saldoBonus: number) => {
-    const result = await updateUserBalance(userId, saldo, saldoBonus);
+  const handleSaveUser = async (userId: string, data: UpdateUserProfileData) => {
+    const result = await updateUserProfile(userId, data);
     if (result.success) {
       fetchUsers();
+    } else if (result.error) {
+      alert(result.error);
     }
   };
 
