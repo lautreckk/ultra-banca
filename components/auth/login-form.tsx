@@ -46,8 +46,10 @@ export function LoginForm() {
         return;
       }
 
-      // Rastrear login para auditoria
-      await trackLogin();
+      // Rastrear login para auditoria (não bloqueia o redirecionamento)
+      trackLogin().catch(() => {
+        // Ignora erros de tracking - não deve impedir o login
+      });
 
       router.push('/');
       router.refresh();
