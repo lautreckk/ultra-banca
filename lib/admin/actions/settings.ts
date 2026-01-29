@@ -260,8 +260,10 @@ export async function updateModalidade(
     return { success: false, error: error.message };
   }
 
-  // Invalidar cache das páginas de loterias para refletir alterações
-  revalidatePath('/loterias');
+  // Invalidar cache de todas as páginas que usam modalidades
+  revalidatePath('/loterias', 'layout');
+  revalidatePath('/calculadora');
+  revalidatePath('/relatorios/cotacoes', 'layout');
 
   return { success: true };
 }

@@ -24,6 +24,7 @@ export interface PlatformConfig {
   social_whatsapp: string | null;
   social_instagram: string | null;
   social_telegram: string | null;
+  promotor_link: string | null;
 
   // Financeiro
   active_gateway: string;
@@ -52,9 +53,9 @@ export interface PlatformConfig {
 
 export const defaultConfig: PlatformConfig = {
   id: '',
-  site_name: 'Banca Forte',
+  site_name: 'Carregando...',
   site_description: 'Sua banca de apostas online',
-  logo_url: '/images/logo.png',
+  logo_url: '',
   favicon_url: '/favicon.ico',
   color_primary: '#D4A84B',
   color_primary_dark: '#B8923F',
@@ -66,6 +67,7 @@ export const defaultConfig: PlatformConfig = {
   social_whatsapp: null,
   social_instagram: null,
   social_telegram: null,
+  promotor_link: null,
   active_gateway: 'bspay',
   deposit_min: 10,
   deposit_max: 10000,

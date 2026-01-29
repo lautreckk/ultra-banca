@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { Share2, Loader2 } from 'lucide-react';
 import { HORARIOS } from '@/lib/constants/horarios';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 interface MovimentoItem {
   horario: string;
@@ -19,6 +20,7 @@ interface UserProfile {
 }
 
 export default function MovimentoPage() {
+  const config = usePlatformConfig();
   const [loading, setLoading] = useState(true);
   const [movimento, setMovimento] = useState<MovimentoItem[]>([]);
   const [totalGeral, setTotalGeral] = useState(0);
@@ -147,7 +149,7 @@ TOTAL GERAL: ${formatCurrency(totalGeral)}
         {/* Header Info */}
         <div className="overflow-hidden rounded-lg bg-zinc-800 shadow-sm">
           <div className="px-4 py-3 text-center">
-            <p className="text-sm text-zinc-400">BANCA FORTE</p>
+            <p className="text-sm text-zinc-400">{config.site_name.toUpperCase()}</p>
             {profile && (
               <p className="text-lg font-bold text-white">
                 VENDEDOR: {profile.nome || profile.codigo_convite}

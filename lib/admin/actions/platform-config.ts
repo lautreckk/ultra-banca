@@ -9,7 +9,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
 
   const { data, error } = await supabase
     .from('platform_config')
-    .select('id, site_name, site_description, logo_url, favicon_url, color_primary, color_primary_dark, color_background, color_surface, color_accent_teal, color_accent_green, color_text_primary, social_whatsapp, social_instagram, social_telegram, active_gateway, deposit_min, deposit_max, withdrawal_min, withdrawal_max, withdrawal_fee_percent, withdrawal_mode, bet_min, bet_max, max_payout_per_bet, max_payout_daily, facebook_pixel_id, facebook_access_token, google_analytics_id, custom_head_scripts, production_mode')
+    .select('id, site_name, site_description, logo_url, favicon_url, color_primary, color_primary_dark, color_background, color_surface, color_accent_teal, color_accent_green, color_text_primary, social_whatsapp, social_instagram, social_telegram, promotor_link, active_gateway, deposit_min, deposit_max, withdrawal_min, withdrawal_max, withdrawal_fee_percent, withdrawal_mode, bet_min, bet_max, max_payout_per_bet, max_payout_daily, facebook_pixel_id, facebook_access_token, google_analytics_id, custom_head_scripts, production_mode')
     .limit(1)
     .single();
 
@@ -34,6 +34,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
     social_whatsapp: data.social_whatsapp,
     social_instagram: data.social_instagram,
     social_telegram: data.social_telegram,
+    promotor_link: data.promotor_link,
     active_gateway: data.active_gateway || defaultConfig.active_gateway,
     deposit_min: Number(data.deposit_min) || defaultConfig.deposit_min,
     deposit_max: Number(data.deposit_max) || defaultConfig.deposit_max,
@@ -74,9 +75,16 @@ export async function updatePlatformConfig(
     return { success: false, error: error.message };
   }
 
-  // Revalidate pages that use the config
-  revalidatePath('/');
+  // Revalidate ALL pages that use the config
+  revalidatePath('/', 'layout'); // Revalida todo o layout raiz e páginas filhas
   revalidatePath('/admin/configuracoes');
+  revalidatePath('/login');
+  revalidatePath('/cadastro');
+  revalidatePath('/apostas/finalizar');
+  revalidatePath('/lotinha', 'layout');
+  revalidatePath('/quininha', 'layout');
+  revalidatePath('/seninha', 'layout');
+  revalidatePath('/loterias', 'layout');
 
   return { success: true };
 }

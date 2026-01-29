@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff, ChevronUp, Info, Clock } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, EyeOff, ChevronUp, Clock } from 'lucide-react';
 
 function getNextSorteioDays(): { dateStr: string; dayName: string }[] {
   const days = [];
@@ -35,7 +35,6 @@ function LotinhaDiasContent() {
   const valorPorPalpite = parseFloat(valorParam);
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [sorteExtra, setSorteExtra] = useState(false);
   const [accordionOpen, setAccordionOpen] = useState(true);
 
   const sorteioDays = getNextSorteioDays();
@@ -79,17 +78,6 @@ function LotinhaDiasContent() {
 
           {accordionOpen && (
             <div className="px-4 pb-4">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Info className="h-4 w-4 text-blue-500" />
-                <span className="text-blue-500 font-bold">SORTE EXTRA?</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500 text-sm">NÃO</span>
-                  <button onClick={() => setSorteExtra(!sorteExtra)} className={`w-12 h-6 rounded-full transition-colors ${sorteExtra ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${sorteExtra ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                  </button>
-                </div>
-              </div>
-
               <div className="space-y-3">
                 {sorteioDays.map((day) => (
                   <button

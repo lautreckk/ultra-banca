@@ -1,43 +1,34 @@
-'use client';
-
-import { use } from 'react';
 import { PageLayout } from '@/components/layout';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { Share2 } from 'lucide-react';
-import {
-  MODALIDADES_LOTERIAS,
-  MODALIDADES_QUININHA,
-  MODALIDADES_SENINHA,
-  MODALIDADES_LOTINHA,
-  CATEGORIAS_MODALIDADES,
-  type Modalidade,
-} from '@/lib/constants/modalidades';
+import { getModalidadesAtivas, getModalidadesByJogo, type ModalidadeDB } from '@/lib/actions/modalidades';
+import { CATEGORIAS_MODALIDADES } from '@/lib/constants/modalidades';
+import { CotacoesShareButton } from './share-button';
 
-const TIPOS_CONFIG: Record<string, { titulo: string; modalidades: Modalidade[]; showCategories: boolean }> = {
+// Forçar revalidação para pegar alterações do admin
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const TIPOS_CONFIG: Record<string, { titulo: string; showCategories: boolean }> = {
   loterias: {
     titulo: 'LOTERIAS',
-    modalidades: MODALIDADES_LOTERIAS,
     showCategories: true,
   },
   quininha: {
     titulo: 'QUININHA',
-    modalidades: MODALIDADES_QUININHA,
     showCategories: false,
   },
   seninha: {
     titulo: 'SENINHA',
-    modalidades: MODALIDADES_SENINHA,
     showCategories: false,
   },
   lotinha: {
     titulo: 'LOTINHA',
-    modalidades: MODALIDADES_LOTINHA,
     showCategories: false,
   },
 };
 
-export default function CotacaoTipoPage({ params }: { params: Promise<{ tipo: string }> }) {
-  const { tipo } = use(params);
+export default async function CotacaoTipoPage({ params }: { params: Promise<{ tipo: string }> }) {
+  const { tipo } = await params;
   const config = TIPOS_CONFIG[tipo];
 
   if (!config) {
@@ -50,40 +41,36 @@ export default function CotacaoTipoPage({ params }: { params: Promise<{ tipo: st
     );
   }
 
-  const { titulo, modalidades, showCategories } = config;
+  const { titulo, showCategories } = config;
 
-  // Group by category for loterias
+  // Buscar modalidades do banco de dados
+  let modalidadesDB: ModalidadeDB[] = [];
+
+  if (tipo === 'loterias') {
+    // Para loterias, busca todas as ativas e agrupa por categoria
+    modalidadesDB = await getModalidadesAtivas();
+  } else {
+    // Para quininha, seninha, lotinha - busca por tipo de jogo
+    modalidadesDB = await getModalidadesByJogo(tipo);
+  }
+
+  if (modalidadesDB.length === 0) {
+    return (
+      <PageLayout title={`COTACOES - ${titulo}`} showBack>
+        <div className="flex items-center justify-center py-20">
+          <p className="text-gray-500">Nenhuma modalidade encontrada</p>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // Agrupar modalidades
   const groupedModalidades = showCategories
     ? CATEGORIAS_MODALIDADES.map(cat => ({
         ...cat,
-        items: modalidades.filter(m => m.categoria === cat.id),
+        items: modalidadesDB.filter(m => m.categoria === cat.id),
       })).filter(cat => cat.items.length > 0)
-    : [{ id: 'all', nome: titulo, items: modalidades }];
-
-  const handleShare = async () => {
-    let text = `TABELA DE COTACOES - ${titulo}\n\n`;
-
-    groupedModalidades.forEach(group => {
-      if (showCategories) {
-        text += `${group.nome.toUpperCase()}\n`;
-      }
-      group.items.forEach(m => {
-        text += `${m.nome}: ${formatCurrency(m.multiplicador)}\n`;
-      });
-      text += '\n';
-    });
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: text.trim() });
-      } catch {
-        // User cancelled sharing
-      }
-    } else {
-      await navigator.clipboard.writeText(text.trim());
-      alert('Copiado para a area de transferencia!');
-    }
-  };
+    : [{ id: 'all', nome: titulo, items: modalidadesDB }];
 
   return (
     <PageLayout title={`COTACOES - ${titulo}`} showBack>
@@ -125,13 +112,14 @@ export default function CotacaoTipoPage({ params }: { params: Promise<{ tipo: st
         </div>
 
         {/* Share Button */}
-        <button
-          onClick={handleShare}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 py-4 text-white active:bg-zinc-700"
-        >
-          <Share2 className="h-5 w-5" />
-          <span className="font-semibold">Compartilhar</span>
-        </button>
+        <CotacoesShareButton
+          titulo={titulo}
+          groupedData={groupedModalidades.map(g => ({
+            nome: g.nome,
+            items: g.items.map(m => ({ nome: m.nome, multiplicador: m.multiplicador }))
+          }))}
+          showCategories={showCategories}
+        />
       </div>
     </PageLayout>
   );

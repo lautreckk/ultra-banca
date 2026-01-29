@@ -17,7 +17,7 @@ const keyTypes = [
   { value: 'aleatoria', label: 'Chave aleatória', icon: Key, placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
 ];
 
-const quickAmounts = [10, 20, 50, 100, 200, 500];
+const quickAmounts = [20, 50, 100, 200, 500, 1000];
 
 export default function NovoSaquePage() {
   const router = useRouter();
@@ -40,9 +40,15 @@ export default function NovoSaquePage() {
   const supabase = createClient();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('saque');
 
-  // Fetch user balance
+  const [config, setConfig] = useState({
+    minWithdrawal: 20,
+    maxWithdrawal: 5000,
+    feePercent: 0,
+  });
+
+  // Fetch user balance and platform config
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase
@@ -54,8 +60,23 @@ export default function NovoSaquePage() {
           setSaldo(Number(data.saldo) || 0);
         }
       }
+
+      // Fetch platform config
+      const { data: platformData } = await supabase
+        .from('platform_config')
+        .select('withdrawal_min, withdrawal_max, withdrawal_fee_percent')
+        .limit(1)
+        .single();
+
+      if (platformData) {
+        setConfig({
+          minWithdrawal: Number(platformData.withdrawal_min) || 20,
+          maxWithdrawal: Number(platformData.withdrawal_max) || 5000,
+          feePercent: Number(platformData.withdrawal_fee_percent) || 0,
+        });
+      }
     };
-    fetchBalance();
+    fetchData();
   }, [supabase]);
 
   // Close dropdown when clicking outside
@@ -88,7 +109,7 @@ export default function NovoSaquePage() {
 
   const calculateFee = () => {
     const valor = parseInt(amount) || 0;
-    const taxa = Number((valor * 0.01).toFixed(2));
+    const taxa = Number((valor * config.feePercent / 100).toFixed(2));
     const liquido = Number((valor - taxa).toFixed(2));
     return { valor, taxa, liquido };
   };
@@ -106,13 +127,13 @@ export default function NovoSaquePage() {
       return;
     }
 
-    if (!valorNum || valorNum < 1) {
-      setError('Valor mínimo: R$ 1,00');
+    if (!valorNum || valorNum < config.minWithdrawal) {
+      setError(`Valor mínimo: ${formatCurrency(config.minWithdrawal)}`);
       return;
     }
 
-    if (valorNum > 5000) {
-      setError('Valor máximo: R$ 5.000,00');
+    if (valorNum > config.maxWithdrawal) {
+      setError(`Valor máximo: ${formatCurrency(config.maxWithdrawal)}`);
       return;
     }
 
@@ -194,10 +215,12 @@ export default function NovoSaquePage() {
                 <span className="text-gray-500">Valor solicitado</span>
                 <span className="font-medium">{formatCurrency(result.valor)}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-500">Taxa (1%)</span>
-                <span className="font-medium text-red-500">-{formatCurrency(result.taxa)}</span>
-              </div>
+              {result.taxa > 0 && (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-500">Taxa ({config.feePercent}%)</span>
+                  <span className="font-medium text-red-500">-{formatCurrency(result.taxa)}</span>
+                </div>
+              )}
               <div className="flex justify-between py-2">
                 <span className="text-gray-700 font-medium">Valor a receber</span>
                 <span className="font-bold text-green-600">{formatCurrency(result.valorLiquido)}</span>
@@ -258,10 +281,12 @@ export default function NovoSaquePage() {
                 <span className="text-gray-500">Valor solicitado</span>
                 <span className="font-medium">{formatCurrency(valor)}</span>
               </div>
-              <div className="flex justify-between py-3 border-b border-gray-200">
-                <span className="text-gray-500">Taxa (1%)</span>
-                <span className="font-medium text-red-500">-{formatCurrency(taxa)}</span>
-              </div>
+              {config.feePercent > 0 && (
+                <div className="flex justify-between py-3 border-b border-gray-200">
+                  <span className="text-gray-500">Taxa ({config.feePercent}%)</span>
+                  <span className="font-medium text-red-500">-{formatCurrency(taxa)}</span>
+                </div>
+              )}
               <div className="flex justify-between py-3">
                 <span className="text-gray-700 font-bold">Valor a receber</span>
                 <span className="font-bold text-green-600 text-lg">{formatCurrency(liquido)}</span>
@@ -363,9 +388,9 @@ export default function NovoSaquePage() {
           </p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <p className="text-gray-800"><span className="font-medium">Horário:</span> 24h</p>
-            <p className="text-gray-800"><span className="font-medium">Taxa:</span> 1%</p>
-            <p className="text-gray-800"><span className="font-medium">Mínimo:</span> R$ 1,00</p>
-            <p className="text-gray-800"><span className="font-medium">Máximo:</span> R$ 5.000,00</p>
+            <p className="text-gray-800"><span className="font-medium">Taxa:</span> {config.feePercent}%</p>
+            <p className="text-gray-800"><span className="font-medium">Mínimo:</span> {formatCurrency(config.minWithdrawal)}</p>
+            <p className="text-gray-800"><span className="font-medium">Máximo:</span> {formatCurrency(config.maxWithdrawal)}</p>
           </div>
         </div>
 
@@ -482,10 +507,12 @@ export default function NovoSaquePage() {
           {/* Fee Preview */}
           {parseInt(amount) > 0 && (
             <div className="mt-4 pt-3 border-t border-gray-100">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Taxa (1%)</span>
-                <span className="text-red-500">-{formatCurrency(taxa)}</span>
-              </div>
+              {config.feePercent > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Taxa ({config.feePercent}%)</span>
+                  <span className="text-red-500">-{formatCurrency(taxa)}</span>
+                </div>
+              )}
               <div className="flex justify-between mt-1">
                 <span className="font-medium text-gray-700">Você receberá</span>
                 <span className="font-bold text-green-600">{formatCurrency(liquido)}</span>

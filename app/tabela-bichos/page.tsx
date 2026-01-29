@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
 import { BICHOS } from '@/lib/constants/bichos';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 export default function TabelaBichosPage() {
   const router = useRouter();
+  const config = usePlatformConfig();
 
   const formatDezena = (num: number): string => {
     return num.toString().padStart(2, '0');
@@ -22,7 +24,7 @@ export default function TabelaBichosPage() {
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">BANCA FORTE</span>
+          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
           <button className="flex h-10 w-10 items-center justify-center">
             <Menu className="h-5 w-5 text-white" />
           </button>

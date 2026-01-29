@@ -126,3 +126,58 @@ export async function getModalidadesByCategoria(categoria: string): Promise<Moda
   }));
 }
 
+// Mapeamento de tipo de jogo para categorias
+const JOGO_CATEGORIAS: Record<string, string[]> = {
+  loterias: [
+    'centena', 'milhar', 'unidade', 'dezena', 'duque_dezena',
+    'terno_dezena_seco', 'terno_dezena', 'grupo', 'duque_grupo',
+    'terno_grupo', 'quadra_grupo', 'quina_grupo', 'sena_grupo',
+    'passe', 'palpitao'
+  ],
+  quininha: ['quininha'],
+  seninha: ['seninha'],
+  lotinha: ['lotinha'],
+};
+
+/**
+ * Busca modalidades por tipo de jogo (loterias, quininha, seninha, lotinha)
+ */
+export async function getModalidadesByJogo(jogo: string): Promise<ModalidadeDB[]> {
+  const categorias = JOGO_CATEGORIAS[jogo];
+  if (!categorias) {
+    console.error('Tipo de jogo não encontrado:', jogo);
+    return [];
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('modalidades_config')
+    .select('id, categoria, nome, codigo, multiplicador, valor_minimo, valor_maximo, posicoes_1_5, posicoes_1_6, posicoes_1_7, posicoes_1_10, posicoes_5_6, ativo, ordem')
+    .in('categoria', categorias)
+    .eq('ativo', true)
+    .order('ordem');
+
+  if (error) {
+    console.error('Erro ao buscar modalidades por jogo:', error);
+    return [];
+  }
+
+  return (data || []).map((m) => ({
+    id: m.id,
+    categoria: m.categoria,
+    nome: m.nome,
+    codigo: m.codigo,
+    multiplicador: Number(m.multiplicador) || 0,
+    valor_minimo: Number(m.valor_minimo) || 1,
+    valor_maximo: Number(m.valor_maximo) || 1000,
+    posicoes_1_5: m.posicoes_1_5,
+    posicoes_1_6: m.posicoes_1_6,
+    posicoes_1_7: m.posicoes_1_7,
+    posicoes_1_10: m.posicoes_1_10,
+    posicoes_5_6: m.posicoes_5_6,
+    ativo: m.ativo,
+    ordem: m.ordem || 0,
+  }));
+}
+

@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { Printer, Share2 } from 'lucide-react';
 import { PageLayout } from '@/components/layout';
 import { BANCAS, getBichoByDezena } from '@/lib/constants';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 // Mock results - replace with actual data from Supabase
 function generateMockResults(loteriaId: string) {
@@ -26,6 +27,7 @@ function generateMockResults(loteriaId: string) {
 export default function ResultadoVerPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const config = usePlatformConfig();
   const data = params.data as string;
   const loteriasParam = searchParams.get('loterias') || '';
   const selectedLoterias = loteriasParam.split(',').filter(Boolean);
@@ -60,7 +62,7 @@ export default function ResultadoVerPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Resultados - Banca Forte',
+          title: `Resultados - ${config.site_name}`,
           text: text,
         });
       } catch {
@@ -78,7 +80,7 @@ export default function ResultadoVerPage() {
       <div className="bg-white min-h-screen">
         {/* Header Info */}
         <div className="px-4 py-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-center text-gray-900 mb-4">BANCA FORTE</h1>
+          <h1 className="text-xl font-bold text-center text-gray-900 mb-4">{config.site_name.toUpperCase()}</h1>
 
           <div className="flex justify-between text-sm mb-2">
             <div>

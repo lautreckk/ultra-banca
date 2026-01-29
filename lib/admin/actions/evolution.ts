@@ -96,17 +96,23 @@ async function callEvolutionApi(
   const config = await getEvolutionApiConfig();
 
   if (!config) {
-    return { success: false, error: 'Evolution API não configurada' };
+    return { success: false, error: 'Evolution API não configurada. Vá em WhatsApp > Configuração para configurar.' };
   }
 
+  const url = `${config.baseUrl}${endpoint}`;
+
   try {
-    const url = `${config.baseUrl}${endpoint}`;
+    // Criar um AbortController para timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+
     const options: RequestInit = {
       method,
       headers: {
         'Content-Type': 'application/json',
         'apikey': config.apiKey
-      }
+      },
+      signal: controller.signal
     };
 
     if (body && method !== 'GET') {
@@ -114,15 +120,49 @@ async function callEvolutionApi(
     }
 
     const response = await fetch(url, options);
-    const data = await response.json();
+    clearTimeout(timeoutId);
+
+    // Tentar parsear o JSON, mas pode não ter corpo
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+    }
 
     if (!response.ok) {
-      return { success: false, error: data?.message || `Erro ${response.status}` };
+      const errorMsg = data?.message || data?.error || `Erro ${response.status}: ${response.statusText}`;
+      return { success: false, error: errorMsg };
     }
 
     return { success: true, data };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
+    // Tratar diferentes tipos de erros
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        return { success: false, error: `Timeout: A Evolution API (${config.baseUrl}) não respondeu em 15 segundos. Verifique se o servidor está online.` };
+      }
+
+      // Erros de rede comuns
+      if (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED')) {
+        return { success: false, error: `Não foi possível conectar à Evolution API (${config.baseUrl}). Verifique se o servidor está online e acessível.` };
+      }
+
+      if (error.message.includes('ENOTFOUND')) {
+        return { success: false, error: `Endereço não encontrado: ${config.baseUrl}. Verifique se a URL está correta.` };
+      }
+
+      if (error.message.includes('certificate') || error.message.includes('SSL')) {
+        return { success: false, error: `Erro de certificado SSL ao conectar com ${config.baseUrl}. Verifique o certificado do servidor.` };
+      }
+
+      return { success: false, error: `Erro ao conectar: ${error.message}` };
+    }
+
+    return { success: false, error: 'Erro desconhecido ao conectar com a Evolution API' };
   }
 }
 

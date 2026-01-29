@@ -1,38 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, ChevronDown, RefreshCw, EyeOff } from 'lucide-react';
-import { MODALIDADES_LOTERIAS, type Modalidade } from '@/lib/constants/modalidades';
-import { COLOCACOES, type Colocacao } from '@/lib/constants/colocacoes';
-
-// Modalidades específicas para a calculadora (ordenadas como no site)
-const MODALIDADES_CALCULADORA: Modalidade[] = MODALIDADES_LOTERIAS.filter(m =>
-  m.jogo === 'loterias'
-).sort((a, b) => {
-  // Ordem personalizada por categoria
-  const ordem: Record<string, number> = {
-    'centena': 1,
-    'milhar': 2,
-    'unidade': 3,
-    'dezena': 4,
-    'duque_dezena': 5,
-    'terno_dezena_seco': 6,
-    'terno_dezena': 7,
-    'grupo': 8,
-    'duque_grupo': 9,
-    'terno_grupo': 10,
-    'quadra_grupo': 11,
-    'quina_grupo': 12,
-    'sena_grupo': 13,
-    'passe': 14,
-    'palpitao': 15,
-  };
-  const ordemA = ordem[a.categoria || ''] || 99;
-  const ordemB = ordem[b.categoria || ''] || 99;
-  if (ordemA !== ordemB) return ordemA - ordemB;
-  return a.nome.localeCompare(b.nome);
-});
+import { ChevronLeft, Menu, ChevronDown, RefreshCw, EyeOff, Loader2 } from 'lucide-react';
+import { getModalidadesAtivas, type ModalidadeDB } from '@/lib/actions/modalidades';
+import { type Colocacao } from '@/lib/constants/colocacoes';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 // Colocações ordenadas como no site
 const COLOCACOES_CALCULADORA: Colocacao[] = [
@@ -103,14 +76,58 @@ const COLOCACOES_CALCULADORA: Colocacao[] = [
   { id: '9_10_premio', nome: '9/10 PRÊMIO', fator: 2 },
 ];
 
+// Ordem das categorias para exibição
+const CATEGORIA_ORDEM: Record<string, number> = {
+  'centena': 1,
+  'milhar': 2,
+  'unidade': 3,
+  'dezena': 4,
+  'duque_dezena': 5,
+  'terno_dezena_seco': 6,
+  'terno_dezena': 7,
+  'grupo': 8,
+  'duque_grupo': 9,
+  'terno_grupo': 10,
+  'quadra_grupo': 11,
+  'quina_grupo': 12,
+  'sena_grupo': 13,
+  'passe': 14,
+  'palpitao': 15,
+};
+
 export default function CalculadoraPage() {
   const router = useRouter();
-  const [selectedModalidade, setSelectedModalidade] = useState<Modalidade | null>(null);
+  const config = usePlatformConfig();
+  const [modalidades, setModalidades] = useState<ModalidadeDB[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedModalidade, setSelectedModalidade] = useState<ModalidadeDB | null>(null);
   const [selectedColocacao, setSelectedColocacao] = useState<Colocacao | null>(null);
   const [valorAposta, setValorAposta] = useState('');
   const [showModalidadeDropdown, setShowModalidadeDropdown] = useState(false);
   const [showColocacaoDropdown, setShowColocacaoDropdown] = useState(false);
   const [resultado, setResultado] = useState<{ premio: number; cotacao: number } | null>(null);
+
+  useEffect(() => {
+    const fetchModalidades = async () => {
+      try {
+        const data = await getModalidadesAtivas();
+        // Ordenar por categoria e nome
+        const sorted = data.sort((a, b) => {
+          const ordemA = CATEGORIA_ORDEM[a.categoria] || 99;
+          const ordemB = CATEGORIA_ORDEM[b.categoria] || 99;
+          if (ordemA !== ordemB) return ordemA - ordemB;
+          return a.nome.localeCompare(b.nome);
+        });
+        setModalidades(sorted);
+      } catch (error) {
+        console.error('Erro ao carregar modalidades:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchModalidades();
+  }, []);
 
   const handleCalcular = () => {
     if (!selectedModalidade || !selectedColocacao || !valorAposta) {
@@ -152,7 +169,7 @@ export default function CalculadoraPage() {
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">BANCA FORTE</span>
+          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
           <button className="flex h-10 w-10 items-center justify-center">
             <Menu className="h-5 w-5 text-white" />
           </button>
@@ -181,159 +198,167 @@ export default function CalculadoraPage() {
         {/* Divider */}
         <div className="border-t border-gray-200 mb-4" />
 
-        {/* Modalidade Select */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            Modalidade:
-          </label>
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowModalidadeDropdown(!showModalidadeDropdown);
-                setShowColocacaoDropdown(false);
-              }}
-              className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
-            >
-              <span className={selectedModalidade ? 'text-gray-900' : 'text-gray-400'}>
-                {selectedModalidade?.nome || 'Selecione...'}
-              </span>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            </button>
-
-            {showModalidadeDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
-                {/* Empty option */}
-                <button
-                  onClick={() => {
-                    setSelectedModalidade(null);
-                    setShowModalidadeDropdown(false);
-                    setResultado(null);
-                  }}
-                  className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] flex items-center gap-2 ${
-                    !selectedModalidade ? 'bg-blue-600' : ''
-                  }`}
-                >
-                  {!selectedModalidade && <span className="text-white">✓</span>}
-                </button>
-                {MODALIDADES_CALCULADORA.map((modalidade) => (
-                  <button
-                    key={modalidade.id}
-                    onClick={() => {
-                      setSelectedModalidade(modalidade);
-                      setShowModalidadeDropdown(false);
-                      setResultado(null);
-                    }}
-                    className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] ${
-                      selectedModalidade?.id === modalidade.id ? 'bg-blue-600' : ''
-                    }`}
-                  >
-                    {modalidade.nome}
-                  </button>
-                ))}
-              </div>
-            )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
-        </div>
-
-        {/* Colocação Select */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            Colocação:
-          </label>
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowColocacaoDropdown(!showColocacaoDropdown);
-                setShowModalidadeDropdown(false);
-              }}
-              className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
-            >
-              <span className={selectedColocacao ? 'text-gray-900' : 'text-gray-400'}>
-                {selectedColocacao?.nome || 'Selecione...'}
-              </span>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            </button>
-
-            {showColocacaoDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
-                {/* Empty option */}
+        ) : (
+          <>
+            {/* Modalidade Select */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Modalidade:
+              </label>
+              <div className="relative">
                 <button
                   onClick={() => {
-                    setSelectedColocacao(null);
+                    setShowModalidadeDropdown(!showModalidadeDropdown);
                     setShowColocacaoDropdown(false);
-                    setResultado(null);
                   }}
-                  className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] flex items-center gap-2 ${
-                    !selectedColocacao ? 'bg-blue-600' : ''
-                  }`}
+                  className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
                 >
-                  {!selectedColocacao && <span className="text-white">✓</span>}
+                  <span className={selectedModalidade ? 'text-gray-900' : 'text-gray-400'}>
+                    {selectedModalidade?.nome || 'Selecione...'}
+                  </span>
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
                 </button>
-                {COLOCACOES_CALCULADORA.map((colocacao) => (
-                  <button
-                    key={colocacao.id}
-                    onClick={() => {
-                      setSelectedColocacao(colocacao);
-                      setShowColocacaoDropdown(false);
-                      setResultado(null);
-                    }}
-                    className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] ${
-                      selectedColocacao?.id === colocacao.id ? 'bg-blue-600' : ''
-                    }`}
-                  >
-                    {colocacao.nome}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Valor da Aposta */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            Valor da aposta:
-          </label>
-          <div className="relative flex items-center">
-            <span className="absolute left-4 text-gray-500">R$</span>
-            <input
-              type="text"
-              value={valorAposta}
-              onChange={handleValorChange}
-              placeholder="Aposta..."
-              className="w-full h-12 pl-12 pr-4 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Resultado */}
-        {resultado && (
-          <div className="mb-6 border border-dashed border-gray-300 rounded-lg p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="text-xs text-gray-500 font-medium">PRÊMIO</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  R$ {formatCurrency(resultado.premio)}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-gray-500 font-medium">COTAÇÃO</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  R$ {formatCurrency(resultado.cotacao)}
-                </div>
+                {showModalidadeDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+                    {/* Empty option */}
+                    <button
+                      onClick={() => {
+                        setSelectedModalidade(null);
+                        setShowModalidadeDropdown(false);
+                        setResultado(null);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] flex items-center gap-2 ${
+                        !selectedModalidade ? 'bg-blue-600' : ''
+                      }`}
+                    >
+                      {!selectedModalidade && <span className="text-white">✓</span>}
+                    </button>
+                    {modalidades.map((modalidade) => (
+                      <button
+                        key={modalidade.id}
+                        onClick={() => {
+                          setSelectedModalidade(modalidade);
+                          setShowModalidadeDropdown(false);
+                          setResultado(null);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] ${
+                          selectedModalidade?.id === modalidade.id ? 'bg-blue-600' : ''
+                        }`}
+                      >
+                        {modalidade.nome}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Calcular Button */}
-        <button
-          onClick={handleCalcular}
-          disabled={!selectedModalidade || !selectedColocacao || !valorAposta}
-          className="w-full h-12 bg-[#1A202C] rounded-lg font-semibold text-white disabled:opacity-50"
-        >
-          Calcular :)
-        </button>
+            {/* Colocação Select */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Colocação:
+              </label>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setShowColocacaoDropdown(!showColocacaoDropdown);
+                    setShowModalidadeDropdown(false);
+                  }}
+                  className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
+                >
+                  <span className={selectedColocacao ? 'text-gray-900' : 'text-gray-400'}>
+                    {selectedColocacao?.nome || 'Selecione...'}
+                  </span>
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                </button>
+
+                {showColocacaoDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+                    {/* Empty option */}
+                    <button
+                      onClick={() => {
+                        setSelectedColocacao(null);
+                        setShowColocacaoDropdown(false);
+                        setResultado(null);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] flex items-center gap-2 ${
+                        !selectedColocacao ? 'bg-blue-600' : ''
+                      }`}
+                    >
+                      {!selectedColocacao && <span className="text-white">✓</span>}
+                    </button>
+                    {COLOCACOES_CALCULADORA.map((colocacao) => (
+                      <button
+                        key={colocacao.id}
+                        onClick={() => {
+                          setSelectedColocacao(colocacao);
+                          setShowColocacaoDropdown(false);
+                          setResultado(null);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-white hover:bg-[#5A6578] ${
+                          selectedColocacao?.id === colocacao.id ? 'bg-blue-600' : ''
+                        }`}
+                      >
+                        {colocacao.nome}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Valor da Aposta */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Valor da aposta:
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-gray-500">R$</span>
+                <input
+                  type="text"
+                  value={valorAposta}
+                  onChange={handleValorChange}
+                  placeholder="Aposta..."
+                  className="w-full h-12 pl-12 pr-4 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Resultado */}
+            {resultado && (
+              <div className="mb-6 border border-dashed border-gray-300 rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium">PRÊMIO</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      R$ {formatCurrency(resultado.premio)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 font-medium">COTAÇÃO</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      R$ {formatCurrency(resultado.cotacao)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Calcular Button */}
+            <button
+              onClick={handleCalcular}
+              disabled={!selectedModalidade || !selectedColocacao || !valorAposta}
+              className="w-full h-12 bg-[#1A202C] rounded-lg font-semibold text-white disabled:opacity-50"
+            >
+              Calcular :)
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

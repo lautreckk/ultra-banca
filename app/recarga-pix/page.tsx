@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2 } from 'lucide-react';
+import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
 import { formatCurrency } from '@/lib/utils/format-currency';
@@ -260,9 +260,25 @@ export default function RecargaPixPage() {
     );
   }
 
+  // Loading state: show overlay while generating PIX or waiting for QR code
+  const isGeneratingPix = loading || (paymentData && !qrCodeDataUrl);
+
   return (
     <PageLayout title="RECARGA PIX">
-      <div className="bg-white min-h-screen">
+      <div className="bg-white min-h-screen relative">
+        {/* Loading Overlay */}
+        {isGeneratingPix && (
+          <div className="absolute inset-0 z-40 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center min-h-[calc(100vh-7.5rem)]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-[#E5A220] rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-lg font-semibold text-gray-800">Gerando PIX...</p>
+              <p className="text-sm text-gray-500">Aguarde um momento</p>
+            </div>
+          </div>
+        )}
         {!paymentData ? (
           <div className="p-4 space-y-6">
             {error && (

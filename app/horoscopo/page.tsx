@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Share2, ChevronLeft, Menu } from 'lucide-react';
 import { SIGNOS, getPrevisaoDoDia, gerarNumerosDoHoroscopo, type Signo } from '@/lib/constants/horoscopo';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 // Zodiac sign icons/emojis for display
 const SIGNO_IMAGES: Record<string, string> = {
@@ -23,6 +25,7 @@ const SIGNO_IMAGES: Record<string, string> = {
 
 export default function HoroscopoPage() {
   const router = useRouter();
+  const config = usePlatformConfig();
   const [selectedSigno, setSelectedSigno] = useState<Signo | null>(null);
   const [previsao, setPrevisao] = useState<string>('');
   const [numeros, setNumeros] = useState<{ grupo: number; dezena: number; centena: number; milhar: number } | null>(null);
@@ -65,7 +68,7 @@ export default function HoroscopoPage() {
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">BANCA FORTE</span>
+          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
           <button className="flex h-10 w-10 items-center justify-center">
             <Menu className="h-5 w-5 text-white" />
           </button>
@@ -101,11 +104,22 @@ export default function HoroscopoPage() {
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               {/* Banca Logo */}
               <div className="text-center pt-4 pb-2">
-                <span className="text-sm font-bold text-gray-700">BANCA FORTE</span>
+                <span className="text-sm font-bold text-gray-700">{config.site_name.toUpperCase()}</span>
                 <div className="flex justify-center mt-2">
-                  <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
-                    <span className="text-[#E5A220] font-bold text-sm text-center">BANCA<br/>FORTE</span>
-                  </div>
+                  {config.logo_url ? (
+                    <Image
+                      src={config.logo_url}
+                      alt={config.site_name}
+                      width={96}
+                      height={64}
+                      className="object-contain"
+                      unoptimized={config.logo_url.includes('supabase.co')}
+                    />
+                  ) : (
+                    <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                      <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

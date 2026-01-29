@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Trophy, Calendar, Clock, Loader2 } from 'lucide-react';
 import { PageLayout } from '@/components/layout';
@@ -20,11 +20,166 @@ interface ApostaPremiada {
   pule?: string;
 }
 
+function generateMockPremiadas(): ApostaPremiada[] {
+  const today = new Date();
+  const mockData: ApostaPremiada[] = [
+    {
+      id: 'mock-1',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Milhar',
+      palpites: ['4523'],
+      horarios: ['14:00'],
+      data_jogo: new Date(today.getTime() - 0 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 5.00,
+      premio_valor: 20000.00,
+      created_at: new Date(today.getTime() - 0 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00847291',
+    },
+    {
+      id: 'mock-2',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Centena',
+      palpites: ['789'],
+      horarios: ['18:00'],
+      data_jogo: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 10.00,
+      premio_valor: 5000.00,
+      created_at: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00847156',
+    },
+    {
+      id: 'mock-3',
+      tipo: 'Lotinha',
+      modalidade: 'Lotofácil',
+      palpites: ['02', '05', '08', '11', '14', '17', '20', '23'],
+      horarios: ['20:00'],
+      data_jogo: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 15.00,
+      premio_valor: 850.00,
+      created_at: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00846998',
+    },
+    {
+      id: 'mock-4',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Dezena',
+      palpites: ['45', '78'],
+      horarios: ['11:00', '14:00'],
+      data_jogo: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 4.00,
+      premio_valor: 240.00,
+      created_at: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00846754',
+    },
+    {
+      id: 'mock-5',
+      tipo: 'Seninha',
+      modalidade: 'Mega-Sena',
+      palpites: ['07', '19', '23', '34', '41', '58'],
+      horarios: ['20:00'],
+      data_jogo: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 20.00,
+      premio_valor: 1200.00,
+      created_at: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00846612',
+    },
+    {
+      id: 'mock-6',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Grupo',
+      palpites: ['Cavalo', 'Leão'],
+      horarios: ['18:00'],
+      data_jogo: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 8.00,
+      premio_valor: 144.00,
+      created_at: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00846401',
+    },
+    {
+      id: 'mock-7',
+      tipo: 'Fazendinha',
+      modalidade: 'Padrão',
+      palpites: ['Galinha', 'Porco', 'Vaca'],
+      horarios: ['09:00'],
+      data_jogo: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 6.00,
+      premio_valor: 180.00,
+      created_at: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00846287',
+    },
+    {
+      id: 'mock-8',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Milhar',
+      palpites: ['1234'],
+      horarios: ['21:00'],
+      data_jogo: new Date(today.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 2.00,
+      premio_valor: 8000.00,
+      created_at: new Date(today.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00846089',
+    },
+    {
+      id: 'mock-9',
+      tipo: 'Quininha',
+      modalidade: 'Quina',
+      palpites: ['12', '28', '35', '52', '71'],
+      horarios: ['20:00'],
+      data_jogo: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 10.00,
+      premio_valor: 650.00,
+      created_at: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00845876',
+    },
+    {
+      id: 'mock-10',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Centena',
+      palpites: ['456', '123'],
+      horarios: ['14:00', '18:00'],
+      data_jogo: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 20.00,
+      premio_valor: 10000.00,
+      created_at: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00845721',
+    },
+    {
+      id: 'mock-11',
+      tipo: 'Jogo do Bicho',
+      modalidade: 'Dezena',
+      palpites: ['67'],
+      horarios: ['11:00'],
+      data_jogo: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 5.00,
+      premio_valor: 300.00,
+      created_at: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00845543',
+    },
+    {
+      id: 'mock-12',
+      tipo: 'Lotinha',
+      modalidade: 'Lotofácil',
+      palpites: ['01', '03', '07', '09', '12', '15', '18', '21', '24'],
+      horarios: ['20:00'],
+      data_jogo: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      valor_total: 25.00,
+      premio_valor: 2500.00,
+      created_at: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      pule: 'PL00845398',
+    },
+  ];
+  return mockData;
+}
+
 export default function PremiadasPage() {
   const [apostas, setApostas] = useState<ApostaPremiada[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalPremios, setTotalPremios] = useState(0);
   const supabase = createClient();
+
+  const mockPremiadas = useMemo(() => generateMockPremiadas(), []);
+
+  const displayApostas = apostas.length > 0 ? apostas : mockPremiadas;
+  const totalPremios = displayApostas.reduce((acc, a) => acc + (a.premio_valor || 0), 0);
 
   useEffect(() => {
     const fetchPremiadas = async () => {
@@ -46,7 +201,6 @@ export default function PremiadasPage() {
 
         if (!error && data) {
           setApostas(data);
-          setTotalPremios(data.reduce((acc, a) => acc + (a.premio_valor || 0), 0));
         }
       } catch (error) {
         console.error('Erro ao buscar premiadas:', error);
@@ -99,15 +253,9 @@ export default function PremiadasPage() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-[#D4A84B]" />
             </div>
-          ) : apostas.length === 0 ? (
-            <div className="bg-zinc-900/50 rounded-xl p-8 text-center">
-              <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400">Nenhuma aposta premiada ainda</p>
-              <p className="text-sm text-gray-500 mt-1">Continue apostando para ganhar!</p>
-            </div>
           ) : (
             <div className="space-y-3">
-              {apostas.map((aposta) => (
+              {displayApostas.map((aposta) => (
                 <div
                   key={aposta.id}
                   className="bg-zinc-900/80 border border-emerald-500/20 rounded-xl p-4 space-y-3"

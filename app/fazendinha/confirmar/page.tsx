@@ -2,15 +2,18 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Home, Share2, Check, X, Loader2, FileText } from 'lucide-react';
 import { PageLayout } from '@/components/layout';
 import { getFazendinhaModalidadeById, getFazendinhaLoteriaById } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 function ConfirmarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const config = usePlatformConfig();
 
   // Get params from URL
   const modalidadeId = searchParams.get('modalidade') || 'dezena';
@@ -174,17 +177,23 @@ function ConfirmarContent() {
 
             {/* Banca Name & Logo */}
             <div className="text-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">BANCA FORTE</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-2">{config.site_name.toUpperCase()}</h2>
               <div className="flex justify-center">
-                <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
-                  <span className="text-[#E5A220] font-bold text-sm text-center">
-                    BANCA
-                    <br />
-                    FORTE
-                  </span>
-                </div>
+                {config.logo_url ? (
+                  <Image
+                    src={config.logo_url}
+                    alt={config.site_name}
+                    width={96}
+                    height={64}
+                    className="object-contain"
+                    unoptimized={config.logo_url.includes('supabase.co')}
+                  />
+                ) : (
+                  <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                    <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
+                  </div>
+                )}
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mt-2">BANCA FORTE</h3>
             </div>
 
             {/* Vale Date */}

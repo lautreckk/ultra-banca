@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Search, X, Share2, ChevronLeft, Menu } from 'lucide-react';
 import { searchSonhos, getSonhoByPalavra, gerarNumerosDoSonho, type Sonho } from '@/lib/constants/sonhos';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 export default function SonhosPage() {
   const router = useRouter();
+  const config = usePlatformConfig();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Sonho[]>([]);
   const [selectedSonho, setSelectedSonho] = useState<Sonho | null>(null);
@@ -58,7 +61,7 @@ export default function SonhosPage() {
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">BANCA FORTE</span>
+          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
           <button className="flex h-10 w-10 items-center justify-center">
             <Menu className="h-5 w-5 text-white" />
           </button>
@@ -122,11 +125,22 @@ export default function SonhosPage() {
             <div className="p-4">
               {/* Banca Logo */}
               <div className="text-center mb-4">
-                <span className="text-sm font-bold text-gray-700">BANCA FORTE</span>
+                <span className="text-sm font-bold text-gray-700">{config.site_name.toUpperCase()}</span>
                 <div className="flex justify-center mt-2">
-                  <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
-                    <span className="text-[#E5A220] font-bold text-sm text-center">BANCA<br/>FORTE</span>
-                  </div>
+                  {config.logo_url ? (
+                    <Image
+                      src={config.logo_url}
+                      alt={config.site_name}
+                      width={96}
+                      height={64}
+                      className="object-contain"
+                      unoptimized={config.logo_url.includes('supabase.co')}
+                    />
+                  ) : (
+                    <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                      <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { ChevronLeft, Menu, ChevronDown, RefreshCw, EyeOff, Share2 } from 'lucide-react';
 import { BANCAS } from '@/lib/constants/bancas';
 import { BICHOS } from '@/lib/constants/bichos';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 interface LoteriaOption {
   id: string;
@@ -59,6 +61,7 @@ function generateAtrasados(loteriaId: string, colocacaoId: string): AtrasadoItem
 
 export default function AtrasadosPage() {
   const router = useRouter();
+  const config = usePlatformConfig();
   const [selectedLoteria, setSelectedLoteria] = useState<LoteriaOption | null>(null);
   const [selectedColocacao, setSelectedColocacao] = useState<{ id: string; nome: string } | null>(null);
   const [showLoteriaDropdown, setShowLoteriaDropdown] = useState(false);
@@ -83,7 +86,7 @@ export default function AtrasadosPage() {
 
     if (navigator.share) {
       navigator.share({
-        title: 'Atrasados - Banca Forte',
+        title: `Atrasados - ${config.site_name}`,
         text,
       });
     }
@@ -105,7 +108,7 @@ export default function AtrasadosPage() {
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">BANCA FORTE</span>
+          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
           <button className="flex h-10 w-10 items-center justify-center">
             <Menu className="h-5 w-5 text-white" />
           </button>
@@ -233,11 +236,22 @@ export default function AtrasadosPage() {
 
             {/* Banca Logo */}
             <div className="text-center mb-4">
-              <span className="text-sm font-bold text-gray-700">BANCA FORTE</span>
+              <span className="text-sm font-bold text-gray-700">{config.site_name.toUpperCase()}</span>
               <div className="flex justify-center mt-2">
-                <div className="w-24 h-20 bg-[#1A202C] rounded-lg flex items-center justify-center">
-                  <span className="text-[#E5A220] font-bold text-sm text-center">BANCA<br/>FORTE</span>
-                </div>
+                {config.logo_url ? (
+                  <Image
+                    src={config.logo_url}
+                    alt={config.site_name}
+                    width={96}
+                    height={80}
+                    className="object-contain"
+                    unoptimized={config.logo_url.includes('supabase.co')}
+                  />
+                ) : (
+                  <div className="w-24 h-20 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                    <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
+                  </div>
+                )}
               </div>
             </div>
 

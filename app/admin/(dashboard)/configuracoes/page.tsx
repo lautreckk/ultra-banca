@@ -648,6 +648,21 @@ export default function AdminConfiguracoesPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Link do Promotor (WhatsApp)
+                  </label>
+                  <Input
+                    type="text"
+                    value={config.promotor_link || ''}
+                    onChange={(e) => updateField('promotor_link', e.target.value || null)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    placeholder="https://wa.me/5511999999999"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Se preenchido, ao clicar em &quot;Promotor&quot; na tela inicial, abre este link em nova aba
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     WhatsApp (link completo)
                   </label>
                   <Input

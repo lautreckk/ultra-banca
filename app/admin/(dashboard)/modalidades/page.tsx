@@ -2,17 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { getModalidades, updateModalidade, type ModalidadeConfig } from '@/lib/admin/actions/settings';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleSwitch } from '@/components/admin/shared';
-import { Save, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Dices, Info, TrendingUp } from 'lucide-react';
+import { Save, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Dices, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CategoryGroup {
   name: string;
   label: string;
-  icon: string;
-  color: string;
   modalidades: ModalidadeConfig[];
 }
 
@@ -92,23 +89,23 @@ export default function AdminModalidadesPage() {
     }
   };
 
-  // Group modalidades by category with colors
+  // Group modalidades by category
   const categories: CategoryGroup[] = [
-    { name: 'centena', label: 'Centenas', icon: '💯', color: 'from-green-600 to-green-700', modalidades: [] },
-    { name: 'milhar', label: 'Milhares', icon: '🎰', color: 'from-orange-600 to-orange-700', modalidades: [] },
-    { name: 'unidade', label: 'Unidade', icon: '1️⃣', color: 'from-gray-600 to-gray-700', modalidades: [] },
-    { name: 'dezena', label: 'Dezenas', icon: '🔢', color: 'from-purple-600 to-purple-700', modalidades: [] },
-    { name: 'duque_dezena', label: 'Duque Dezena', icon: '✌️', color: 'from-violet-600 to-violet-700', modalidades: [] },
-    { name: 'terno_dezena_seco', label: 'Terno Dezena Seco', icon: '🎯', color: 'from-indigo-600 to-indigo-700', modalidades: [] },
-    { name: 'terno_dezena', label: 'Terno Dezena', icon: '🎲', color: 'from-blue-600 to-blue-700', modalidades: [] },
-    { name: 'grupo', label: 'Grupo', icon: '👥', color: 'from-cyan-600 to-cyan-700', modalidades: [] },
-    { name: 'duque_grupo', label: 'Duque Grupo', icon: '👬', color: 'from-teal-600 to-teal-700', modalidades: [] },
-    { name: 'terno_grupo', label: 'Terno Grupo', icon: '👨‍👩‍👦', color: 'from-emerald-600 to-emerald-700', modalidades: [] },
-    { name: 'quadra_grupo', label: 'Quadra Grupo', icon: '4️⃣', color: 'from-lime-600 to-lime-700', modalidades: [] },
-    { name: 'quina_grupo', label: 'Quina Grupo', icon: '5️⃣', color: 'from-yellow-600 to-yellow-700', modalidades: [] },
-    { name: 'sena_grupo', label: 'Sena Grupo', icon: '6️⃣', color: 'from-amber-600 to-amber-700', modalidades: [] },
-    { name: 'passe', label: 'Passe', icon: '🎫', color: 'from-pink-600 to-pink-700', modalidades: [] },
-    { name: 'palpitao', label: 'Palpitão', icon: '🔮', color: 'from-rose-600 to-rose-700', modalidades: [] },
+    { name: 'centena', label: 'Centenas', modalidades: [] },
+    { name: 'milhar', label: 'Milhares', modalidades: [] },
+    { name: 'unidade', label: 'Unidade', modalidades: [] },
+    { name: 'dezena', label: 'Dezenas', modalidades: [] },
+    { name: 'duque_dezena', label: 'Duque Dezena', modalidades: [] },
+    { name: 'terno_dezena_seco', label: 'Terno Dezena Seco', modalidades: [] },
+    { name: 'terno_dezena', label: 'Terno Dezena', modalidades: [] },
+    { name: 'grupo', label: 'Grupo', modalidades: [] },
+    { name: 'duque_grupo', label: 'Duque Grupo', modalidades: [] },
+    { name: 'terno_grupo', label: 'Terno Grupo', modalidades: [] },
+    { name: 'quadra_grupo', label: 'Quadra Grupo', modalidades: [] },
+    { name: 'quina_grupo', label: 'Quina Grupo', modalidades: [] },
+    { name: 'sena_grupo', label: 'Sena Grupo', modalidades: [] },
+    { name: 'passe', label: 'Passe', modalidades: [] },
+    { name: 'palpitao', label: 'Palpitão', modalidades: [] },
   ];
 
   modalidades.forEach((m) => {
@@ -133,26 +130,31 @@ export default function AdminModalidadesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg">
-            <Dices className="h-7 w-7 text-white" />
+          <div className="p-3 rounded-xl bg-zinc-800 border border-zinc-700">
+            <Dices className="h-6 w-6 text-zinc-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Configurações de Modalidades</h1>
-            <p className="text-gray-400">Gerencie multiplicadores, limites e posições de cada modalidade</p>
+            <p className="text-zinc-500">Gerencie multiplicadores, limites e posições de cada modalidade</p>
           </div>
         </div>
-        <Button
-          variant="teal"
+        <button
           onClick={handleSave}
           disabled={isSaving || !hasChanges}
           className={cn(
-            "transition-all",
-            hasChanges && "animate-pulse shadow-lg shadow-cyan-500/30"
+            "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all",
+            hasChanges
+              ? "bg-cyan-500 text-white hover:bg-cyan-600"
+              : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
           )}
         >
-          <Save className="h-4 w-4 mr-2" />
-          {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          Salvar Alterações
+        </button>
       </div>
 
       {/* Status Messages */}
@@ -171,118 +173,104 @@ export default function AdminModalidadesPage() {
       )}
 
       {/* Categories */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {categories.filter(c => c.modalidades.length > 0).map((category) => (
-          <div key={category.name} className="bg-gray-800/50 backdrop-blur rounded-xl overflow-hidden border border-gray-700/50 shadow-xl">
+          <div key={category.name} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
             {/* Category Header */}
             <button
               onClick={() => toggleCategory(category.name)}
-              className={cn(
-                "w-full px-5 py-4 flex items-center justify-between transition-all",
-                `bg-gradient-to-r ${category.color}`
-              )}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{category.icon}</span>
-                <span className="text-lg font-bold text-white">{category.label}</span>
-                <span className="text-sm text-white/70 bg-white/20 px-2 py-0.5 rounded-full">
-                  {category.modalidades.length} modalidades
+                <span className="text-white font-medium">{category.label}</span>
+                <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">
+                  {category.modalidades.length}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                {expandedCategories.includes(category.name) ? (
-                  <ChevronDown className="h-6 w-6 text-white/80" />
-                ) : (
-                  <ChevronRight className="h-6 w-6 text-white/80" />
-                )}
-              </div>
+              {expandedCategories.includes(category.name) ? (
+                <ChevronDown className="h-5 w-5 text-zinc-500" />
+              ) : (
+                <ChevronRight className="h-5 w-5 text-zinc-500" />
+              )}
             </button>
 
             {/* Table */}
             {expandedCategories.includes(category.name) && (
-              <div className="overflow-x-auto">
+              <div className="border-t border-zinc-800 overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-gray-900/50 border-b border-gray-700/50">
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider w-48">
-                        Sorteio
+                    <tr className="border-b border-zinc-800">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider w-48">
+                        Modalidade
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="h-3.5 w-3.5" />
-                          Prêmio
-                        </div>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        Multiplicador
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        <div className="flex items-center gap-1">
-                          Máx. Aposta
-                          <Info className="h-3.5 w-3.5 text-gray-500" />
-                        </div>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        Máx. Aposta
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        1º ao 5º
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        1º-5º
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        1º ao 6º
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        1º-6º
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        1º ao 7º
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        1º-7º
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        1º ao 10º
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        1º-10º
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        5º e 6º
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        5º-6º
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Status
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        Ativo
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-700/30">
-                    {category.modalidades.map((modalidade, index) => {
+                  <tbody className="divide-y divide-zinc-800/50">
+                    {category.modalidades.map((modalidade) => {
                       const isActive = getValue(modalidade, 'ativo') as boolean;
+                      const isEdited = !!editedModalidades[modalidade.id];
                       return (
                         <tr
                           key={modalidade.id}
                           className={cn(
-                            "transition-colors",
-                            index % 2 === 0 ? "bg-gray-800/30" : "bg-gray-800/10",
-                            !isActive && "opacity-50"
+                            "transition-colors hover:bg-zinc-800/30",
+                            !isActive && "opacity-50",
+                            isEdited && "bg-cyan-500/5"
                           )}
                         >
                           {/* Nome */}
-                          <td className="px-4 py-3">
-                            <span className="font-medium text-white">{modalidade.nome}</span>
+                          <td className="px-4 py-2">
+                            <span className="text-sm font-medium text-white">{modalidade.nome}</span>
                           </td>
 
-                          {/* Multiplicador (Prêmio) */}
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <span className="text-gray-500 text-sm">R$</span>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={getValue(modalidade, 'multiplicador') as number}
-                                onChange={(e) => handleChange(modalidade.id, 'multiplicador', parseFloat(e.target.value) || 0)}
-                                className="w-24 bg-gray-900/50 border-gray-600 text-white text-sm h-8 focus:border-cyan-500 focus:ring-cyan-500/20"
-                              />
-                            </div>
+                          {/* Multiplicador */}
+                          <td className="px-4 py-2">
+                            <Input
+                              type="number"
+                              step="1"
+                              value={getValue(modalidade, 'multiplicador') as number}
+                              onChange={(e) => handleChange(modalidade.id, 'multiplicador', parseFloat(e.target.value) || 0)}
+                              className="w-24 bg-zinc-800 border-zinc-700 text-white text-sm h-8"
+                            />
                           </td>
 
                           {/* Valor Máximo */}
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <Input
                               type="number"
-                              step="0.01"
+                              step="1"
                               value={getValue(modalidade, 'valor_maximo') as number}
                               onChange={(e) => handleChange(modalidade.id, 'valor_maximo', parseFloat(e.target.value) || 0)}
-                              className="w-20 bg-gray-900/50 border-gray-600 text-white text-sm h-8 focus:border-cyan-500 focus:ring-cyan-500/20"
+                              className="w-24 bg-zinc-800 border-zinc-700 text-white text-sm h-8"
                             />
                           </td>
 
                           {/* Posições - Toggles */}
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_1_5') as boolean}
@@ -292,7 +280,7 @@ export default function AdminModalidadesPage() {
                             </div>
                           </td>
 
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_1_6') as boolean}
@@ -302,7 +290,7 @@ export default function AdminModalidadesPage() {
                             </div>
                           </td>
 
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_1_7') as boolean}
@@ -312,7 +300,7 @@ export default function AdminModalidadesPage() {
                             </div>
                           </td>
 
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_1_10') as boolean}
@@ -322,7 +310,7 @@ export default function AdminModalidadesPage() {
                             </div>
                           </td>
 
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_5_6') as boolean}
@@ -333,7 +321,7 @@ export default function AdminModalidadesPage() {
                           </td>
 
                           {/* Ativo/Desativado */}
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={isActive}
@@ -354,20 +342,20 @@ export default function AdminModalidadesPage() {
       </div>
 
       {/* Legend */}
-      <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
-        <h3 className="text-sm font-semibold text-gray-400 mb-3">Legenda</h3>
-        <div className="flex flex-wrap gap-6 text-sm text-gray-400">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-cyan-400" />
-            <span><strong>Prêmio:</strong> Multiplicador aplicado ao valor da aposta</span>
+      <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
+        <div className="flex items-center gap-2 mb-3">
+          <Info className="h-4 w-4 text-zinc-500" />
+          <h3 className="text-sm font-medium text-zinc-400">Legenda</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-zinc-500">
+          <div>
+            <span className="text-zinc-400">Multiplicador:</span> Valor que multiplica a aposta para calcular o prêmio
           </div>
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-cyan-400" />
-            <span><strong>Máx. Aposta:</strong> Valor máximo permitido por aposta (0 = sem limite)</span>
+          <div>
+            <span className="text-zinc-400">Máx. Aposta:</span> Valor máximo permitido por aposta (0 = sem limite)
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-cyan-500 rounded-full" />
-            <span><strong>Posições:</strong> Define em quais prêmios a modalidade pode ser apostada</span>
+          <div>
+            <span className="text-zinc-400">Posições:</span> Define em quais prêmios a modalidade pode ser apostada
           </div>
         </div>
       </div>

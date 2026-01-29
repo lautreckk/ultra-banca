@@ -168,16 +168,34 @@ export default function DashboardPage() {
 
       {/* PROMOTOR & Amigos */}
       <div className="grid grid-cols-2 gap-3">
-        <Link href="/promotor" className="block overflow-hidden rounded-xl shadow-lg active:scale-[0.98]">
-          <div className="relative aspect-square bg-[#E5A220]">
-            <Image
-              src="/images/PROMOTOR.webp"
-              alt="Promotor"
-              fill
-              className="object-cover"
-            />
+        {config.promotor_link ? (
+          <a
+            href={config.promotor_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block overflow-hidden rounded-xl shadow-lg active:scale-[0.98]"
+          >
+            <div className="relative aspect-square bg-[#E5A220]">
+              <Image
+                src="/images/PROMOTOR.webp"
+                alt="Promotor"
+                fill
+                className="object-cover"
+              />
+            </div>
+          </a>
+        ) : (
+          <div className="block overflow-hidden rounded-xl shadow-lg cursor-default opacity-90">
+            <div className="relative aspect-square bg-[#E5A220]">
+              <Image
+                src="/images/PROMOTOR.webp"
+                alt="Promotor"
+                fill
+                className="object-cover"
+              />
+            </div>
           </div>
-        </Link>
+        )}
 
         <Link href="/amigos" className="block overflow-hidden rounded-xl bg-[#2D3748] shadow-lg active:scale-[0.98]">
           <div className="flex aspect-square flex-col items-center justify-center p-4">
