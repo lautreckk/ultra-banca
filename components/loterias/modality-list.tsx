@@ -9,17 +9,74 @@ import {
   formatMultiplicador,
   type Modalidade
 } from '@/lib/constants';
+import type { ModalidadeDB } from '@/lib/actions/modalidades';
+
+// Categorias para exibição (do banco)
+const CATEGORIAS_DB = [
+  { id: 'centena', nome: 'Centenas' },
+  { id: 'milhar', nome: 'Milhares' },
+  { id: 'unidade', nome: 'Unidade' },
+  { id: 'dezena', nome: 'Dezenas' },
+  { id: 'duque_dezena', nome: 'Duque Dezena' },
+  { id: 'terno_dezena_seco', nome: 'Terno Dezena Seco' },
+  { id: 'terno_dezena', nome: 'Terno Dezena' },
+  { id: 'grupo', nome: 'Grupo' },
+  { id: 'duque_grupo', nome: 'Duque Grupo' },
+  { id: 'terno_grupo', nome: 'Terno Grupo' },
+  { id: 'quadra_grupo', nome: 'Quadra Grupo' },
+  { id: 'quina_grupo', nome: 'Quina Grupo' },
+  { id: 'sena_grupo', nome: 'Sena Grupo' },
+  { id: 'passe', nome: 'Passe' },
+  { id: 'palpitao', nome: 'Palpitão' },
+];
 
 interface ModalityListProps {
   baseHref: string;
   tipoJogo?: string;
   className?: string;
+  modalidadesFromDB?: ModalidadeDB[];
 }
 
-export function ModalityList({ baseHref, tipoJogo = 'loterias', className }: ModalityListProps) {
-  const modalidades = getModalidadesByJogo(tipoJogo);
+export function ModalityList({ baseHref, tipoJogo = 'loterias', className, modalidadesFromDB }: ModalityListProps) {
+  // Se tiver modalidades do banco e for loterias, usa elas
+  const useDBModalidades = modalidadesFromDB && modalidadesFromDB.length > 0 && tipoJogo === 'loterias';
 
-  // Para Loterias, agrupa por categoria
+  // Fallback para hardcoded (quininha, seninha, lotinha)
+  const modalidades = useDBModalidades ? [] : getModalidadesByJogo(tipoJogo);
+
+  // Para Loterias com dados do banco
+  if (useDBModalidades && modalidadesFromDB) {
+    return (
+      <div className={cn('bg-white', className)}>
+        {CATEGORIAS_DB.map((categoria) => {
+          const modalidadesCategoria = modalidadesFromDB.filter(
+            (m) => m.categoria === categoria.id
+          );
+
+          if (modalidadesCategoria.length === 0) return null;
+
+          return (
+            <div key={categoria.id} className="mb-2">
+              <div className="bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-700 uppercase tracking-wide">
+                {categoria.nome}
+              </div>
+              <div className="divide-y divide-[var(--color-border)]">
+                {modalidadesCategoria.map((modalidade) => (
+                  <ModalityItemDB
+                    key={modalidade.id}
+                    modalidade={modalidade}
+                    baseHref={baseHref}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Para Loterias com dados hardcoded (fallback)
   if (tipoJogo === 'loterias') {
     return (
       <div className={cn('bg-white', className)}>
@@ -74,6 +131,29 @@ function ModalityItem({ modalidade, baseHref }: ModalityItemProps) {
   return (
     <Link
       href={`${baseHref}/${modalidade.id}`}
+      className="flex h-14 items-center justify-between px-4 min-h-[44px] transition-colors duration-200 active:bg-gray-50"
+    >
+      <span className="font-semibold text-zinc-800">{modalidade.nome}</span>
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-blue-600">
+          {formatMultiplicador(modalidade.multiplicador)}
+        </span>
+        <ChevronRight className="h-5 w-5 text-gray-400" />
+      </div>
+    </Link>
+  );
+}
+
+// Componente para modalidades do banco de dados
+interface ModalityItemDBProps {
+  modalidade: ModalidadeDB;
+  baseHref: string;
+}
+
+function ModalityItemDB({ modalidade, baseHref }: ModalityItemDBProps) {
+  return (
+    <Link
+      href={`${baseHref}/${modalidade.codigo}`}
       className="flex h-14 items-center justify-between px-4 min-h-[44px] transition-colors duration-200 active:bg-gray-50"
     >
       <span className="font-semibold text-zinc-800">{modalidade.nome}</span>

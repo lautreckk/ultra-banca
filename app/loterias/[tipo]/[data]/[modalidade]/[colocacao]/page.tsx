@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useBetStore } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById, calcularMultiplicadorEfetivo } from '@/lib/constants';
+import { getModalidadeByCodigo, type ModalidadeDB } from '@/lib/actions/modalidades';
 import { BetHeader } from '@/components/layout';
 import { ValueSelector, BetSummary, LotterySelector } from '@/components/loterias';
 import { TipoJogo } from '@/types/bet';
@@ -26,14 +27,31 @@ export default function ColocacaoPage({ params }: ColocacaoPageProps) {
   const [valorUnitario, setValorUnitario] = useState(0.1);
   const [valorMode, setValorMode] = useState<'todos' | 'cada'>('todos');
   const [selectedLotteries, setSelectedLotteries] = useState<string[]>([]);
+  const [modalidadeDB, setModalidadeDB] = useState<ModalidadeDB | null>(null);
 
+  // Buscar modalidade do banco de dados
+  useEffect(() => {
+    const fetchModalidade = async () => {
+      const data = await getModalidadeByCodigo(modalidade);
+      if (data) {
+        setModalidadeDB(data);
+      }
+    };
+    fetchModalidade();
+  }, [modalidade]);
+
+  // Fallback para hardcoded se não encontrar no banco
   const modalidadeInfo = getModalidadeById(modalidade);
   const colocacaoInfo = getColocacaoById(colocacao);
+
+  // Usa multiplicador do banco se disponível, senão usa hardcoded
+  const multiplicadorBase = modalidadeDB?.multiplicador ?? modalidadeInfo?.multiplicador ?? 800;
   const multiplicadorEfetivo = calcularMultiplicadorEfetivo(
-    modalidadeInfo?.multiplicador || 800,
+    multiplicadorBase,
     colocacao
   );
 
+  // Usa digitos do hardcoded (estrutura da aposta não muda)
   const maxDigits = modalidadeInfo?.digitos || 3;
 
   // Format date as DD/MM/YYYY

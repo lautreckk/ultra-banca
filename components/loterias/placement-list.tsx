@@ -5,18 +5,42 @@ import Link from 'next/link';
 import { ChevronRight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { COLOCACOES, calcularMultiplicadorEfetivo, formatMultiplicador } from '@/lib/constants';
+import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface PlacementListProps {
   baseHref: string;
   multiplicadorBase?: number;
   className?: string;
+  modalidadeDB?: ModalidadeDB | null;
 }
 
-export function PlacementList({ baseHref, multiplicadorBase = 800, className }: PlacementListProps) {
+// Mapeamento de colocação para campo de permissão
+function isColocacaoPermitida(modalidade: ModalidadeDB | null | undefined, colocacaoId: string): boolean {
+  if (!modalidade) return true; // Se não tiver dados do banco, permite todas
+
+  switch (colocacaoId) {
+    case '1_ao_5':
+      return modalidade.posicoes_1_5;
+    case '1_ao_6':
+      return modalidade.posicoes_1_6;
+    case '1_ao_7':
+      return modalidade.posicoes_1_7;
+    case '1_ao_10':
+      return modalidade.posicoes_1_10;
+    case '5_e_6':
+      return modalidade.posicoes_5_6;
+    default:
+      return true;
+  }
+}
+
+export function PlacementList({ baseHref, multiplicadorBase = 800, className, modalidadeDB }: PlacementListProps) {
   const [search, setSearch] = useState('');
 
+  // Filtra por busca e por permissões da modalidade
   const filteredColocacoes = COLOCACOES.filter((c) =>
-    c.nome.toLowerCase().includes(search.toLowerCase())
+    c.nome.toLowerCase().includes(search.toLowerCase()) &&
+    isColocacaoPermitida(modalidadeDB, c.id)
   );
 
   return (

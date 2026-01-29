@@ -11,7 +11,7 @@ function sha256(value: string): string {
 }
 
 interface CAPIEventParams {
-  eventName: 'Purchase' | 'CompleteRegistration' | 'Lead';
+  eventName: 'Purchase' | 'CompleteRegistration' | 'Lead' | 'InitiateCheckout';
   eventId?: string;
   value?: number;
   currency?: string;
@@ -164,5 +164,30 @@ export async function trackLeadCAPI(params: {
   return sendCAPIEvent({
     eventName: 'Lead',
     ...params,
+  });
+}
+
+/**
+ * Envia evento de início de checkout para CAPI
+ */
+export async function trackInitiateCheckoutCAPI(params: {
+  eventId: string;
+  value: number;
+  email?: string;
+  phone?: string;
+  clientIp?: string;
+  clientUserAgent?: string;
+  eventSourceUrl?: string;
+}): Promise<{ success: boolean }> {
+  return sendCAPIEvent({
+    eventName: 'InitiateCheckout',
+    eventId: params.eventId,
+    value: params.value,
+    currency: 'BRL',
+    email: params.email,
+    phone: params.phone,
+    clientIp: params.clientIp,
+    clientUserAgent: params.clientUserAgent,
+    eventSourceUrl: params.eventSourceUrl,
   });
 }

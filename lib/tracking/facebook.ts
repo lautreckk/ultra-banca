@@ -1,7 +1,7 @@
 'use client';
 
 // Tipos de eventos do Facebook Pixel
-export type FacebookEvent = 'CompleteRegistration' | 'Purchase' | 'Lead' | 'PageView';
+export type FacebookEvent = 'CompleteRegistration' | 'Purchase' | 'Lead' | 'PageView' | 'InitiateCheckout';
 
 // Parâmetros para eventos com valor
 export interface PurchaseEventParams {
@@ -71,6 +71,17 @@ export function trackPurchase(value: number, eventId?: string): void {
  */
 export function trackLead(): void {
   trackPixelEvent('Lead');
+}
+
+/**
+ * Dispara evento de início de checkout (ex: gerar PIX)
+ */
+export function trackInitiateCheckout(value: number, eventId?: string): void {
+  trackPixelEvent('InitiateCheckout', {
+    value,
+    currency: 'BRL',
+    eventID: eventId,
+  });
 }
 
 /**

@@ -127,7 +127,7 @@ export default function AdminApostasPage() {
           <span className="text-sm text-gray-400">Status:</span>
         </div>
         <div className="grid grid-cols-2 sm:flex gap-2">
-          {['', 'pendente', 'ganhou', 'perdeu'].map((status) => (
+          {['', 'pendente', 'confirmada', 'premiada', 'perdeu'].map((status) => (
             <button
               key={status}
               onClick={() => {
@@ -140,7 +140,7 @@ export default function AdminApostasPage() {
                   : 'bg-gray-700 text-gray-400 hover:text-white'
               }`}
             >
-              {status === '' ? 'Todas' : status === 'pendente' ? 'Pendentes' : status === 'ganhou' ? 'Ganhou' : 'Perdeu'}
+              {status === '' ? 'Todas' : status === 'pendente' ? 'Pendentes' : status === 'confirmada' ? 'Confirmadas' : status === 'premiada' ? 'Premiadas' : 'Perdeu'}
             </button>
           ))}
         </div>

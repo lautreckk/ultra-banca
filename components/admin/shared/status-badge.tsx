@@ -28,6 +28,8 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
   // Bet statuses
   pendente: { label: 'Pendente', className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  confirmada: { label: 'Confirmada', className: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
+  premiada: { label: 'Premiada', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
   ganhou: { label: 'Ganhou', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
   perdeu: { label: 'Perdeu', className: 'bg-red-500/10 text-red-400 border-red-500/20' },
 

@@ -26,6 +26,8 @@ import {
   Shield,
   Loader2,
   Megaphone,
+  Calendar,
+  CheckCircle,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 
@@ -63,6 +65,8 @@ const navItems: NavItem[] = [
       { label: 'Loterias', href: '/admin/apostas/loterias', icon: <Trophy className="h-4 w-4" /> },
       { label: 'Sorteios', href: '/admin/apostas/sorteios', icon: <CircleDot className="h-4 w-4" /> },
       { label: 'Modalidades', href: '/admin/modalidades', icon: <Dices className="h-4 w-4" /> },
+      { label: 'Resultados', href: '/admin/resultados', icon: <Calendar className="h-4 w-4" /> },
+      { label: 'Verificação', href: '/admin/verificacao', icon: <CheckCircle className="h-4 w-4" /> },
     ],
   },
   {

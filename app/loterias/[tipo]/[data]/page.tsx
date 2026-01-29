@@ -1,4 +1,5 @@
 import { ModalityList } from '@/components/loterias';
+import { getModalidadesAtivas } from '@/lib/actions/modalidades';
 
 interface DataPageProps {
   params: Promise<{ tipo: string; data: string }>;
@@ -6,6 +7,9 @@ interface DataPageProps {
 
 export default async function DataPage({ params }: DataPageProps) {
   const { tipo, data } = await params;
+
+  // Buscar modalidades do banco de dados
+  const modalidadesDB = await getModalidadesAtivas();
 
   const formattedDate = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -20,7 +24,11 @@ export default async function DataPage({ params }: DataPageProps) {
         <p className="text-sm text-zinc-600 mt-1 capitalize">{formattedDate}</p>
       </div>
 
-      <ModalityList baseHref={`/loterias/${tipo}/${data}`} tipoJogo={tipo} />
+      <ModalityList
+        baseHref={`/loterias/${tipo}/${data}`}
+        tipoJogo={tipo}
+        modalidadesFromDB={modalidadesDB}
+      />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
 import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
-import { trackPurchase, generateEventId } from '@/lib/tracking/facebook';
+import { trackPurchase, trackInitiateCheckout, generateEventId } from '@/lib/tracking/facebook';
 
 const quickAmounts = [10, 20, 50, 100, 200, 500];
 
@@ -95,6 +95,11 @@ export default function RecargaPixPage() {
         orderNumber: data.pagamento.orderNumber,
       });
       setStatus('PENDING');
+
+      // Dispara evento InitiateCheckout no Facebook Pixel
+      const eventId = generateEventId('checkout', data.pagamento.id);
+      trackInitiateCheckout(valorNum, eventId);
+      console.log('[Tracking] InitiateCheckout disparado:', { valor: valorNum, eventId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar pagamento');
     } finally {
