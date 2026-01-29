@@ -51,8 +51,8 @@ export function LoginForm() {
         // Ignora erros de tracking - não deve impedir o login
       });
 
-      router.push('/');
-      router.refresh();
+      // Força reload completo para o middleware verificar a sessão
+      window.location.href = '/';
     } catch {
       setError('Erro ao entrar. Tente novamente.');
     } finally {
