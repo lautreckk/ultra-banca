@@ -32,26 +32,44 @@ export function PageLayout({
         {showBack ? (
           <button
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              router.back();
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Voltar"
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
         ) : showHome ? (
           <button
             onClick={() => router.push('/')}
-            className="flex h-10 w-10 items-center justify-center"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              router.push('/');
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Ir para início"
           >
             <Home className="h-5 w-5 text-white" />
           </button>
         ) : (
-          <div className="w-10" />
+          <div className="w-11" />
         )}
         <span className="text-sm font-bold text-white">{title}</span>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex h-10 w-10 items-center justify-center"
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            setDrawerOpen(true);
+          }}
+          className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+          aria-label="Abrir menu"
         >
-          <Menu className="h-5 w-5 text-white" />
+          <Menu className="h-6 w-6 text-white" />
         </button>
       </header>
 

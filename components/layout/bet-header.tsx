@@ -40,9 +40,15 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
           <span className="text-sm font-bold text-white">{title}</span>
           <button
             onClick={() => setDrawerOpen(true)}
-            className="flex h-10 w-10 items-center justify-center"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setDrawerOpen(true);
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Abrir menu"
           >
-            <Menu className="h-5 w-5 text-white" />
+            <Menu className="h-6 w-6 text-white" />
           </button>
         </div>
       </header>

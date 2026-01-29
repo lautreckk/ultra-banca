@@ -64,7 +64,7 @@ export default function WashPayConfigPage() {
       const result = await updateGatewayConfig('washpay', {
         ativo: config.ativo,
         client_id: config.api_key, // WashPay usa apenas API Key (pk_...)
-        client_secret: null, // WashPay não usa secret key
+        client_secret: '', // WashPay não usa secret key
         config: {
           base_url: config.base_url,
           sandbox: false,

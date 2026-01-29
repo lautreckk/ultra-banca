@@ -33,11 +33,17 @@ export function Header({
       )}
     >
       {/* Left: Back or Home */}
-      <div className="w-10">
+      <div className="w-11">
         {showBack && (
           <button
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-lg active:bg-white/10"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              router.back();
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Voltar"
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
@@ -45,7 +51,13 @@ export function Header({
         {showHome && !showBack && (
           <button
             onClick={() => router.push('/')}
-            className="flex h-10 w-10 items-center justify-center rounded-lg active:bg-white/10"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              router.push('/');
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Ir para início"
           >
             <Home className="h-5 w-5 text-white" />
           </button>
@@ -62,13 +74,19 @@ export function Header({
       </div>
 
       {/* Right: Menu */}
-      <div className="w-10">
+      <div className="w-11">
         {showMenu && (
           <button
             onClick={onMenuClick}
-            className="flex h-10 w-10 items-center justify-center rounded-lg active:bg-white/10"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              onMenuClick?.();
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Abrir menu"
           >
-            <Menu className="h-5 w-5 text-white" />
+            <Menu className="h-6 w-6 text-white" />
           </button>
         )}
       </div>
