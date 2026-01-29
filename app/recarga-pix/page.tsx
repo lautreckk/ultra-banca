@@ -211,7 +211,7 @@ export default function RecargaPixPage() {
   const handleManualCheck = async () => {
     if (!paymentData) return;
     setChecking(true);
-    await checkPaymentStatus(true);
+    await checkPaymentStatus();
     setChecking(false);
   };
 
