@@ -1,27 +1,130 @@
 'use client';
 
 import { useParams, useSearchParams } from 'next/navigation';
-import { Printer, Share2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Printer, Share2, Loader2 } from 'lucide-react';
 import { PageLayout } from '@/components/layout';
 import { BANCAS, getBichoByDezena } from '@/lib/constants';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { createClient } from '@/lib/supabase/client';
 
-// Mock results - replace with actual data from Supabase
-function generateMockResults(loteriaId: string) {
-  const results = [];
-  for (let i = 1; i <= 10; i++) {
-    const numero = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
-    const grupo = Math.floor(1 + Math.random() * 25).toString().padStart(2, '0');
-    const dezena = parseInt(numero.slice(-2));
-    const bicho = getBichoByDezena(dezena);
-    results.push({
-      posicao: i,
-      numero,
-      grupo: `G.${grupo}`,
-      bicho: bicho?.nome || 'Desconhecido',
-    });
-  }
-  return results;
+interface ResultadoDB {
+  id: string;
+  data: string;
+  horario: string;
+  banca: string;
+  loteria: string;
+  premio_1: string;
+  premio_2: string;
+  premio_3: string;
+  premio_4: string;
+  premio_5: string;
+  bicho_1: string;
+  bicho_2: string;
+  bicho_3: string;
+  bicho_4: string;
+  bicho_5: string;
+}
+
+interface ResultadoFormatado {
+  posicao: number;
+  numero: string;
+  grupo: string;
+  bicho: string;
+}
+
+// Mapeamento de IDs de subloterias para filtros do banco
+function getLoteriaFilter(loteriaId: string): { banca: string; horario: string; loteria?: string } | null {
+  // Mapeamento baseado na estrutura de BANCAS
+  const mappings: Record<string, { banca: string; horario: string; loteria?: string }> = {
+    // RIO/FEDERAL - PT RIO
+    'pt_rio_11': { banca: 'RIO/FEDERAL', horario: '11', loteria: 'PT' },
+    'pt_rio_14': { banca: 'RIO/FEDERAL', horario: '14', loteria: 'PT' },
+    'pt_rio_16': { banca: 'RIO/FEDERAL', horario: '16', loteria: 'PT' },
+    'pt_rio_18': { banca: 'RIO/FEDERAL', horario: '18', loteria: 'PT' },
+    'pt_rio_21': { banca: 'RIO/FEDERAL', horario: '21', loteria: 'PT' },
+    // RIO/FEDERAL - MALUCA
+    'maluca_rio_11': { banca: 'RIO/FEDERAL', horario: '11', loteria: 'MALUCA' },
+    'maluca_rio_14': { banca: 'RIO/FEDERAL', horario: '14', loteria: 'MALUCA' },
+    'maluca_rio_16': { banca: 'RIO/FEDERAL', horario: '16', loteria: 'MALUCA' },
+    'maluca_rio_18': { banca: 'RIO/FEDERAL', horario: '18', loteria: 'MALUCA' },
+    'maluca_rio_21': { banca: 'RIO/FEDERAL', horario: '21', loteria: 'MALUCA' },
+    // NACIONAL
+    'nacional_12': { banca: 'NACIONAL', horario: '12' },
+    'nacional_15': { banca: 'NACIONAL', horario: '15' },
+    'nacional_19': { banca: 'NACIONAL', horario: '19' },
+    'nacional_21': { banca: 'NACIONAL', horario: '21', loteria: 'FEDERAL' },
+    // LOOK/GOIAS
+    'look_11': { banca: 'LOOK/GOIAS', horario: '11' },
+    'look_14': { banca: 'LOOK/GOIAS', horario: '14' },
+    'look_16': { banca: 'LOOK/GOIAS', horario: '16' },
+    'look_18': { banca: 'LOOK/GOIAS', horario: '18' },
+    'look_21': { banca: 'LOOK/GOIAS', horario: '21' },
+    // BAHIA
+    'bahia_10': { banca: 'BAHIA', horario: '10' },
+    'bahia_12': { banca: 'BAHIA', horario: '12' },
+    'bahia_15': { banca: 'BAHIA', horario: '15' },
+    'bahia_17': { banca: 'BAHIA', horario: '17' },
+    'bahia_19': { banca: 'BAHIA', horario: '19' },
+    'bahia_21': { banca: 'BAHIA', horario: '21' },
+    // LOTEP
+    'lotep_10': { banca: 'LOTEP', horario: '10' },
+    'lotep_14': { banca: 'LOTEP', horario: '14' },
+    'lotep_18': { banca: 'LOTEP', horario: '18' },
+    'lotep_21': { banca: 'LOTEP', horario: '21' },
+    // BOA SORTE/GOIAS
+    'boasorte_11': { banca: 'BOASORTE/GOIAS', horario: '11' },
+    'boasorte_14': { banca: 'BOASORTE/GOIAS', horario: '14' },
+    'boasorte_16': { banca: 'BOASORTE/GOIAS', horario: '16' },
+    'boasorte_18': { banca: 'BOASORTE/GOIAS', horario: '18' },
+    'boasorte_21': { banca: 'BOASORTE/GOIAS', horario: '21' },
+    // LOTECE
+    'lotece_10': { banca: 'LOTECE', horario: '10' },
+    'lotece_14': { banca: 'LOTECE', horario: '14' },
+    'lotece_18': { banca: 'LOTECE', horario: '18' },
+    'lotece_21': { banca: 'LOTECE', horario: '21' },
+    // SAO PAULO
+    'sp_11': { banca: 'SAO-PAULO', horario: '11' },
+    'sp_14': { banca: 'SAO-PAULO', horario: '14' },
+    'sp_16': { banca: 'SAO-PAULO', horario: '16' },
+    'sp_18': { banca: 'SAO-PAULO', horario: '18' },
+    'sp_21': { banca: 'SAO-PAULO', horario: '21' },
+    // SORTE
+    'sorte_11': { banca: 'SORTE', horario: '11' },
+    'sorte_14': { banca: 'SORTE', horario: '14' },
+    'sorte_16': { banca: 'SORTE', horario: '16' },
+    'sorte_18': { banca: 'SORTE', horario: '18' },
+    'sorte_21': { banca: 'SORTE', horario: '21' },
+    // MINAS GERAIS
+    'mg_11': { banca: 'MINAS-GERAIS', horario: '11' },
+    'mg_14': { banca: 'MINAS-GERAIS', horario: '14' },
+    'mg_16': { banca: 'MINAS-GERAIS', horario: '16' },
+    'mg_18': { banca: 'MINAS-GERAIS', horario: '18' },
+    'mg_21': { banca: 'MINAS-GERAIS', horario: '21' },
+  };
+  return mappings[loteriaId] || null;
+}
+
+function formatResultados(resultado: ResultadoDB): ResultadoFormatado[] {
+  const premios = [
+    { milhar: resultado.premio_1, bicho: resultado.bicho_1 },
+    { milhar: resultado.premio_2, bicho: resultado.bicho_2 },
+    { milhar: resultado.premio_3, bicho: resultado.bicho_3 },
+    { milhar: resultado.premio_4, bicho: resultado.bicho_4 },
+    { milhar: resultado.premio_5, bicho: resultado.bicho_5 },
+  ];
+
+  return premios.map((premio, index) => {
+    const dezena = parseInt(premio.milhar.slice(-2));
+    const bicho = premio.bicho || getBichoByDezena(dezena)?.nome || 'Desconhecido';
+    const grupo = Math.ceil(dezena === 0 ? 25 : dezena / 4);
+    return {
+      posicao: index + 1,
+      numero: premio.milhar.padStart(4, '0'),
+      grupo: `G.${grupo.toString().padStart(2, '0')}`,
+      bicho,
+    };
+  });
 }
 
 export default function ResultadoVerPage() {
@@ -32,10 +135,86 @@ export default function ResultadoVerPage() {
   const loteriasParam = searchParams.get('loterias') || '';
   const selectedLoterias = loteriasParam.split(',').filter(Boolean);
 
+  const [resultados, setResultados] = useState<Record<string, ResultadoFormatado[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Format date
   const dateObj = new Date(data + 'T00:00:00');
   const formattedDate = dateObj.toLocaleDateString('pt-BR');
   const currentTime = new Date().toLocaleTimeString('pt-BR');
+
+  // Buscar resultados do Supabase
+  useEffect(() => {
+    async function fetchResultados() {
+      setLoading(true);
+      setError(null);
+      const supabase = createClient();
+      const resultadosMap: Record<string, ResultadoFormatado[]> = {};
+
+      for (const loteriaId of selectedLoterias) {
+        const filter = getLoteriaFilter(loteriaId);
+        if (!filter) {
+          console.warn(`Filtro nao encontrado para ${loteriaId}`);
+          continue;
+        }
+
+        // Buscar resultado que tenha o horario comecando com a hora especificada
+        let query = supabase
+          .from('resultados')
+          .select('*')
+          .eq('data', data)
+          .eq('banca', filter.banca)
+          .like('horario', `${filter.horario}%`);
+
+        // Se tiver loteria especifica, filtrar por ela
+        if (filter.loteria) {
+          query = query.eq('loteria', filter.loteria);
+        }
+
+        const { data: resultadoData, error: queryError } = await query.limit(1).single();
+
+        if (queryError) {
+          // Tentar buscar sem filtro de loteria especifica (GERAL)
+          if (filter.loteria) {
+            const { data: resultadoGeral } = await supabase
+              .from('resultados')
+              .select('*')
+              .eq('data', data)
+              .eq('banca', filter.banca)
+              .like('horario', `${filter.horario}%`)
+              .eq('loteria', 'GERAL')
+              .limit(1)
+              .single();
+
+            if (resultadoGeral) {
+              resultadosMap[loteriaId] = formatResultados(resultadoGeral as ResultadoDB);
+              continue;
+            }
+          }
+          console.warn(`Resultado nao encontrado para ${loteriaId}:`, queryError.message);
+          continue;
+        }
+
+        if (resultadoData) {
+          resultadosMap[loteriaId] = formatResultados(resultadoData as ResultadoDB);
+        }
+      }
+
+      setResultados(resultadosMap);
+      setLoading(false);
+
+      if (Object.keys(resultadosMap).length === 0 && selectedLoterias.length > 0) {
+        setError('Nenhum resultado encontrado para esta data. Tente outra data.');
+      }
+    }
+
+    if (selectedLoterias.length > 0) {
+      fetchResultados();
+    } else {
+      setLoading(false);
+    }
+  }, [data, selectedLoterias]);
 
   // Get lottery info
   const getLoteriaInfo = (loteriaId: string) => {
@@ -75,6 +254,19 @@ export default function ResultadoVerPage() {
     window.print();
   };
 
+  if (loading) {
+    return (
+      <PageLayout title="RESULTADO" showBack>
+        <div className="bg-white min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-[#E5A220]" />
+            <p className="text-gray-600">Carregando resultados...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout title="RESULTADO" showBack>
       <div className="bg-white min-h-screen">
@@ -101,11 +293,29 @@ export default function ResultadoVerPage() {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="px-4 py-8 text-center">
+            <p className="text-gray-600">{error}</p>
+          </div>
+        )}
+
         {/* Results per Loteria */}
         <div className="px-4 py-4 space-y-6">
           {selectedLoterias.map((loteriaId) => {
             const info = getLoteriaInfo(loteriaId);
-            const results = generateMockResults(loteriaId);
+            const results = resultados[loteriaId];
+
+            if (!results || results.length === 0) {
+              return (
+                <div key={loteriaId} className="border-b border-gray-200 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="font-bold text-gray-900">{info.nome}</h2>
+                  </div>
+                  <p className="text-gray-500 text-sm">Resultado nao disponivel para esta data.</p>
+                </div>
+              );
+            }
 
             return (
               <div key={loteriaId} className="border-b border-gray-200 pb-4">
