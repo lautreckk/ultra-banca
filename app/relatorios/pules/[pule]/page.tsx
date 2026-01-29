@@ -115,7 +115,7 @@ Colocacao: ${aposta.colocacao}
 
 Palpites: ${aposta.palpites.join(', ')}
 Horarios: ${aposta.horarios.join(', ')}
-Data do Jogo: ${new Date(aposta.data_jogo).toLocaleDateString('pt-BR')}
+Data do Jogo: ${new Date(aposta.data_jogo + 'T12:00:00').toLocaleDateString('pt-BR')}
 
 Valor Unitario: ${formatCurrency(aposta.valor_unitario)}
 Valor Total: ${formatCurrency(aposta.valor_total)}
@@ -199,7 +199,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
             <div className="flex items-center justify-between py-3">
               <span className="text-gray-600">Data do Jogo</span>
               <span className="font-semibold text-gray-800">
-                {new Date(aposta.data_jogo).toLocaleDateString('pt-BR')}
+                {new Date(aposta.data_jogo + 'T12:00:00').toLocaleDateString('pt-BR')}
               </span>
             </div>
           </div>

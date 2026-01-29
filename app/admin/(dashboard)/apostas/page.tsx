@@ -5,6 +5,46 @@ import { DataTable, type Column, StatusBadge } from '@/components/admin/shared';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { getBets, type Bet } from '@/lib/admin/actions/bets';
 import { Filter } from 'lucide-react';
+import { BANCAS } from '@/lib/constants/bancas';
+
+// Função para converter ID da loteria para nome legível
+function getLoteriaDisplay(loterias: string[], horarios: string[]): string {
+  if (!loterias || loterias.length === 0) {
+    if (horarios && horarios.length > 0) {
+      return horarios.join(', ');
+    }
+    return '-';
+  }
+
+  const names = loterias.map(id => {
+    for (const banca of BANCAS) {
+      const sub = banca.subLoterias.find(s => s.id === id);
+      if (sub) {
+        return `${sub.nome} ${sub.horario}`;
+      }
+    }
+    return id;
+  });
+
+  if (names.length <= 2) {
+    return names.join(', ');
+  }
+  return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
+}
+
+// Função para formatar colocação
+function formatColocacao(colocacao: string): string {
+  const map: Record<string, string> = {
+    '1_premio': '1º Prêmio',
+    '2_premio': '2º Prêmio',
+    '3_premio': '3º Prêmio',
+    '4_premio': '4º Prêmio',
+    '5_premio': '5º Prêmio',
+    '1_5_premio': '1º ao 5º',
+    '1_7_premio': '1º ao 7º',
+  };
+  return map[colocacao] || colocacao;
+}
 
 export default function AdminApostasPage() {
   const [bets, setBets] = useState<Bet[]>([]);
@@ -52,15 +92,27 @@ export default function AdminApostasPage() {
       ),
     },
     {
-      key: 'tipo',
-      header: 'Loteria',
+      key: 'loterias',
+      header: 'Loteria/Horário',
       hideOnMobile: true,
-      render: (value) => <span className="capitalize">{value as string}</span>,
+      render: (value, row) => (
+        <span className="text-xs" title={(value as string[])?.join(', ')}>
+          {getLoteriaDisplay(value as string[], row.horarios as string[])}
+        </span>
+      ),
     },
     {
       key: 'modalidade',
       header: 'Modalidade',
       render: (value) => <span className="capitalize">{value as string}</span>,
+    },
+    {
+      key: 'colocacao',
+      header: 'Colocação',
+      hideOnMobile: true,
+      render: (value) => (
+        <span className="text-xs text-gray-300">{formatColocacao(value as string)}</span>
+      ),
     },
     {
       key: 'palpites',
@@ -69,7 +121,7 @@ export default function AdminApostasPage() {
         const palpites = value as string[];
         const display = palpites.slice(0, 3).join(', ');
         return (
-          <span className="text-gray-300" title={palpites.join(', ')}>
+          <span className="text-gray-300 font-mono" title={palpites.join(', ')}>
             {display}{palpites.length > 3 ? ` +${palpites.length - 3}` : ''}
           </span>
         );
@@ -98,7 +150,11 @@ export default function AdminApostasPage() {
       key: 'data_jogo',
       header: 'Data Jogo',
       hideOnMobile: true,
-      render: (value) => new Date(value as string).toLocaleDateString('pt-BR'),
+      render: (value) => {
+        // Adiciona T12:00:00 para evitar problema de timezone (UTC-3 mostrando dia anterior)
+        const dateStr = value as string;
+        return new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR');
+      },
     },
     {
       key: 'created_at',

@@ -12,6 +12,8 @@ export interface Bet {
   colocacao: string;
   palpites: string[];
   horarios: string[];
+  loterias: string[];
+  pule: string;
   data_jogo: string;
   valor_unitario: number;
   valor_total: number;
@@ -52,6 +54,8 @@ export async function getBets(params: BetsListParams = {}): Promise<BetsListResu
       colocacao,
       palpites,
       horarios,
+      loterias,
+      pule,
       data_jogo,
       valor_unitario,
       valor_total,
@@ -97,6 +101,8 @@ export async function getBets(params: BetsListParams = {}): Promise<BetsListResu
     colocacao: b.colocacao,
     palpites: b.palpites || [],
     horarios: b.horarios || [],
+    loterias: b.loterias || [],
+    pule: b.pule || '',
     data_jogo: b.data_jogo,
     valor_unitario: Number(b.valor_unitario) || 0,
     valor_total: Number(b.valor_total) || 0,
@@ -122,6 +128,8 @@ export async function getBetById(id: string): Promise<Bet | null> {
       colocacao,
       palpites,
       horarios,
+      loterias,
+      pule,
       data_jogo,
       valor_unitario,
       valor_total,
@@ -148,6 +156,8 @@ export async function getBetById(id: string): Promise<Bet | null> {
     colocacao: data.colocacao,
     palpites: data.palpites || [],
     horarios: data.horarios || [],
+    loterias: data.loterias || [],
+    pule: data.pule || '',
     data_jogo: data.data_jogo,
     valor_unitario: Number(data.valor_unitario) || 0,
     valor_total: Number(data.valor_total) || 0,

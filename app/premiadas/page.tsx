@@ -291,7 +291,7 @@ export default function PremiadasPage() {
                       <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {new Date(aposta.data_jogo).toLocaleDateString('pt-BR')}
+                          {new Date(aposta.data_jogo + 'T12:00:00').toLocaleDateString('pt-BR')}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />

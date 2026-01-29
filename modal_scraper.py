@@ -78,30 +78,66 @@ def scrape_todos_estados(data: Optional[str] = None) -> dict:
     from supabase import create_client
     import re
     import time
+    import random
 
     supabase_url = os.environ["SUPABASE_URL"]
     supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     supabase = create_client(supabase_url, supabase_key)
 
-    def fetch_html(url: str, retries: int = 3) -> Optional[str]:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "text/html,application/xhtml+xml",
-            "Accept-Language": "pt-BR,pt;q=0.9",
-        }
+    def fetch_html(url: str, retries: int = 5) -> Optional[str]:
+        # Lista de User-Agents reais para rotação
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        ]
+
         for attempt in range(retries):
+            headers = {
+                "User-Agent": random.choice(user_agents),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "none",
+                "Sec-Fetch-User": "?1",
+                "Cache-Control": "max-age=0",
+                "DNT": "1",
+            }
+
+            # Delay aleatório antes de cada requisição (1-3 segundos)
+            time.sleep(random.uniform(1.0, 3.0))
+
             try:
                 with httpx.Client(timeout=30.0, follow_redirects=True) as client:
                     response = client.get(url, headers=headers)
-                    if response.status_code == 429:
-                        time.sleep(5 * (attempt + 1))
+
+                    if response.status_code == 403:
+                        print(f"Tentativa {attempt + 1} falhou: Client error '403 Forbidden' for url '{url}'")
+                        print(f"For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403")
+                        # Delay maior para 403 (bloqueio anti-bot)
+                        time.sleep(random.uniform(5.0, 10.0) * (attempt + 1))
                         continue
+
+                    if response.status_code == 429:
+                        print(f"Tentativa {attempt + 1}: Rate limited (429)")
+                        time.sleep(10 * (attempt + 1))
+                        continue
+
                     response.raise_for_status()
                     return response.text
+
             except Exception as e:
                 print(f"Tentativa {attempt + 1} falhou: {e}")
                 if attempt < retries - 1:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(random.uniform(3.0, 6.0) * (attempt + 1))
+
+        print(f"Todas as {retries} tentativas falharam para: {url}")
         return None
 
     def parse_horario(text: str) -> Optional[str]:
@@ -195,7 +231,7 @@ def scrape_todos_estados(data: Optional[str] = None) -> dict:
         except Exception as e:
             erros_scrape.append(f"{estado}: {e}")
             print(f"Erro {estado}: {e}")
-        time.sleep(0.8)
+        time.sleep(random.uniform(2.0, 4.0))  # Delay maior entre estados
 
     # Salvar no Supabase
     upserted = 0
