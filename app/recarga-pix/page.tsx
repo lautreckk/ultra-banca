@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
@@ -124,33 +124,56 @@ export default function RecargaPixPage() {
     }
   }, [paymentData]);
 
-  // Poll for payment status
+  // Função para verificar status na API da BSPAY
+  const checkPaymentStatus = useCallback(async () => {
+    if (!paymentData) return false;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('check-pix-status', {
+        body: { pagamentoId: paymentData.id },
+      });
+
+      if (error) {
+        console.error('Error checking status:', error);
+        return false;
+      }
+
+      console.log('[Check Status] Response:', data);
+
+      if (data.status === 'PAID') {
+        setStatus('PAID');
+        return true;
+      } else if (data.status === 'CANCELLED') {
+        setStatus('CANCELLED');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      return false;
+    }
+  }, [paymentData, supabase]);
+
+  // Poll for payment status (a cada 10 segundos para escalar bem com 1000+ usuários)
   useEffect(() => {
     if (!paymentData || status !== 'PENDING') return;
 
-    const checkStatus = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('pagamentos')
-          .select('status')
-          .eq('id', paymentData.id)
-          .single();
+    // Verifica imediatamente após gerar o PIX (depois de 3 segundos)
+    const initialCheck = setTimeout(() => {
+      checkPaymentStatus();
+    }, 3000);
 
-        if (!error && data) {
-          if (data.status === 'PAID') {
-            setStatus('PAID');
-          } else if (data.status === 'CANCELLED') {
-            setStatus('CANCELLED');
-          }
-        }
-      } catch (error) {
-        console.error('Error checking payment status:', error);
-      }
+    // Depois verifica a cada 10 segundos
+    const interval = setInterval(() => {
+      checkPaymentStatus();
+    }, 10000);
+
+    return () => {
+      clearTimeout(initialCheck);
+      clearInterval(interval);
     };
-
-    const interval = setInterval(checkStatus, 5000);
-    return () => clearInterval(interval);
-  }, [paymentData, status, supabase]);
+  }, [paymentData, status, checkPaymentStatus]);
 
   // Track purchase and show ad popup when payment is confirmed
   useEffect(() => {
@@ -188,23 +211,7 @@ export default function RecargaPixPage() {
   const handleManualCheck = async () => {
     if (!paymentData) return;
     setChecking(true);
-    try {
-      const { data, error } = await supabase
-        .from('pagamentos')
-        .select('status')
-        .eq('id', paymentData.id)
-        .single();
-
-      if (!error && data) {
-        if (data.status === 'PAID') {
-          setStatus('PAID');
-        } else if (data.status === 'CANCELLED') {
-          setStatus('CANCELLED');
-        }
-      }
-    } catch (error) {
-      console.error('Error checking payment status:', error);
-    }
+    await checkPaymentStatus(true);
     setChecking(false);
   };
 
