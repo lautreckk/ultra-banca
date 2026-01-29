@@ -2,14 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Home, Share2, Printer, Check, X, Loader2 } from 'lucide-react';
 import { BetHeader } from '@/components/layout';
 import { useBetStore } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById, getSubLoteriaById } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 export default function FinalizarApostaPage() {
   const router = useRouter();
+  const config = usePlatformConfig();
   const { items, clearCart } = useBetStore();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +106,7 @@ export default function FinalizarApostaPage() {
     // Share functionality
     if (navigator.share) {
       navigator.share({
-        title: 'Minha Aposta - Banca Forte',
+        title: `Minha Aposta - ${config.site_name}`,
         text: `Pule #${puleNumber} - ${modalidadeInfo?.nome} - R$ ${valorTotal.toFixed(2).replace('.', ',')}`,
       });
     }
@@ -153,11 +156,22 @@ export default function FinalizarApostaPage() {
 
           {/* Banca Name & Logo */}
           <div className="text-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-3">BANCA FORTE</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">{config.site_name.toUpperCase()}</h2>
             <div className="flex justify-center">
-              <div className="w-28 h-20 bg-[#1A202C] rounded-lg flex items-center justify-center">
-                <span className="text-[#E5A220] font-bold text-lg text-center">BANCA<br/>FORTE</span>
-              </div>
+              {config.logo_url ? (
+                <Image
+                  src={config.logo_url}
+                  alt={config.site_name}
+                  width={120}
+                  height={80}
+                  className="object-contain"
+                  unoptimized={config.logo_url.includes('supabase.co')}
+                />
+              ) : (
+                <div className="w-28 h-20 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                  <span className="text-[#E5A220] font-bold text-lg text-center">{config.site_name}</span>
+                </div>
+              )}
             </div>
           </div>
 

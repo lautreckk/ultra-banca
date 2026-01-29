@@ -2,15 +2,18 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { ChevronLeft, Menu, RefreshCw, EyeOff, Home, Share2, Printer, Loader2, X } from 'lucide-react';
 import { getModalidadeById } from '@/lib/constants/modalidades';
 import { createClient } from '@/lib/supabase/client';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 function QuininhaFinalizarContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const config = usePlatformConfig();
 
   const dataJogo = params.data as string;
   const modalidadeId = params.modalidade as string;
@@ -92,7 +95,7 @@ function QuininhaFinalizarContent() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: 'Aposta Quininha - Banca Forte',
+        title: `Aposta Quininha - ${config.site_name}`,
         text: `PULE #${puleNumber}\n${modalidade?.nome}\n${palpites.length} palpites\nTotal: R$ ${formatCurrency(valorTotal)}`,
       });
     }
@@ -146,11 +149,22 @@ function QuininhaFinalizarContent() {
 
           {/* Banca Logo */}
           <div className="text-center mb-4">
-            <span className="text-lg font-bold text-gray-900">BANCA FORTE</span>
+            <span className="text-lg font-bold text-gray-900">{config.site_name.toUpperCase()}</span>
             <div className="flex justify-center mt-2">
-              <div className="w-20 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
-                <span className="text-[#E5A220] font-bold text-xs text-center">BANCA<br/>FORTE</span>
-              </div>
+              {config.logo_url ? (
+                <Image
+                  src={config.logo_url}
+                  alt={config.site_name}
+                  width={100}
+                  height={70}
+                  className="object-contain"
+                  unoptimized={config.logo_url.includes('supabase.co')}
+                />
+              ) : (
+                <div className="w-20 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                  <span className="text-[#E5A220] font-bold text-xs text-center">{config.site_name}</span>
+                </div>
+              )}
             </div>
           </div>
 
