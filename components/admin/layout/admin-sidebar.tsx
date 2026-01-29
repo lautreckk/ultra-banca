@@ -34,6 +34,7 @@ import {
   Send,
   Webhook,
   ExternalLink,
+  BarChart3,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 
@@ -116,6 +117,11 @@ const navItems: NavItem[] = [
     label: 'Auditoria',
     href: '/admin/auditoria',
     icon: <Shield className="h-5 w-5" />,
+  },
+  {
+    label: 'Gráficos',
+    href: '/admin/graficos',
+    icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     label: 'Configurações',

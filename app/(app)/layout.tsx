@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Header, BalanceDisplay, MobileDrawer } from '@/components/layout';
 import { createClient } from '@/lib/supabase/client';
+import { usePageTracking } from '@/lib/hooks/use-page-tracking';
 
 interface UserProfile {
   saldo: number;
@@ -24,6 +25,9 @@ export default function AppLayout({
   const [loading, setLoading] = useState(true);
 
   const supabase = createClient();
+
+  // Track page views and visitor presence
+  usePageTracking();
 
   const fetchProfile = useCallback(async () => {
     try {
