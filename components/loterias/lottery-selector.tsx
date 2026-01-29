@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp, Check, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BANCAS } from '@/lib/constants';
 
@@ -12,6 +12,7 @@ interface LotterySelectorProps {
   onBack: () => void;
   total?: number;
   className?: string;
+  dataJogo?: string; // Data da aposta no formato YYYY-MM-DD
 }
 
 export function LotterySelector({
@@ -21,8 +22,37 @@ export function LotterySelector({
   onBack,
   total = 0,
   className,
+  dataJogo,
 }: LotterySelectorProps) {
   const [expandedBancas, setExpandedBancas] = useState<string[]>(['rio_federal']);
+
+  // Verifica se um horário já passou (com margem de 5 minutos antes do sorteio)
+  const isHorarioPassado = useMemo(() => {
+    const agora = new Date();
+    const hojeStr = agora.toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+    return (horario: string): boolean => {
+      // Se a data da aposta é futura, nenhum horário passou
+      if (dataJogo && dataJogo > hojeStr) {
+        return false;
+      }
+
+      // Se a data da aposta é passada, todos os horários passaram
+      if (dataJogo && dataJogo < hojeStr) {
+        return true;
+      }
+
+      // Se é hoje, verifica o horário
+      const [hora, minuto] = horario.split(':').map(Number);
+      const horarioDate = new Date();
+      horarioDate.setHours(hora, minuto, 0, 0);
+
+      // Margem de 5 minutos antes do sorteio (fecha apostas 5min antes)
+      const margemMs = 5 * 60 * 1000;
+
+      return agora.getTime() > (horarioDate.getTime() - margemMs);
+    };
+  }, [dataJogo]);
 
   const toggleBanca = (bancaId: string) => {
     setExpandedBancas((prev) =>
@@ -32,33 +62,39 @@ export function LotterySelector({
     );
   };
 
-  const isAllSelectedInBanca = (bancaId: string): boolean => {
+  // Filtra subLoterias disponíveis (horários que ainda não passaram)
+  const getSubLoteriasDisponiveis = (bancaId: string) => {
     const banca = BANCAS.find((b) => b.id === bancaId);
-    if (!banca) return false;
-    return banca.subLoterias.every((sub) => selectedLotteries.includes(sub.id));
+    if (!banca) return [];
+    return banca.subLoterias.filter((sub) => !isHorarioPassado(sub.horario));
+  };
+
+  const isAllSelectedInBanca = (bancaId: string): boolean => {
+    const disponiveis = getSubLoteriasDisponiveis(bancaId);
+    if (disponiveis.length === 0) return false;
+    return disponiveis.every((sub) => selectedLotteries.includes(sub.id));
   };
 
   const isSomeSelectedInBanca = (bancaId: string): boolean => {
-    const banca = BANCAS.find((b) => b.id === bancaId);
-    if (!banca) return false;
-    return banca.subLoterias.some((sub) => selectedLotteries.includes(sub.id));
+    const disponiveis = getSubLoteriasDisponiveis(bancaId);
+    return disponiveis.some((sub) => selectedLotteries.includes(sub.id));
   };
 
   const toggleAllInBanca = (bancaId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const banca = BANCAS.find((b) => b.id === bancaId);
-    if (!banca) return;
+    const disponiveis = getSubLoteriasDisponiveis(bancaId);
+    if (disponiveis.length === 0) return;
 
     const allSelected = isAllSelectedInBanca(bancaId);
 
     if (allSelected) {
-      banca.subLoterias.forEach((sub) => {
+      disponiveis.forEach((sub) => {
         if (selectedLotteries.includes(sub.id)) {
           onToggleLottery(sub.id);
         }
       });
     } else {
-      banca.subLoterias.forEach((sub) => {
+      disponiveis.forEach((sub) => {
         if (!selectedLotteries.includes(sub.id)) {
           onToggleLottery(sub.id);
         }
@@ -124,6 +160,31 @@ export function LotterySelector({
                   {banca.subLoterias.map((sub) => {
                     const isSelected = selectedLotteries.includes(sub.id);
                     const isMaluca = sub.nome.toLowerCase().includes('maluca');
+                    const passado = isHorarioPassado(sub.horario);
+
+                    // Se horário já passou, mostra desabilitado
+                    if (passado) {
+                      return (
+                        <div
+                          key={sub.id}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left bg-gray-100 opacity-50 cursor-not-allowed"
+                        >
+                          <div className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0">
+                            <Clock className="h-3 w-3 text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-500 line-through">
+                                {sub.nome} {sub.horario.replace(':', 'H').replace(':00', 'HS').replace(':20', 'HS').replace(':15', 'HS')}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-red-500 font-medium">ENCERRADO</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
 
                     return (
                       <button

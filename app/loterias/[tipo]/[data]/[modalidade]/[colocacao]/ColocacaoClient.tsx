@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useBetStore } from '@/stores/bet-store';
-import { getModalidadeById, getColocacaoById, calcularMultiplicadorEfetivo } from '@/lib/constants';
+import { getModalidadeById, getColocacaoById, calcularMultiplicadorEfetivo, BANCAS } from '@/lib/constants';
 import { BetHeader } from '@/components/layout';
 import { ValueSelector, BetSummary, LotterySelector } from '@/components/loterias';
 import { TipoJogo } from '@/types/bet';
@@ -92,6 +92,21 @@ export function ColocacaoClient({
     );
   };
 
+  // Extrai os horários das loterias selecionadas
+  const getHorariosFromLotteries = (lotteryIds: string[]): string[] => {
+    const horarios: string[] = [];
+    for (const banca of BANCAS) {
+      for (const subLoteria of banca.subLoterias) {
+        if (lotteryIds.includes(subLoteria.id) && subLoteria.horario) {
+          if (!horarios.includes(subLoteria.horario)) {
+            horarios.push(subLoteria.horario);
+          }
+        }
+      }
+    }
+    return horarios;
+  };
+
   const handleModeSelect = (mode: 'todos' | 'cada') => {
     setValorMode(mode);
     setStep('resumo');
@@ -100,13 +115,16 @@ export function ColocacaoClient({
   const handleValendo = () => {
     if (palpites.length === 0) return;
 
+    // Extrai horários das loterias selecionadas
+    const horarios = getHorariosFromLotteries(selectedLotteries);
+
     addItem({
       tipo: tipo as TipoJogo,
       data,
       modalidade,
       colocacao,
       palpites,
-      horarios: [],
+      horarios,
       loterias: selectedLotteries,
       valorUnitario,
       multiplicador: multiplicadorEfetivo,
@@ -122,13 +140,16 @@ export function ColocacaoClient({
   const handleConfirmarLoterias = () => {
     if (palpites.length === 0 || selectedLotteries.length === 0) return;
 
+    // Extrai horários das loterias selecionadas
+    const horarios = getHorariosFromLotteries(selectedLotteries);
+
     addItem({
       tipo: tipo as TipoJogo,
       data,
       modalidade,
       colocacao,
       palpites,
-      horarios: [],
+      horarios,
       loterias: selectedLotteries,
       valorUnitario,
       multiplicador: multiplicadorEfetivo,
@@ -304,6 +325,7 @@ export function ColocacaoClient({
         onConfirm={handleConfirmarLoterias}
         onBack={handleBack}
         total={palpites.length * valorUnitario * Math.max(selectedLotteries.length, 1)}
+        dataJogo={data}
       />
     </div>
   );
