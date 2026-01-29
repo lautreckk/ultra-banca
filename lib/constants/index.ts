@@ -1,5 +1,18 @@
 export { BICHOS, getBichoByDezena, getBichoByNumero, type Bicho } from './bichos';
 export {
+  FAZENDINHA_LOTERIAS,
+  FAZENDINHA_MODALIDADES,
+  FAZENDINHA_VALORES_DEZENA,
+  FAZENDINHA_VALORES_GRUPO,
+  FAZENDINHA_VALORES_CENTENA,
+  getValoresByModalidade,
+  getModalidadeById as getFazendinhaModalidadeById,
+  getLoteriaById as getFazendinhaLoteriaById,
+  formatPremio,
+  type FazendinhaLoteria,
+  type FazendinhaModalidade,
+} from './fazendinha';
+export {
   MODALIDADES,
   MODALIDADES_LOTERIAS,
   MODALIDADES_QUININHA,

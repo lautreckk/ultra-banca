@@ -1,20 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Wallet, FileText, PawPrint, TrendingUp, Table } from 'lucide-react';
+import { ChevronRight, Dices, Star, Sparkles, Clover } from 'lucide-react';
 import { PageLayout } from '@/components/layout';
 
 const menuItems = [
-  { icon: Wallet, label: 'SALDO', href: '/relatorios/saldo' },
-  { icon: FileText, label: 'PULES', href: '/relatorios/pules' },
-  { icon: PawPrint, label: 'FAZENDINHA', href: '/relatorios/fazendinha' },
-  { icon: TrendingUp, label: 'MOVIMENTO LOTERIAS', href: '/relatorios/movimento' },
-  { icon: Table, label: 'COTACOES', href: '/relatorios/cotacoes' },
+  { icon: Dices, label: 'LOTERIAS', href: '/relatorios/cotacoes/loterias' },
+  { icon: Star, label: 'QUININHA', href: '/relatorios/cotacoes/quininha' },
+  { icon: Sparkles, label: 'SENINHA', href: '/relatorios/cotacoes/seninha' },
+  { icon: Clover, label: 'LOTINHA', href: '/relatorios/cotacoes/lotinha' },
 ];
 
-export default function RelatoriosPage() {
+export default function CotacoesPage() {
   return (
-    <PageLayout title="RELATORIOS">
+    <PageLayout title="COTACOES" showBack>
       <div className="divide-y divide-gray-200 bg-white">
         {menuItems.map((item) => {
           const Icon = item.icon;

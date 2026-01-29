@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { PageLayout } from '@/components/layout';
 
 export default function FazendinhaPage() {
-  // Gerar próximos 7 dias
+  // Gerar proximos 7 dias
   const dates = generateNext7Days();
 
   return (
@@ -19,12 +19,12 @@ export default function FazendinhaPage() {
               <Link
                 key={date.value}
                 href={`/fazendinha/${date.value}`}
-                className="flex flex-col items-center justify-center bg-white border border-zinc-200 shadow-sm rounded-xl py-6 px-4 min-h-[100px] transition-all hover:shadow-md hover:border-zinc-300 active:scale-[0.98]"
+                className="flex flex-col items-center justify-center bg-zinc-900 rounded-xl py-6 px-4 min-h-[120px] transition-all hover:bg-zinc-800 active:scale-[0.98]"
               >
-                <span className="text-2xl font-bold text-white bg-zinc-900 rounded-lg px-3 py-1">
+                <span className="text-2xl font-bold text-white bg-white/10 rounded-lg px-4 py-1.5">
                   {date.day}
                 </span>
-                <span className="text-zinc-700 font-semibold mt-2 uppercase tracking-wide">
+                <span className="text-white font-bold mt-3 uppercase tracking-wide text-lg">
                   {index === 0 ? 'HOJE' : date.weekday}
                 </span>
               </Link>
@@ -38,7 +38,7 @@ export default function FazendinhaPage() {
 
 function generateNext7Days(): { value: string; day: string; weekday: string }[] {
   const days: { value: string; day: string; weekday: string }[] = [];
-  const weekdays = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
+  const weekdays = ['DOMINGO', 'SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO'];
 
   const today = new Date();
 
