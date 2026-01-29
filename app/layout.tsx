@@ -4,10 +4,10 @@ import './globals.css';
 import { ConfigProvider } from '@/contexts/platform-config-context';
 import { ThemeInjector } from '@/components/theme-injector';
 import { getPlatformConfig } from '@/lib/admin/actions/platform-config';
-import DOMPurify from 'isomorphic-dompurify';
 
 // ============================================================================
 // SECURITY: Sanitização de Scripts para prevenir XSS
+// Implementação sem dependências externas para compatibilidade com Vercel Edge
 // ============================================================================
 
 /**
@@ -24,34 +24,94 @@ function sanitizeTrackingId(id: string | null | undefined): string | null {
 
 /**
  * Sanitiza scripts customizados do admin
- * IMPORTANTE: Por segurança, removemos TODOS os scripts inline maliciosos
- * Apenas scripts de fontes confiáveis (src externo) são permitidos
+ * IMPORTANTE: Por segurança, apenas permite tags <script src="..."> externas
+ * Scripts inline são BLOQUEADOS para prevenir XSS
+ *
+ * Regras de segurança:
+ * 1. Apenas tags <script> com atributo src são permitidas
+ * 2. O src deve apontar para domínios HTTPS confiáveis
+ * 3. Qualquer conteúdo entre <script> e </script> é bloqueado
+ * 4. Atributos perigosos (onerror, onload, etc) são removidos
  */
 function sanitizeCustomScripts(scripts: string | null | undefined): string | null {
   if (!scripts) return null;
 
-  // Usar DOMPurify para limpar o conteúdo
-  // Configuração RESTRITIVA: apenas permite tags script com src externo
-  const sanitized = DOMPurify.sanitize(scripts, {
-    ALLOWED_TAGS: ['script', 'noscript'],
-    ALLOWED_ATTR: ['src', 'async', 'defer', 'type', 'id', 'data-*'],
-    // Bloquear conteúdo inline em scripts (previne XSS)
-    ALLOW_DATA_ATTR: true,
-    // Forçar parsing como HTML
-    FORCE_BODY: true,
-  });
+  // Lista de domínios confiáveis para scripts externos
+  const trustedDomains = [
+    'googletagmanager.com',
+    'google-analytics.com',
+    'connect.facebook.net',
+    'static.hotjar.com',
+    'js.hs-scripts.com',
+    'cdn.jsdelivr.net',
+    'cdnjs.cloudflare.com',
+    'unpkg.com',
+  ];
 
-  // Verificação adicional: remover scripts que tentam executar código inline
-  // Um script seguro deve ter src="" apontando para domínio confiável
-  const hasInlineCode = /<script[^>]*>[\s\S]*?[^\s][\s\S]*?<\/script>/i.test(sanitized);
+  // Regex para encontrar tags script
+  const scriptRegex = /<script([^>]*)>([\s\S]*?)<\/script>/gi;
+  const sanitizedScripts: string[] = [];
 
-  if (hasInlineCode) {
-    // Se há código inline, registrar alerta de segurança e bloquear
-    console.warn('[SECURITY] Blocked inline script injection attempt in custom_head_scripts');
-    return null;
+  let match;
+  while ((match = scriptRegex.exec(scripts)) !== null) {
+    const attributes = match[1];
+    const content = match[2].trim();
+
+    // BLOQUEAR: Scripts com conteúdo inline
+    if (content.length > 0) {
+      console.warn('[SECURITY] Blocked inline script in custom_head_scripts');
+      continue;
+    }
+
+    // Extrair o atributo src
+    const srcMatch = attributes.match(/src\s*=\s*["']([^"']+)["']/i);
+    if (!srcMatch) {
+      console.warn('[SECURITY] Blocked script without src attribute');
+      continue;
+    }
+
+    const src = srcMatch[1];
+
+    // Validar que é HTTPS
+    if (!src.startsWith('https://')) {
+      console.warn('[SECURITY] Blocked non-HTTPS script:', src);
+      continue;
+    }
+
+    // Validar domínio confiável
+    const url = new URL(src);
+    const isTrusted = trustedDomains.some(domain =>
+      url.hostname === domain || url.hostname.endsWith('.' + domain)
+    );
+
+    if (!isTrusted) {
+      console.warn('[SECURITY] Blocked script from untrusted domain:', url.hostname);
+      continue;
+    }
+
+    // Remover atributos perigosos e manter apenas os seguros
+    const safeAttrs: string[] = [];
+
+    // Extrair atributos seguros
+    const asyncMatch = attributes.match(/\basync\b/i);
+    const deferMatch = attributes.match(/\bdefer\b/i);
+    const typeMatch = attributes.match(/type\s*=\s*["']([^"']+)["']/i);
+    const idMatch = attributes.match(/id\s*=\s*["']([^"']+)["']/i);
+
+    safeAttrs.push(`src="${src}"`);
+    if (asyncMatch) safeAttrs.push('async');
+    if (deferMatch) safeAttrs.push('defer');
+    if (typeMatch && /^(text\/javascript|module)$/.test(typeMatch[1])) {
+      safeAttrs.push(`type="${typeMatch[1]}"`);
+    }
+    if (idMatch && /^[a-zA-Z0-9_-]+$/.test(idMatch[1])) {
+      safeAttrs.push(`id="${idMatch[1]}"`);
+    }
+
+    sanitizedScripts.push(`<script ${safeAttrs.join(' ')}></script>`);
   }
 
-  return sanitized || null;
+  return sanitizedScripts.length > 0 ? sanitizedScripts.join('\n') : null;
 }
 
 const poppins = Poppins({
