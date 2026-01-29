@@ -119,7 +119,8 @@ function ConfirmarContent() {
     <PageLayout title="SELECIONAR NÚMEROS">
       {/* Success Toast */}
       {showToast && (
-        <div className="fixed top-16 left-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
+          <div className="bg-green-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-2">
             <Check className="h-5 w-5" />
             <span>Pule registrada com sucesso. Boa sorte!</span>
@@ -127,19 +128,22 @@ function ConfirmarContent() {
           <button onClick={() => setShowToast(false)}>
             <X className="h-5 w-5" />
           </button>
+          </div>
         </div>
       )}
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed top-16 left-4 right-4 z-50 bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-2">
-            <X className="h-5 w-5" />
-            <span>{error}</span>
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
+          <div className="bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+            <div className="flex items-center gap-2">
+              <X className="h-5 w-5" />
+              <span>{error}</span>
+            </div>
+            <button onClick={() => setError(null)}>
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button onClick={() => setError(null)}>
-            <X className="h-5 w-5" />
-          </button>
         </div>
       )}
 

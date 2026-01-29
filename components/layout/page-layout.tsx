@@ -26,7 +26,8 @@ export function PageLayout({
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-gray-300 flex justify-center">
+      <div className="w-full max-w-md bg-zinc-50 min-h-screen shadow-xl flex flex-col">
       {/* Header - Dark for contrast */}
       <header className="sticky top-0 z-40 flex h-12 items-center justify-between bg-zinc-900 px-4">
         {showBack ? (
@@ -101,9 +102,10 @@ export function PageLayout({
       </div>
 
       {/* Content */}
-      {children}
+      <div className="flex-1">{children}</div>
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      </div>
     </div>
   );
 }
