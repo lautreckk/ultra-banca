@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { RegisterForm } from '@/components/auth';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 function CadastroContent() {
   const searchParams = useSearchParams();
@@ -17,17 +18,20 @@ function CadastroContent() {
 }
 
 export default function CadastroPage() {
+  const config = usePlatformConfig();
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-black px-6 py-8">
-      {/* Logo - Identical to Login */}
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-8" style={{ backgroundColor: config.color_background }}>
+      {/* Logo - Dinâmica do banco de dados */}
       <div className="mb-8 flex flex-col items-center">
         <Image
-          src="/images/logo-banca-forte.jpeg"
-          alt="Banca Forte"
-          width={200}
-          height={200}
-          className="mb-2"
+          src={config.logo_url || '/images/logo.png'}
+          alt={config.site_name}
+          width={250}
+          height={100}
+          className="mb-2 object-contain"
           priority
+          unoptimized={config.logo_url?.includes('supabase.co')}
         />
       </div>
 
