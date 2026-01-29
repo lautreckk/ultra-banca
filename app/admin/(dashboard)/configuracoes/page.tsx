@@ -50,6 +50,16 @@ const ImageUpload = dynamic(
   }
 );
 
+// WhatsAppLinkGenerator: Componente de geração de link WhatsApp - só carrega na aba Marketing
+const WhatsAppLinkGenerator = dynamic(
+  () => import('@/components/admin/whatsapp-link-generator').then((mod) => ({ default: mod.WhatsAppLinkGenerator })),
+  {
+    loading: () => (
+      <div className="h-32 bg-zinc-700/50 rounded-lg animate-pulse" />
+    ),
+  }
+);
+
 type TabId = 'geral' | 'financeiro' | 'apostas' | 'marketing' | 'seguranca';
 
 interface TabConfig {
@@ -646,33 +656,20 @@ export default function AdminConfiguracoesPage() {
             <div className="border-t border-gray-600 pt-6">
               <h3 className="text-sm font-semibold text-white mb-3">Redes Sociais</h3>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Link do Promotor (WhatsApp)
-                  </label>
-                  <Input
-                    type="text"
-                    value={config.promotor_link || ''}
-                    onChange={(e) => updateField('promotor_link', e.target.value || null)}
-                    className="bg-gray-700 border-gray-600 text-white"
-                    placeholder="https://wa.me/5511999999999"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Se preenchido, ao clicar em &quot;Promotor&quot; na tela inicial, abre este link em nova aba
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    WhatsApp (link completo)
-                  </label>
-                  <Input
-                    type="text"
-                    value={config.social_whatsapp || ''}
-                    onChange={(e) => updateField('social_whatsapp', e.target.value || null)}
-                    className="bg-gray-700 border-gray-600 text-white"
-                    placeholder="https://wa.me/5511999999999"
-                  />
-                </div>
+                <WhatsAppLinkGenerator
+                  label="Link do Promotor (WhatsApp)"
+                  value={config.promotor_link}
+                  onChange={(value) => updateField('promotor_link', value)}
+                  description="Se preenchido, ao clicar em 'Promotor' na tela inicial, abre este link em nova aba"
+                />
+
+                <WhatsAppLinkGenerator
+                  label="WhatsApp de Suporte"
+                  value={config.social_whatsapp}
+                  onChange={(value) => updateField('social_whatsapp', value)}
+                  description="Link de contato exibido no rodapé e outras áreas do site"
+                />
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     Instagram (link completo)
