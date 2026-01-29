@@ -42,28 +42,23 @@ export function LoginForm() {
       });
 
       if (authError) {
-        console.error('Auth error:', authError);
         setError('CPF ou senha incorretos');
         setLoading(false);
         return;
       }
 
       if (!data.session) {
-        console.error('No session returned');
         setError('Erro ao criar sessão. Tente novamente.');
         setLoading(false);
         return;
       }
-
-      console.log('Login success, redirecting...');
 
       // Rastrear login para auditoria (não bloqueia o redirecionamento)
       trackLogin().catch(() => {});
 
       // Força reload completo para o middleware verificar a sessão
       window.location.replace('/');
-    } catch (err) {
-      console.error('Login catch error:', err);
+    } catch {
       setError('Erro ao entrar. Tente novamente.');
       setLoading(false);
     }
