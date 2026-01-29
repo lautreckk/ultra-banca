@@ -39,12 +39,9 @@ export function trackPixelEvent(
       } else {
         window.fbq('track', event);
       }
-      console.log(`[Pixel] Evento ${event} disparado`, params || '');
-    } catch (error) {
-      console.error('[Pixel] Erro ao disparar evento:', error);
+    } catch {
+      // Silently fail - pixel tracking is not critical
     }
-  } else {
-    console.log(`[Pixel] fbq não disponível, evento ${event} não disparado`);
   }
 }
 

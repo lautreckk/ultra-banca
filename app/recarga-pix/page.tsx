@@ -99,7 +99,6 @@ export default function RecargaPixPage() {
       // Dispara evento InitiateCheckout no Facebook Pixel
       const eventId = generateEventId('checkout', data.pagamento.id);
       trackInitiateCheckout(valorNum, eventId);
-      console.log('[Tracking] InitiateCheckout disparado:', { valor: valorNum, eventId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar pagamento');
     } finally {
@@ -137,8 +136,6 @@ export default function RecargaPixPage() {
         console.error('Error checking status:', error);
         return false;
       }
-
-      console.log('[Check Status] Response:', data);
 
       if (data.status === 'PAID') {
         setStatus('PAID');
