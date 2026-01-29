@@ -35,26 +35,22 @@ interface ResultadoFormatado {
 
 // Mapeamento de IDs de subloterias para filtros do banco
 function getLoteriaFilter(loteriaId: string): { banca: string; horario: string; loteria?: string } | null {
-  // Mapeamento baseado na estrutura de BANCAS
+  // Mapeamento baseado na estrutura de BANCAS e dados do banco
   const mappings: Record<string, { banca: string; horario: string; loteria?: string }> = {
-    // RIO/FEDERAL - PT RIO
-    'pt_rio_11': { banca: 'RIO/FEDERAL', horario: '11', loteria: 'PT' },
-    'pt_rio_14': { banca: 'RIO/FEDERAL', horario: '14', loteria: 'PT' },
-    'pt_rio_16': { banca: 'RIO/FEDERAL', horario: '16', loteria: 'PT' },
-    'pt_rio_18': { banca: 'RIO/FEDERAL', horario: '18', loteria: 'PT' },
-    'pt_rio_21': { banca: 'RIO/FEDERAL', horario: '21', loteria: 'PT' },
-    // RIO/FEDERAL - MALUCA
-    'maluca_rio_11': { banca: 'RIO/FEDERAL', horario: '11', loteria: 'MALUCA' },
-    'maluca_rio_14': { banca: 'RIO/FEDERAL', horario: '14', loteria: 'MALUCA' },
-    'maluca_rio_16': { banca: 'RIO/FEDERAL', horario: '16', loteria: 'MALUCA' },
-    'maluca_rio_18': { banca: 'RIO/FEDERAL', horario: '18', loteria: 'MALUCA' },
-    'maluca_rio_21': { banca: 'RIO/FEDERAL', horario: '21', loteria: 'MALUCA' },
+    // RIO/FEDERAL
+    'pt_09': { banca: 'RIO/FEDERAL', horario: '09', loteria: 'PT' },
+    'ptm_11': { banca: 'RIO/FEDERAL', horario: '11', loteria: 'PTM' },
+    'pt_14': { banca: 'RIO/FEDERAL', horario: '14', loteria: 'PT' },
+    'ptv_16': { banca: 'RIO/FEDERAL', horario: '16', loteria: 'PTV' },
+    'ptn_18': { banca: 'RIO/FEDERAL', horario: '18', loteria: 'PTN' },
+    'coruja_21': { banca: 'RIO/FEDERAL', horario: '21', loteria: 'CORUJA' },
     // NACIONAL
     'nacional_12': { banca: 'NACIONAL', horario: '12' },
     'nacional_15': { banca: 'NACIONAL', horario: '15' },
-    'nacional_19': { banca: 'NACIONAL', horario: '19' },
-    'nacional_21': { banca: 'NACIONAL', horario: '21', loteria: 'FEDERAL' },
+    'nacional_17': { banca: 'NACIONAL', horario: '17' },
+    'nacional_21': { banca: 'NACIONAL', horario: '21' },
     // LOOK/GOIAS
+    'look_09': { banca: 'LOOK/GOIAS', horario: '09' },
     'look_11': { banca: 'LOOK/GOIAS', horario: '11' },
     'look_14': { banca: 'LOOK/GOIAS', horario: '14' },
     'look_16': { banca: 'LOOK/GOIAS', horario: '16' },
@@ -64,43 +60,57 @@ function getLoteriaFilter(loteriaId: string): { banca: string; horario: string; 
     'bahia_10': { banca: 'BAHIA', horario: '10' },
     'bahia_12': { banca: 'BAHIA', horario: '12' },
     'bahia_15': { banca: 'BAHIA', horario: '15' },
-    'bahia_17': { banca: 'BAHIA', horario: '17' },
     'bahia_19': { banca: 'BAHIA', horario: '19' },
     'bahia_21': { banca: 'BAHIA', horario: '21' },
+    // BAHIA - MALUCA
+    'maluca_10': { banca: 'BAHIA', horario: '10', loteria: 'MALUCA' },
+    'maluca_12': { banca: 'BAHIA', horario: '12', loteria: 'MALUCA' },
+    'maluca_15': { banca: 'BAHIA', horario: '15', loteria: 'MALUCA' },
+    'maluca_19': { banca: 'BAHIA', horario: '19', loteria: 'MALUCA' },
+    'maluca_21': { banca: 'BAHIA', horario: '21', loteria: 'MALUCA' },
     // LOTEP
     'lotep_10': { banca: 'LOTEP', horario: '10' },
+    'lotep_11': { banca: 'LOTEP', horario: '11' },
+    'lotep_12': { banca: 'LOTEP', horario: '12' },
     'lotep_14': { banca: 'LOTEP', horario: '14' },
+    'lotep_15': { banca: 'LOTEP', horario: '15' },
     'lotep_18': { banca: 'LOTEP', horario: '18' },
+    'lotep_19': { banca: 'LOTEP', horario: '19' },
     'lotep_21': { banca: 'LOTEP', horario: '21' },
-    // BOA SORTE/GOIAS
-    'boasorte_11': { banca: 'BOASORTE/GOIAS', horario: '11' },
-    'boasorte_14': { banca: 'BOASORTE/GOIAS', horario: '14' },
-    'boasorte_16': { banca: 'BOASORTE/GOIAS', horario: '16' },
-    'boasorte_18': { banca: 'BOASORTE/GOIAS', horario: '18' },
-    'boasorte_21': { banca: 'BOASORTE/GOIAS', horario: '21' },
     // LOTECE
-    'lotece_10': { banca: 'LOTECE', horario: '10' },
-    'lotece_14': { banca: 'LOTECE', horario: '14' },
-    'lotece_18': { banca: 'LOTECE', horario: '18' },
-    'lotece_21': { banca: 'LOTECE', horario: '21' },
+    'lotece_11': { banca: 'LOTECE', horario: '11', loteria: 'LOTECE' },
+    'lotece_14': { banca: 'LOTECE', horario: '14', loteria: 'LOTECE' },
+    'lotece_15': { banca: 'LOTECE', horario: '15', loteria: 'LOTECE' },
+    'lotece_19': { banca: 'LOTECE', horario: '19', loteria: 'LOTECE' },
     // SAO PAULO
-    'sp_11': { banca: 'SAO-PAULO', horario: '11' },
-    'sp_14': { banca: 'SAO-PAULO', horario: '14' },
-    'sp_16': { banca: 'SAO-PAULO', horario: '16' },
-    'sp_18': { banca: 'SAO-PAULO', horario: '18' },
-    'sp_21': { banca: 'SAO-PAULO', horario: '21' },
-    // SORTE
-    'sorte_11': { banca: 'SORTE', horario: '11' },
-    'sorte_14': { banca: 'SORTE', horario: '14' },
-    'sorte_16': { banca: 'SORTE', horario: '16' },
-    'sorte_18': { banca: 'SORTE', horario: '18' },
-    'sorte_21': { banca: 'SORTE', horario: '21' },
+    'sp_10': { banca: 'SAO-PAULO', horario: '10' },
+    'sp_12': { banca: 'SAO-PAULO', horario: '12' },
+    'sp_13': { banca: 'SAO-PAULO', horario: '13' },
+    'sp_15': { banca: 'SAO-PAULO', horario: '15' },
+    'sp_17': { banca: 'SAO-PAULO', horario: '17' },
+    'sp_19': { banca: 'SAO-PAULO', horario: '19' },
+    'sp_ptn_20': { banca: 'SAO-PAULO', horario: '20', loteria: 'PTN' },
     // MINAS GERAIS
-    'mg_11': { banca: 'MINAS-GERAIS', horario: '11' },
-    'mg_14': { banca: 'MINAS-GERAIS', horario: '14' },
-    'mg_16': { banca: 'MINAS-GERAIS', horario: '16' },
-    'mg_18': { banca: 'MINAS-GERAIS', horario: '18' },
+    'mg_12': { banca: 'MINAS-GERAIS', horario: '12' },
+    'mg_15': { banca: 'MINAS-GERAIS', horario: '15' },
+    'mg_19': { banca: 'MINAS-GERAIS', horario: '19' },
     'mg_21': { banca: 'MINAS-GERAIS', horario: '21' },
+    // PARAIBA
+    'pb_09': { banca: 'PARAIBA', horario: '09' },
+    'pb_10': { banca: 'PARAIBA', horario: '10' },
+    'pb_12': { banca: 'PARAIBA', horario: '12' },
+    'pb_15': { banca: 'PARAIBA', horario: '15' },
+    'pb_18': { banca: 'PARAIBA', horario: '18' },
+    'pb_19': { banca: 'PARAIBA', horario: '19' },
+    // LBR/BRASILIA
+    'lbr_08': { banca: 'BRASILIA', horario: '08', loteria: 'LBR' },
+    'lbr_10': { banca: 'BRASILIA', horario: '10', loteria: 'LBR' },
+    'lbr_12': { banca: 'BRASILIA', horario: '12', loteria: 'LBR' },
+    'lbr_15': { banca: 'BRASILIA', horario: '15', loteria: 'LBR' },
+    'lbr_17': { banca: 'BRASILIA', horario: '17', loteria: 'LBR' },
+    'lbr_19': { banca: 'BRASILIA', horario: '19', loteria: 'LBR' },
+    'lbr_20': { banca: 'BRASILIA', horario: '20', loteria: 'LBR' },
+    'lbr_22': { banca: 'BRASILIA', horario: '22', loteria: 'LBR' },
   };
   return mappings[loteriaId] || null;
 }
