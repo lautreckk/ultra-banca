@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
+import { useAdPopup } from '@/hooks/use-ad-popup';
+import { AdPopup } from '@/components/shared/ad-popup';
+import { trackPurchase, generateEventId } from '@/lib/tracking/facebook';
 
 const quickAmounts = [10, 20, 50, 100, 200, 500];
 
@@ -30,6 +33,7 @@ export default function RecargaPixPage() {
 
   const supabase = createClient();
   const router = useRouter();
+  const { currentAd, isVisible, showAd, closeAd } = useAdPopup('deposito');
 
   const handleAmountChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -143,6 +147,20 @@ export default function RecargaPixPage() {
     return () => clearInterval(interval);
   }, [paymentData, status, supabase]);
 
+  // Track purchase and show ad popup when payment is confirmed
+  useEffect(() => {
+    if (status === 'PAID' && paymentData) {
+      // Dispara evento Purchase no Facebook Pixel
+      const eventId = generateEventId('dep', paymentData.id);
+      trackPurchase(paymentData.valor, eventId);
+
+      const timer = setTimeout(() => {
+        showAd();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, showAd, paymentData]);
+
   const handleCopyPix = async () => {
     if (!paymentData?.pixCopyPaste) return;
 
@@ -220,6 +238,11 @@ export default function RecargaPixPage() {
               </button>
             </div>
           </div>
+
+          {/* Ad Popup */}
+          {isVisible && currentAd && (
+            <AdPopup ad={currentAd} onClose={closeAd} />
+          )}
         </div>
       </PageLayout>
     );

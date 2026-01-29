@@ -7,6 +7,7 @@ import { maskCPF } from '@/lib/utils/mask-cpf';
 import { cpfToEmail, isValidCpf } from '@/lib/utils/cpf-to-email';
 import { createClient } from '@/lib/supabase/client';
 import { trackSignup } from '@/lib/actions/auth';
+import { trackCompleteRegistration } from '@/lib/tracking/facebook';
 
 interface RegisterFormProps {
   initialCodigoConvite?: string;
@@ -115,6 +116,9 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
 
       // Rastrear cadastro para auditoria (não bloqueia o fluxo)
       trackSignup().catch(() => {});
+
+      // Dispara evento de cadastro completo no Facebook Pixel
+      trackCompleteRegistration();
 
       // Força reload completo para o middleware verificar a sessão
       window.location.replace('/login?cadastro=sucesso');

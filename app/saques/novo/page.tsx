@@ -7,6 +7,8 @@ import { Check, ChevronDown, AlertCircle, Loader2, CheckCircle, Smartphone, Mail
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
 import { trackWithdrawalRequest } from '@/lib/actions/auth';
+import { useAdPopup } from '@/hooks/use-ad-popup';
+import { AdPopup } from '@/components/shared/ad-popup';
 
 const keyTypes = [
   { value: 'cpf', label: 'CPF', icon: CreditCard, placeholder: '000.000.000-00' },
@@ -36,6 +38,7 @@ export default function NovoSaquePage() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+  const { currentAd, isVisible, showAd, closeAd } = useAdPopup('saque');
 
   // Fetch user balance
   useEffect(() => {
@@ -164,6 +167,16 @@ export default function NovoSaquePage() {
     }
   };
 
+  // Show ad popup when withdrawal is successful
+  useEffect(() => {
+    if (step === 'success') {
+      const timer = setTimeout(() => {
+        showAd();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, showAd]);
+
   // Success screen
   if (step === 'success' && result) {
     return (
@@ -210,6 +223,11 @@ export default function NovoSaquePage() {
               </button>
             </div>
           </div>
+
+          {/* Ad Popup */}
+          {isVisible && currentAd && (
+            <AdPopup ad={currentAd} onClose={closeAd} />
+          )}
         </div>
       </PageLayout>
     );

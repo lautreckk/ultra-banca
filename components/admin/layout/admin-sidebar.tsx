@@ -25,6 +25,7 @@ import {
   CircleDot,
   Shield,
   Loader2,
+  Megaphone,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 
@@ -77,6 +78,11 @@ const navItems: NavItem[] = [
     label: 'Promoções',
     href: '/admin/promocoes',
     icon: <Gift className="h-5 w-5" />,
+  },
+  {
+    label: 'Propaganda',
+    href: '/admin/propaganda',
+    icon: <Megaphone className="h-5 w-5" />,
   },
   {
     label: 'Auditoria',

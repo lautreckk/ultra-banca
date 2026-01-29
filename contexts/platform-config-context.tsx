@@ -42,6 +42,7 @@ export interface PlatformConfig {
 
   // Tracking/Marketing
   facebook_pixel_id: string | null;
+  facebook_access_token: string | null;
   google_analytics_id: string | null;
   custom_head_scripts: string | null;
 
@@ -77,6 +78,7 @@ export const defaultConfig: PlatformConfig = {
   max_payout_per_bet: 50000,
   max_payout_daily: 100000,
   facebook_pixel_id: null,
+  facebook_access_token: null,
   google_analytics_id: null,
   custom_head_scripts: null,
   production_mode: false,

@@ -625,6 +625,21 @@ export default function AdminConfiguracoesPage() {
                   />
                 </div>
               </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Facebook Access Token (CAPI)
+                </label>
+                <Input
+                  type="password"
+                  value={config.facebook_access_token || ''}
+                  onChange={(e) => updateField('facebook_access_token', e.target.value || null)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="EAAxxxxxxx..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Token para Conversions API - obtenha no Meta Business Manager
+                </p>
+              </div>
             </div>
 
             {/* Redes Sociais */}

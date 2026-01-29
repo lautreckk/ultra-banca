@@ -9,7 +9,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
 
   const { data, error } = await supabase
     .from('platform_config')
-    .select('id, site_name, site_description, logo_url, favicon_url, color_primary, color_primary_dark, color_background, color_surface, color_accent_teal, color_accent_green, color_text_primary, social_whatsapp, social_instagram, social_telegram, active_gateway, deposit_min, deposit_max, withdrawal_min, withdrawal_max, withdrawal_fee_percent, withdrawal_mode, bet_min, bet_max, max_payout_per_bet, max_payout_daily, facebook_pixel_id, google_analytics_id, custom_head_scripts, production_mode')
+    .select('id, site_name, site_description, logo_url, favicon_url, color_primary, color_primary_dark, color_background, color_surface, color_accent_teal, color_accent_green, color_text_primary, social_whatsapp, social_instagram, social_telegram, active_gateway, deposit_min, deposit_max, withdrawal_min, withdrawal_max, withdrawal_fee_percent, withdrawal_mode, bet_min, bet_max, max_payout_per_bet, max_payout_daily, facebook_pixel_id, facebook_access_token, google_analytics_id, custom_head_scripts, production_mode')
     .limit(1)
     .single();
 
@@ -46,6 +46,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
     max_payout_per_bet: Number(data.max_payout_per_bet) || defaultConfig.max_payout_per_bet,
     max_payout_daily: Number(data.max_payout_daily) || defaultConfig.max_payout_daily,
     facebook_pixel_id: data.facebook_pixel_id,
+    facebook_access_token: data.facebook_access_token,
     google_analytics_id: data.google_analytics_id,
     custom_head_scripts: data.custom_head_scripts,
     production_mode: data.production_mode ?? defaultConfig.production_mode,

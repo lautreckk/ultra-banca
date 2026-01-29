@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Link2, Trophy, FileText, Droplets } from 'lucide-react';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { createClient } from '@/lib/supabase/client';
+import { useAdPopup } from '@/hooks/use-ad-popup';
+import { AdPopup } from '@/components/shared/ad-popup';
 
 interface UltimoGanhador {
   unidade: string;
@@ -18,6 +20,7 @@ export default function DashboardPage() {
   const [codigoConvite, setCodigoConvite] = useState('');
   const [ultimoGanhador, setUltimoGanhador] = useState<UltimoGanhador | null>(null);
   const config = usePlatformConfig();
+  const { currentAd, isVisible, showAd, closeAd } = useAdPopup('login');
 
   useEffect(() => {
     const supabase = createClient();
@@ -71,6 +74,14 @@ export default function DashboardPage() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Show ad popup after login (with delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showAd();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [showAd]);
 
   const siteOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const inviteUrl = codigoConvite ? `${siteOrigin}?p=${codigoConvite}` : '';
@@ -227,6 +238,11 @@ export default function DashboardPage() {
       <div className="py-4 text-center">
         <p className="text-sm text-gray-400">© 2026</p>
       </div>
+
+      {/* Ad Popup */}
+      {isVisible && currentAd && (
+        <AdPopup ad={currentAd} onClose={closeAd} />
+      )}
     </div>
   );
 }
