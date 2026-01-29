@@ -23,7 +23,7 @@ interface ChartDataItem extends GameAccessStat {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload }: any) => {
+function renderCustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
 
   const item = payload[0].payload as ChartDataItem;
@@ -44,7 +44,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       </div>
     </div>
   );
-};
+}
 
 export function GameAccessBarChart({ data }: GameAccessBarChartProps) {
   const chartData: ChartDataItem[] = data.slice(0, 8).map((item, index) => ({
@@ -83,7 +83,7 @@ export function GameAccessBarChart({ data }: GameAccessBarChartProps) {
               width={75}
               tick={{ fill: '#a1a1aa' }}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(113, 113, 122, 0.1)' }} />
+            <Tooltip content={renderCustomTooltip} cursor={{ fill: 'rgba(113, 113, 122, 0.1)' }} />
             <Bar dataKey="accessCount" radius={[0, 4, 4, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />

@@ -18,7 +18,7 @@ const formatDate = (dateStr: string) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload, label }: any) => {
+function renderCustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
 
   const date = new Date(label || '');
@@ -45,7 +45,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       </div>
     </div>
   );
-};
+}
 
 export function VisitorLineChart({ data }: VisitorLineChartProps) {
   if (data.length === 0) {
@@ -107,7 +107,7 @@ export function VisitorLineChart({ data }: VisitorLineChartProps) {
               axisLine={false}
               domain={[0, Math.max(maxVisitors, maxPageViews) * 1.1]}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={renderCustomTooltip} />
             <Area
               type="monotone"
               dataKey="visitors"
