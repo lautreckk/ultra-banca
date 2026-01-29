@@ -84,7 +84,7 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
 
       // Criar usuario no Supabase Auth com metadata
       // O trigger no banco criara o perfil automaticamente
-      const { error: authError } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
         password: formData.senha,
         options: {
@@ -101,25 +101,25 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
         if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
           setError('CPF ja cadastrado');
         } else {
-          console.error('Signup error:', authError);
           setError('Erro ao criar conta. Tente novamente.');
         }
+        setLoading(false);
+        return;
+      }
+
+      if (!data.user) {
+        setError('Erro ao criar conta. Tente novamente.');
+        setLoading(false);
         return;
       }
 
       // Rastrear cadastro para auditoria (não bloqueia o fluxo)
-      trackSignup().catch(() => {
-        // Silently ignore tracking errors - signup already succeeded
-      });
+      trackSignup().catch(() => {});
 
-      // Redirecionar para login com mensagem de sucesso
-      // Isso evita problemas com SSL/cookies em produção
-      router.push('/login?cadastro=sucesso');
-      router.refresh();
-    } catch (err) {
-      console.error('Signup error:', err);
+      // Força reload completo para o middleware verificar a sessão
+      window.location.replace('/login?cadastro=sucesso');
+    } catch {
       setError('Erro ao criar conta. Tente novamente.');
-    } finally {
       setLoading(false);
     }
   };
