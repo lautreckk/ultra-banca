@@ -12,41 +12,43 @@ interface VisitorLineChartProps {
   data: TrendData[];
 }
 
-export function VisitorLineChart({ data }: VisitorLineChartProps) {
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  };
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+};
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; dataKey: string }>; label?: string }) => {
-    if (!active || !payload?.length) return null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function renderTooltip(props: any) {
+  const { active, payload, label } = props;
+  if (!active || !payload?.length) return null;
 
-    const date = new Date(label || '');
-    const formattedDate = date.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: '2-digit',
-      month: 'long',
-    });
+  const date = new Date(label || '');
+  const formattedDate = date.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+  });
 
-    return (
-      <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-xl">
-        <p className="text-sm text-gray-400 mb-2 capitalize">{formattedDate}</p>
-        <div className="space-y-1">
-          {payload.map((entry) => (
-            <p key={entry.dataKey} className="text-sm">
-              <span className="text-gray-300">
-                {entry.dataKey === 'visitors' ? 'Visitantes' : 'Page Views'}:
-              </span>{' '}
-              <span className="text-white font-semibold">
-                {entry.value.toLocaleString('pt-BR')}
-              </span>
-            </p>
-          ))}
-        </div>
+  return (
+    <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-xl">
+      <p className="text-sm text-gray-400 mb-2 capitalize">{formattedDate}</p>
+      <div className="space-y-1">
+        {payload.map((entry: { dataKey: string; value: number }) => (
+          <p key={entry.dataKey} className="text-sm">
+            <span className="text-gray-300">
+              {entry.dataKey === 'visitors' ? 'Visitantes' : 'Page Views'}:
+            </span>{' '}
+            <span className="text-white font-semibold">
+              {entry.value.toLocaleString('pt-BR')}
+            </span>
+          </p>
+        ))}
       </div>
-    );
-  };
+    </div>
+  );
+}
 
+export function VisitorLineChart({ data }: VisitorLineChartProps) {
   if (data.length === 0) {
     return (
       <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700/50">
@@ -106,7 +108,7 @@ export function VisitorLineChart({ data }: VisitorLineChartProps) {
               axisLine={false}
               domain={[0, Math.max(maxVisitors, maxPageViews) * 1.1]}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={renderTooltip} />
             <Area
               type="monotone"
               dataKey="visitors"
