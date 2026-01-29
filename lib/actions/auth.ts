@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { logAudit, trackUserLogin, trackUserSignup } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
+import { dispatchLeadWebhook } from '@/lib/webhooks/dispatcher';
 
 /**
  * Rastreia o login de um usuário (chamado após sucesso no cliente)
@@ -61,6 +62,11 @@ export async function trackSignup(): Promise<{ success: boolean }> {
         email: user.email,
         timestamp: new Date().toISOString(),
       },
+    });
+
+    // Disparar webhook de lead (nao-bloqueante)
+    dispatchLeadWebhook(user.id).catch((err) => {
+      console.error('Error dispatching lead webhook:', err);
     });
 
     return { success: true };

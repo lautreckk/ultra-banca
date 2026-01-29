@@ -28,6 +28,12 @@ import {
   Megaphone,
   Calendar,
   CheckCircle,
+  MessageSquare,
+  Smartphone,
+  Zap,
+  Send,
+  Webhook,
+  ExternalLink,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 
@@ -89,6 +95,24 @@ const navItems: NavItem[] = [
     icon: <Megaphone className="h-5 w-5" />,
   },
   {
+    label: 'WhatsApp',
+    icon: <MessageSquare className="h-5 w-5" />,
+    children: [
+      { label: 'Dashboard', href: '/admin/whatsapp', icon: <LayoutDashboard className="h-4 w-4" /> },
+      { label: 'Configuração', href: '/admin/whatsapp/configuracao', icon: <Settings className="h-4 w-4" /> },
+      { label: 'Instâncias', href: '/admin/whatsapp/instancias', icon: <Smartphone className="h-4 w-4" /> },
+      { label: 'Gatilhos', href: '/admin/whatsapp/gatilhos', icon: <Zap className="h-4 w-4" /> },
+      { label: 'Enviar', href: '/admin/whatsapp/enviar', icon: <Send className="h-4 w-4" /> },
+    ],
+  },
+  {
+    label: 'Integracoes',
+    icon: <Webhook className="h-5 w-5" />,
+    children: [
+      { label: 'Webhooks', href: '/admin/webhooks', icon: <ExternalLink className="h-4 w-4" /> },
+    ],
+  },
+  {
     label: 'Auditoria',
     href: '/admin/auditoria',
     icon: <Shield className="h-5 w-5" />,
@@ -107,7 +131,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Financeiro', 'Apostas', 'Pagamentos']);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['Financeiro', 'Apostas', 'Pagamentos', 'WhatsApp', 'Integracoes']);
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = () => {
