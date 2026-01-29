@@ -44,6 +44,9 @@ export interface PlatformConfig {
   facebook_pixel_id: string | null;
   google_analytics_id: string | null;
   custom_head_scripts: string | null;
+
+  // Segurança
+  production_mode: boolean;
 }
 
 export const defaultConfig: PlatformConfig = {
@@ -76,6 +79,7 @@ export const defaultConfig: PlatformConfig = {
   facebook_pixel_id: null,
   google_analytics_id: null,
   custom_head_scripts: null,
+  production_mode: false,
 };
 
 const ConfigContext = createContext<PlatformConfig>(defaultConfig);

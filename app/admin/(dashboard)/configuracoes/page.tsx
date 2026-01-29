@@ -709,6 +709,30 @@ export default function AdminConfiguracoesPage() {
               </div>
             </div>
 
+            {/* Modo Produção */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Banca em Produção?</h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {config.production_mode
+                      ? 'Proteções de segurança ativadas. Alterações de saldo só são permitidas via funções oficiais (Edge Functions).'
+                      : 'Modo desenvolvimento. Permite alterações de saldo via cliente para testes.'}
+                  </p>
+                </div>
+                <ToggleSwitch
+                  checked={config.production_mode}
+                  onChange={(checked) => updateField('production_mode', checked)}
+                  size="lg"
+                />
+              </div>
+              {!config.production_mode && (
+                <div className="mt-3 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded text-yellow-400 text-xs">
+                  ⚠️ Atenção: Com o modo produção desligado, usuários podem manipular saldo. Ative antes de ir ao ar!
+                </div>
+              )}
+            </div>
+
             {/* MFA Setup Component */}
             <MFASetup />
 
