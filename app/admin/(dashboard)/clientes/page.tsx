@@ -11,7 +11,7 @@ interface EditModalProps {
   user: UserProfile | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userId: string, data: UpdateUserProfileData) => Promise<void>;
+  onSave: (userId: string, data: UpdateUserProfileData) => Promise<{ success: boolean; error?: string }>;
 }
 
 function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
@@ -90,8 +90,15 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
         data.newPassword = newPassword;
       }
 
-      await onSave(user.id, data);
-      onClose();
+      const result = await onSave(user.id, data);
+      if (result.success) {
+        onClose();
+      } else {
+        setError(result.error || 'Erro ao salvar alterações');
+      }
+    } catch (err) {
+      setError('Erro inesperado ao salvar');
+      console.error(err);
     } finally {
       setIsSaving(false);
     }
@@ -368,13 +375,12 @@ export default function AdminClientesPage() {
     window.location.href = `/admin/clientes/${user.id}`;
   };
 
-  const handleSaveUser = async (userId: string, data: UpdateUserProfileData) => {
+  const handleSaveUser = async (userId: string, data: UpdateUserProfileData): Promise<{ success: boolean; error?: string }> => {
     const result = await updateUserProfile(userId, data);
     if (result.success) {
       fetchUsers();
-    } else if (result.error) {
-      alert(result.error);
     }
+    return result;
   };
 
   const totalPages = Math.ceil(total / pageSize);
