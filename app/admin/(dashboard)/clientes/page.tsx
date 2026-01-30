@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { getUsers, getUserById, updateUserProfile, type UserProfile, type UpdateUserProfileData } from '@/lib/admin/actions/users';
-import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard } from 'lucide-react';
+import { getUsers, getUserById, updateUserProfile, type UserProfile, type UpdateUserProfileData, type UsersListParams } from '@/lib/admin/actions/users';
+import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -336,12 +336,27 @@ export default function AdminClientesPage() {
   const [searchInput, setSearchInput] = useState('');
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const pageSize = 10;
+
+  // Filtros avançados
+  const [ultimoLoginFiltro, setUltimoLoginFiltro] = useState<UsersListParams['ultimoLoginFiltro']>('todos');
+  const [ultimaApostaFiltro, setUltimaApostaFiltro] = useState<UsersListParams['ultimaApostaFiltro']>('todos');
+  const [statusFiltro, setStatusFiltro] = useState<UsersListParams['statusFiltro']>('todos');
+
+  const hasActiveFilters = ultimoLoginFiltro !== 'todos' || ultimaApostaFiltro !== 'todos' || statusFiltro !== 'todos';
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await getUsers({ page, pageSize, search });
+      const result = await getUsers({
+        page,
+        pageSize,
+        search,
+        ultimoLoginFiltro,
+        ultimaApostaFiltro,
+        statusFiltro,
+      });
       setUsers(result.users);
       setTotal(result.total);
     } catch (error) {
@@ -349,7 +364,7 @@ export default function AdminClientesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, ultimoLoginFiltro, ultimaApostaFiltro, statusFiltro]);
 
   useEffect(() => {
     fetchUsers();
@@ -362,6 +377,13 @@ export default function AdminClientesPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  const clearFilters = () => {
+    setUltimoLoginFiltro('todos');
+    setUltimaApostaFiltro('todos');
+    setStatusFiltro('todos');
+    setPage(1);
+  };
 
   const handleEdit = async (user: UserProfile) => {
     const fullUser = await getUserById(user.id);
@@ -394,16 +416,105 @@ export default function AdminClientesPage() {
         <p className="text-sm md:text-base text-zinc-400">Gerenciamento de usuários da plataforma</p>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Buscar por nome ou CPF..."
-          className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 border border-zinc-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent"
-        />
+      {/* Search and Filters */}
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Buscar por nome ou CPF..."
+              className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors ${
+              hasActiveFilters
+                ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
+                : 'bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
+            }`}
+          >
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filtros</span>
+            {hasActiveFilters && (
+              <span className="w-2 h-2 rounded-full bg-indigo-400" />
+            )}
+            <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+
+        {/* Filtros avançados */}
+        {showFilters && (
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs text-zinc-500 mb-1.5 block">Último Login</label>
+                <select
+                  value={ultimoLoginFiltro}
+                  onChange={(e) => {
+                    setUltimoLoginFiltro(e.target.value as UsersListParams['ultimoLoginFiltro']);
+                    setPage(1);
+                  }}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="hoje">Hoje</option>
+                  <option value="7dias">Últimos 7 dias</option>
+                  <option value="30dias">Últimos 30 dias</option>
+                  <option value="60mais">60+ dias / Nunca</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-500 mb-1.5 block">Última Aposta</label>
+                <select
+                  value={ultimaApostaFiltro}
+                  onChange={(e) => {
+                    setUltimaApostaFiltro(e.target.value as UsersListParams['ultimaApostaFiltro']);
+                    setPage(1);
+                  }}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="nunca">Nunca apostou</option>
+                  <option value="7dias">Últimos 7 dias</option>
+                  <option value="30dias">Últimos 30 dias</option>
+                  <option value="60mais">60+ dias sem apostar</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-zinc-500 mb-1.5 block">Status</label>
+                <select
+                  value={statusFiltro}
+                  onChange={(e) => {
+                    setStatusFiltro(e.target.value as UsersListParams['statusFiltro']);
+                    setPage(1);
+                  }}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="ativos">Ativos (apostou em 7 dias)</option>
+                  <option value="inativos">Inativos</option>
+                </select>
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <div className="flex justify-end">
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-zinc-400 hover:text-white transition-colors"
+                >
+                  Limpar filtros
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Loading */}

@@ -21,6 +21,10 @@ export interface UsersListParams {
   search?: string;
   orderBy?: string;
   orderDir?: 'asc' | 'desc';
+  // Filtros avançados
+  ultimoLoginFiltro?: 'todos' | 'hoje' | '7dias' | '30dias' | '60mais';
+  ultimaApostaFiltro?: 'todos' | 'nunca' | '7dias' | '30dias' | '60mais';
+  statusFiltro?: 'todos' | 'ativos' | 'inativos';
 }
 
 export interface UsersListResult {
@@ -47,33 +51,145 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
     search = '',
     orderBy = 'created_at',
     orderDir = 'desc',
+    ultimoLoginFiltro = 'todos',
+    ultimaApostaFiltro = 'todos',
+    statusFiltro = 'todos',
   } = params;
 
   const offset = (page - 1) * pageSize;
+  const now = new Date();
+
+  // Calcular datas de referência
+  const hoje = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const seteDiasAtras = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const trintaDiasAtras = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const sessentaDiasAtras = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
   // ============================================================================
   // QUERY 1: Buscar usuários com paginação
   // ============================================================================
   let query = supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at', { count: 'exact' });
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login', { count: 'exact' });
 
   if (search) {
     query = query.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`);
   }
 
-  const { data: users, count, error } = await query
-    .order(orderBy, { ascending: orderDir === 'asc' })
-    .range(offset, offset + pageSize - 1);
+  // Filtro por último login
+  if (ultimoLoginFiltro === 'hoje') {
+    query = query.gte('last_login', hoje);
+  } else if (ultimoLoginFiltro === '7dias') {
+    query = query.gte('last_login', seteDiasAtras);
+  } else if (ultimoLoginFiltro === '30dias') {
+    query = query.gte('last_login', trintaDiasAtras);
+  } else if (ultimoLoginFiltro === '60mais') {
+    query = query.or(`last_login.lt.${sessentaDiasAtras},last_login.is.null`);
+  }
 
-  if (error || !users || users.length === 0) {
-    return { users: [], total: count || 0, page, pageSize };
+  // Buscar todos os usuários primeiro (para filtros que precisam de dados de apostas)
+  const needsApostaFilter = ultimaApostaFiltro !== 'todos' || statusFiltro !== 'todos';
+
+  let allUsersQuery = supabase
+    .from('profiles')
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login');
+
+  if (search) {
+    allUsersQuery = allUsersQuery.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`);
+  }
+
+  // Aplicar filtro de login
+  if (ultimoLoginFiltro === 'hoje') {
+    allUsersQuery = allUsersQuery.gte('last_login', hoje);
+  } else if (ultimoLoginFiltro === '7dias') {
+    allUsersQuery = allUsersQuery.gte('last_login', seteDiasAtras);
+  } else if (ultimoLoginFiltro === '30dias') {
+    allUsersQuery = allUsersQuery.gte('last_login', trintaDiasAtras);
+  } else if (ultimoLoginFiltro === '60mais') {
+    allUsersQuery = allUsersQuery.or(`last_login.lt.${sessentaDiasAtras},last_login.is.null`);
+  }
+
+  const { data: allUsers } = await allUsersQuery;
+
+  if (!allUsers || allUsers.length === 0) {
+    return { users: [], total: 0, page, pageSize };
+  }
+
+  const allUserIds = allUsers.map((u) => u.id);
+
+  // Buscar última aposta de cada usuário se necessário para filtros
+  let ultimaApostaMap = new Map<string, string | null>();
+
+  if (needsApostaFilter) {
+    const { data: apostasData } = await supabase
+      .from('apostas')
+      .select('user_id, created_at')
+      .in('user_id', allUserIds)
+      .order('created_at', { ascending: false });
+
+    apostasData?.forEach((a) => {
+      if (!ultimaApostaMap.has(a.user_id)) {
+        ultimaApostaMap.set(a.user_id, a.created_at);
+      }
+    });
+  }
+
+  // Filtrar usuários com base em última aposta e status
+  let filteredUsers = allUsers;
+
+  if (ultimaApostaFiltro !== 'todos') {
+    filteredUsers = filteredUsers.filter((user) => {
+      const ultimaAposta = ultimaApostaMap.get(user.id);
+
+      if (ultimaApostaFiltro === 'nunca') {
+        return !ultimaAposta;
+      } else if (ultimaApostaFiltro === '7dias') {
+        return ultimaAposta && ultimaAposta >= seteDiasAtras;
+      } else if (ultimaApostaFiltro === '30dias') {
+        return ultimaAposta && ultimaAposta >= trintaDiasAtras;
+      } else if (ultimaApostaFiltro === '60mais') {
+        return !ultimaAposta || ultimaAposta < sessentaDiasAtras;
+      }
+      return true;
+    });
+  }
+
+  if (statusFiltro !== 'todos') {
+    filteredUsers = filteredUsers.filter((user) => {
+      const ultimaAposta = ultimaApostaMap.get(user.id);
+      const isAtivo = ultimaAposta && ultimaAposta >= seteDiasAtras;
+
+      if (statusFiltro === 'ativos') {
+        return isAtivo;
+      } else if (statusFiltro === 'inativos') {
+        return !isAtivo;
+      }
+      return true;
+    });
+  }
+
+  // Ordenar
+  filteredUsers.sort((a, b) => {
+    const aValue = a[orderBy as keyof typeof a] ?? '';
+    const bValue = b[orderBy as keyof typeof b] ?? '';
+    if (orderDir === 'asc') {
+      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+    } else {
+      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+    }
+  });
+
+  const total = filteredUsers.length;
+  const paginatedUsers = filteredUsers.slice(offset, offset + pageSize);
+
+  if (paginatedUsers.length === 0) {
+    return { users: [], total, page, pageSize };
   }
 
   // ============================================================================
   // QUERIES 2 e 3: Buscar stats em BATCH (todos os usuários de uma vez)
   // ============================================================================
-  const userIds = users.map((u) => u.id);
+  const userIds = paginatedUsers.map((u) => u.id);
 
   const [apostasResult, ganhosResult] = await Promise.all([
     // Query 2: Todas as apostas dos usuários da página (para contar)
@@ -110,7 +226,7 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
   // ============================================================================
   // MONTAR RESULTADO FINAL
   // ============================================================================
-  const usersWithStats: UserProfile[] = users.map((user) => ({
+  const usersWithStats: UserProfile[] = paginatedUsers.map((user) => ({
     id: user.id,
     nome: user.nome,
     cpf: user.cpf,
@@ -125,7 +241,7 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
 
   return {
     users: usersWithStats,
-    total: count || 0,
+    total,
     page,
     pageSize,
   };

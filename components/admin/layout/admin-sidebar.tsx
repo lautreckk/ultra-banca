@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Users,
+  UserX,
   Wallet,
   Gift,
   Settings,
@@ -55,6 +56,11 @@ const navItems: NavItem[] = [
     label: 'Clientes',
     href: '/admin/clientes',
     icon: <Users className="h-5 w-5" />,
+  },
+  {
+    label: 'Leads Inativos',
+    href: '/admin/leads-inativos',
+    icon: <UserX className="h-5 w-5" />,
   },
   {
     label: 'Financeiro',
