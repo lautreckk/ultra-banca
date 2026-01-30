@@ -21,6 +21,9 @@ image = modal.Image.debian_slim(python_version="3.11").pip_install(
 # Secrets do Supabase (configurar no Modal dashboard)
 supabase_secret = modal.Secret.from_name("supabase-ultra-banca")
 
+# Secret do ScraperAPI para contornar bloqueios
+scraperapi_secret = modal.Secret.from_name("scraperapi-key")
+
 # =============================================================================
 # CONFIGURACAO DAS BANCAS E HORARIOS
 # =============================================================================
@@ -65,7 +68,7 @@ BASE_URL = "https://www.resultadofacil.com.br"
 # FUNCOES MODAL
 # =============================================================================
 
-@app.function(image=image, secrets=[supabase_secret], timeout=600)
+@app.function(image=image, secrets=[supabase_secret, scraperapi_secret], timeout=600)
 def scrape_todos_estados(data: Optional[str] = None) -> dict:
     """
     Scrape todos os estados para uma data especifica
@@ -84,60 +87,79 @@ def scrape_todos_estados(data: Optional[str] = None) -> dict:
     supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     supabase = create_client(supabase_url, supabase_key)
 
-    def fetch_html(url: str, retries: int = 5) -> Optional[str]:
-        # Lista de User-Agents reais para rotação
+    def fetch_html(url: str, retries: int = 3) -> Optional[str]:
+        """Busca HTML usando ScraperAPI para contornar bloqueios"""
+        try:
+            api_key = os.environ.get("SCRAPERAPI_KEY")
+            if not api_key:
+                print("SCRAPERAPI_KEY nao encontrada, tentando requisicao direta...")
+                # Fallback para requisição direta
+                return fetch_html_direct(url, retries)
+
+            scraperapi_url = "http://api.scraperapi.com/"
+            params = {
+                "api_key": api_key,
+                "url": url,
+                "render": "false",
+                "country_code": "br"
+            }
+
+            print(f"Requisicao via ScraperAPI: {url}")
+
+            for attempt in range(retries):
+                try:
+                    with httpx.Client(timeout=60.0) as client:
+                        response = client.get(scraperapi_url, params=params)
+
+                        if response.status_code == 200:
+                            print(f"Sucesso! Tamanho: {len(response.text)} bytes")
+                            return response.text
+                        elif response.status_code == 401:
+                            print(f"API key invalida")
+                            return None
+                        elif response.status_code == 429:
+                            print(f"Rate limit, aguardando...")
+                            time.sleep(10 * (attempt + 1))
+                            continue
+                        else:
+                            print(f"Status {response.status_code}, tentativa {attempt + 1}/{retries}")
+                            if attempt < retries - 1:
+                                time.sleep(5)
+                except Exception as e:
+                    print(f"Erro na tentativa {attempt + 1}: {e}")
+                    if attempt < retries - 1:
+                        time.sleep(5)
+
+            print(f"Todas as tentativas falharam: {url}")
+            return None
+        except Exception as e:
+            print(f"Erro critico: {e}")
+            return None
+
+    def fetch_html_direct(url: str, retries: int = 3) -> Optional[str]:
+        """Fallback: requisição direta sem ScraperAPI"""
         user_agents = [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         ]
 
         for attempt in range(retries):
             headers = {
                 "User-Agent": random.choice(user_agents),
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Connection": "keep-alive",
-                "Upgrade-Insecure-Requests": "1",
-                "Sec-Fetch-Dest": "document",
-                "Sec-Fetch-Mode": "navigate",
-                "Sec-Fetch-Site": "none",
-                "Sec-Fetch-User": "?1",
-                "Cache-Control": "max-age=0",
-                "DNT": "1",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
             }
-
-            # Delay aleatório antes de cada requisição (1-3 segundos)
-            time.sleep(random.uniform(1.0, 3.0))
+            time.sleep(random.uniform(2.0, 4.0))
 
             try:
                 with httpx.Client(timeout=30.0, follow_redirects=True) as client:
                     response = client.get(url, headers=headers)
-
-                    if response.status_code == 403:
-                        print(f"Tentativa {attempt + 1} falhou: Client error '403 Forbidden' for url '{url}'")
-                        print(f"For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403")
-                        # Delay maior para 403 (bloqueio anti-bot)
-                        time.sleep(random.uniform(5.0, 10.0) * (attempt + 1))
-                        continue
-
-                    if response.status_code == 429:
-                        print(f"Tentativa {attempt + 1}: Rate limited (429)")
-                        time.sleep(10 * (attempt + 1))
-                        continue
-
-                    response.raise_for_status()
-                    return response.text
-
+                    if response.status_code == 200:
+                        return response.text
+                    print(f"Status {response.status_code}, tentativa {attempt + 1}")
             except Exception as e:
-                print(f"Tentativa {attempt + 1} falhou: {e}")
-                if attempt < retries - 1:
-                    time.sleep(random.uniform(3.0, 6.0) * (attempt + 1))
+                print(f"Erro tentativa {attempt + 1}: {e}")
 
-        print(f"Todas as {retries} tentativas falharam para: {url}")
         return None
 
     def parse_horario(text: str) -> Optional[str]:
@@ -274,7 +296,7 @@ def scrape_todos_estados(data: Optional[str] = None) -> dict:
     }
 
 
-@app.function(image=image, secrets=[supabase_secret], timeout=300)
+@app.function(image=image, secrets=[supabase_secret, scraperapi_secret], timeout=300)
 def verificar_premios(data: Optional[str] = None) -> dict:
     """
     Verifica apostas pendentes contra resultados e calcula prêmios.
@@ -294,10 +316,13 @@ def verificar_premios(data: Optional[str] = None) -> dict:
 
     # Mapeamento de ID de loteria para banca (para matching com resultados)
     LOTERIA_TO_BANCA = {
-        # RIO DE JANEIRO
-        "rj_pt_09": ("RIO/FEDERAL", "09:20"), "rj_ptm_11": ("RIO/FEDERAL", "11:00"),
-        "rj_pt_14": ("RIO/FEDERAL", "14:20"), "rj_ptv_16": ("RIO/FEDERAL", "16:00"),
-        "rj_ptn_18": ("RIO/FEDERAL", "18:20"), "rj_coruja_21": ("RIO/FEDERAL", "21:20"),
+        # RIO DE JANEIRO (com aliases)
+        "rj_pt_09": ("RIO/FEDERAL", "09:20"), "pt_09": ("RIO/FEDERAL", "09:20"),
+        "rj_ptm_11": ("RIO/FEDERAL", "11:00"), "ptm_11": ("RIO/FEDERAL", "11:00"),
+        "rj_pt_14": ("RIO/FEDERAL", "14:20"), "pt_14": ("RIO/FEDERAL", "14:20"),
+        "rj_ptv_16": ("RIO/FEDERAL", "16:00"), "ptv_16": ("RIO/FEDERAL", "16:00"),
+        "rj_ptn_18": ("RIO/FEDERAL", "18:20"), "ptn_18": ("RIO/FEDERAL", "18:20"),
+        "rj_coruja_21": ("RIO/FEDERAL", "21:20"), "coruja_21": ("RIO/FEDERAL", "21:20"),
         # BAHIA
         "ba_10": ("BAHIA", "10:00"), "ba_12": ("BAHIA", "12:00"), "ba_15": ("BAHIA", "15:00"),
         "ba_19": ("BAHIA", "19:00"), "ba_20": ("BAHIA", "20:00"), "ba_21": ("BAHIA", "21:00"),
@@ -709,7 +734,7 @@ def verificar_premios(data: Optional[str] = None) -> dict:
     return resultado_final
 
 
-@app.function(image=image, secrets=[supabase_secret], timeout=900)
+@app.function(image=image, secrets=[supabase_secret, scraperapi_secret], timeout=900)
 def scrape_historico(dias: int = 7) -> dict:
     """Scrape ultimos N dias (para popular o sistema)"""
     resultados_por_dia = {}
@@ -745,9 +770,9 @@ def scrape_historico(dias: int = 7) -> dict:
 
 @app.function(
     image=image,
-    secrets=[supabase_secret],
+    secrets=[supabase_secret, scraperapi_secret],
     timeout=600,
-    schedule=modal.Cron("*/30 10-23 * * *")  # 7h-20h Brasília (10h-23h UTC)
+    # schedule removido - usando modal_scraper_v2.py agora
 )
 def scrape_scheduled():
     """Scraping agendado - roda a cada 30 minutos (7h-20h Brasília)"""
@@ -769,9 +794,9 @@ def scrape_scheduled():
 
 @app.function(
     image=image,
-    secrets=[supabase_secret],
+    secrets=[supabase_secret, scraperapi_secret],
     timeout=600,
-    schedule=modal.Cron("*/30 0-2 * * *")  # 21h-23h Brasília (0h-2h UTC)
+    # schedule removido - usando modal_scraper_v2.py agora
 )
 def scrape_noturno():
     """Scrape noturno - 21h-23h Brasília"""
@@ -793,9 +818,9 @@ def scrape_noturno():
 
 @app.function(
     image=image,
-    secrets=[supabase_secret],
+    secrets=[supabase_secret, scraperapi_secret],
     timeout=300,
-    schedule=modal.Cron("0 4 * * *")  # 1h Brasília (4h UTC)
+    # schedule removido - usando modal_scraper_v2.py agora
 )
 def scrape_madrugada():
     """Scrape madrugada - 1h Brasília para pegar LBR 00:40"""
