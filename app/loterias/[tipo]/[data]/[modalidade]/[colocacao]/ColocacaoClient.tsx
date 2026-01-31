@@ -170,7 +170,7 @@ export function ColocacaoClient({
   // Render palpite input step
   if (step === 'palpite') {
     return (
-      <div className="min-h-screen bg-zinc-50">
+      <div className="flex-1 bg-zinc-50">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <div className="bg-zinc-50 min-h-screen">
@@ -260,7 +260,7 @@ export function ColocacaoClient({
   // Render value selection step
   if (step === 'valor') {
     return (
-      <div className="min-h-screen bg-zinc-50">
+      <div className="flex-1 bg-zinc-50">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <ValueSelector
@@ -277,7 +277,7 @@ export function ColocacaoClient({
   // Render bet summary step
   if (step === 'resumo') {
     return (
-      <div className="min-h-screen bg-zinc-50">
+      <div className="flex-1 bg-zinc-50">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <BetSummary

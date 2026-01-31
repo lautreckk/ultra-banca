@@ -26,9 +26,15 @@ export default function LoteriasLayout({
     router.back();
   };
 
-  // If in bet flow, render children only (page handles its own header)
+  // If in bet flow, render with centering but without shared header (page handles its own)
   if (isInBetFlow) {
-    return <>{children}</>;
+    return (
+      <div className="min-h-screen bg-gray-300 flex justify-center">
+        <div className="w-full max-w-md bg-zinc-50 min-h-screen shadow-xl flex flex-col">
+          {children}
+        </div>
+      </div>
+    );
   }
 
   return (
