@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { executeTrigger } from './evolution';
 import { dispatchDepositWebhook } from '@/lib/webhooks/dispatcher';
+import { applyDepositBonus } from './bonus-config';
 
 // =============================================
 // DEPOSITS
@@ -141,11 +142,29 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
     return { success: false, error: 'Erro ao atualizar saldo do usuário' };
   }
 
+  // Aplicar bônus de depósito (se houver faixa configurada)
+  let bonusApplied = 0;
+  try {
+    const bonusResult = await applyDepositBonus(
+      deposit.user_id,
+      depositId,
+      Number(deposit.valor)
+    );
+
+    if (bonusResult.success && bonusResult.bonusApplied > 0) {
+      bonusApplied = bonusResult.bonusApplied;
+      console.log(`Bônus de R$ ${bonusApplied} aplicado para depósito ${depositId}`);
+    }
+  } catch (error) {
+    console.error('Erro ao aplicar bônus de depósito:', error);
+    // Não falha a operação se o bônus falhar
+  }
+
   // Disparar gatilho de depósito (WhatsApp)
   try {
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('nome, telefone')
+      .select('nome, telefone, saldo_bonus')
       .eq('id', deposit.user_id)
       .single();
 
@@ -154,7 +173,9 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
         nome: userProfile.nome || 'Cliente',
         telefone: userProfile.telefone,
         valor: Number(deposit.valor),
-        saldo: newBalance
+        saldo: newBalance,
+        bonus: bonusApplied,
+        saldo_bonus: Number(userProfile.saldo_bonus) || 0
       });
     }
   } catch (error) {

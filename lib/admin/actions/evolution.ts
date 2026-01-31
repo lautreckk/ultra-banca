@@ -768,6 +768,8 @@ interface UserData {
   saldo?: number;
   premio?: number;
   modalidade?: string;
+  bonus?: number;
+  saldo_bonus?: number;
 }
 
 function replaceTemplateVariables(text: string, userData: UserData): string {
@@ -787,7 +789,9 @@ function replaceTemplateVariables(text: string, userData: UserData): string {
     .replace(/\{\{data\}\}/g, dataFormatada)
     .replace(/\{\{saldo\}\}/g, userData.saldo ? `R$ ${userData.saldo.toFixed(2).replace('.', ',')}` : '')
     .replace(/\{\{premio\}\}/g, userData.premio ? `R$ ${userData.premio.toFixed(2).replace('.', ',')}` : '')
-    .replace(/\{\{modalidade\}\}/g, userData.modalidade || '');
+    .replace(/\{\{modalidade\}\}/g, userData.modalidade || '')
+    .replace(/\{\{bonus\}\}/g, userData.bonus ? `R$ ${userData.bonus.toFixed(2).replace('.', ',')}` : '')
+    .replace(/\{\{saldo_bonus\}\}/g, userData.saldo_bonus ? `R$ ${userData.saldo_bonus.toFixed(2).replace('.', ',')}` : '');
 }
 
 export async function executeTrigger(

@@ -36,6 +36,7 @@ import {
   Webhook,
   ExternalLink,
   BarChart3,
+  Percent,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 
@@ -99,6 +100,11 @@ const navItems: NavItem[] = [
     label: 'Promoções',
     href: '/admin/promocoes',
     icon: <Gift className="h-5 w-5" />,
+  },
+  {
+    label: 'Bônus Depósito',
+    href: '/admin/bonus-deposito',
+    icon: <Percent className="h-5 w-5" />,
   },
   {
     label: 'Propaganda',
