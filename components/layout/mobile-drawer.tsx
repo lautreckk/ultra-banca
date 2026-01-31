@@ -13,6 +13,8 @@ import {
   LogOut,
   Printer,
   FileText,
+  HelpCircle,
+  Gamepad2,
 } from 'lucide-react';
 import { Drawer, DrawerItem } from '@/components/ui/drawer';
 import { createClient } from '@/lib/supabase/client';
@@ -47,13 +49,13 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             icon={<Download className="h-5 w-5" />}
             label="Baixar APP"
             highlighted
-            onClick={() => {}}
+            onClick={() => handleNavigate('/baixar')}
           />
           <DrawerItem
             icon={<Bell className="h-5 w-5" />}
             label="Notificacoes"
             highlighted
-            onClick={() => {}}
+            onClick={() => handleNavigate('/notificacoes')}
           />
           <DrawerItem
             icon={<Dices className="h-5 w-5" />}
@@ -118,6 +120,19 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             icon={<Printer className="h-5 w-5" />}
             label="Imprimir Apostas"
             onClick={() => handleNavigate('/apostas')}
+          />
+        </div>
+
+        <div>
+          <DrawerItem
+            icon={<Gamepad2 className="h-5 w-5" />}
+            label="Como Jogar"
+            onClick={() => handleNavigate('/como-jogar')}
+          />
+          <DrawerItem
+            icon={<HelpCircle className="h-5 w-5" />}
+            label="Duvidas & Regras"
+            onClick={() => handleNavigate('/regras')}
           />
         </div>
 

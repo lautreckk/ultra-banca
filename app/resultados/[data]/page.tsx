@@ -113,17 +113,19 @@ export default function SelecionarLoteriaPage() {
 
         {/* Bottom Section */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-dashed border-gray-300 p-4">
-          <button
-            onClick={handleAvancar}
-            disabled={selectedLoterias.length === 0}
-            className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${
-              selectedLoterias.length > 0
-                ? 'bg-[#E5A220]'
-                : 'bg-gray-300 cursor-not-allowed'
-            }`}
-          >
-            AVANÇAR
-          </button>
+          <div className="max-w-md mx-auto">
+            <button
+              onClick={handleAvancar}
+              disabled={selectedLoterias.length === 0}
+              className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${
+                selectedLoterias.length > 0
+                  ? 'bg-[#E5A220]'
+                  : 'bg-gray-300 cursor-not-allowed'
+              }`}
+            >
+              AVANÇAR
+            </button>
+          </div>
         </div>
 
         {/* Spacer for fixed button */}

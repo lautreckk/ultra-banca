@@ -147,6 +147,7 @@ export default function FinalizarApostaPage() {
       )}
 
       <div className="bg-gray-100 min-h-screen p-4">
+        <div className="max-w-md mx-auto">
         {/* Receipt Card */}
         <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4">
           {/* Pule # */}
@@ -344,6 +345,7 @@ export default function FinalizarApostaPage() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

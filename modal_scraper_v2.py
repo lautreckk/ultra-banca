@@ -12,11 +12,12 @@ import re
 # Criar app Modal separado
 app = modal.App("ultra-banca-scraper-v2")
 
-# Imagem com Firecrawl
+# Imagem com Firecrawl + requests para fallback
 image = modal.Image.debian_slim(python_version="3.11").pip_install(
     "firecrawl-py",
     "beautifulsoup4",
     "supabase",
+    "requests",
 )
 
 # Secrets
@@ -24,94 +25,427 @@ supabase_secret = modal.Secret.from_name("supabase-ultra-banca")
 firecrawl_secret = modal.Secret.from_name("firecrawl-key")
 
 # =============================================================================
-# CONFIGURACAO DAS BANCAS
+# CONFIGURACAO DAS BANCAS - MULTIPLAS FONTES
 # =============================================================================
 
+# Fonte 1: ResultadoFacil (principal)
+FONTE_RESULTADOFACIL = {
+    "nome": "ResultadoFacil",
+    "base_url": "https://www.resultadofacil.com.br",
+    "url_pattern": "/resultado-do-jogo-do-bicho/{estado}/do-dia/{data}",
+}
+
+# Fonte 2: PortalBrasil (backup)
+FONTE_PORTALBRASIL = {
+    "nome": "PortalBrasil",
+    "base_url": "https://portalbrasil.net",
+    "url_pattern": "/jogodobicho/{estado_slug}/",
+}
+
+# Mapeamento de estados para cada fonte
 ESTADOS_CONFIG = {
-    "RJ": {"url_param": "RJ", "banca": "RIO/FEDERAL"},
-    "BA": {"url_param": "BA", "banca": "BAHIA"},
-    "GO": {"url_param": "GO", "banca": "LOOK/GOIAS"},
-    "CE": {"url_param": "CE", "banca": "LOTECE"},
-    "PE": {"url_param": "PE", "banca": "LOTEP"},
-    "PB": {"url_param": "PB", "banca": "PARAIBA"},
-    "SP": {"url_param": "SP", "banca": "SAO-PAULO"},
-    "MG": {"url_param": "MG", "banca": "MINAS-GERAIS"},
-    "DF": {"url_param": "DF", "banca": "BRASILIA"},
-    "RN": {"url_param": "RN", "banca": "RIO-GRANDE-NORTE"},
-    "RS": {"url_param": "RS", "banca": "RIO-GRANDE-SUL"},
-    "SE": {"url_param": "SE", "banca": "SERGIPE"},
-    "PR": {"url_param": "PR", "banca": "PARANA"},
+    "RJ": {
+        "url_param": "RJ",
+        "banca": "RIO/FEDERAL",
+        "portalbrasil_slug": None,  # RJ fica na página principal
+    },
+    "BA": {
+        "url_param": "BA",
+        "banca": "BAHIA",
+        "portalbrasil_slug": "bahia",
+    },
+    "GO": {
+        "url_param": "GO",
+        "banca": "LOOK/GOIAS",
+        "portalbrasil_slug": "goias",
+    },
+    "CE": {
+        "url_param": "CE",
+        "banca": "LOTECE",
+        "portalbrasil_slug": "ceara",
+    },
+    "PE": {
+        "url_param": "PE",
+        "banca": "LOTEP",
+        "portalbrasil_slug": "pernambuco",
+    },
+    "PB": {
+        "url_param": "PB",
+        "banca": "PARAIBA",
+        "portalbrasil_slug": "paraiba",
+    },
+    "SP": {
+        "url_param": "SP",
+        "banca": "SAO-PAULO",
+        "portalbrasil_slug": "sao-paulo",
+    },
+    "MG": {
+        "url_param": "MG",
+        "banca": "MINAS-GERAIS",
+        "portalbrasil_slug": "minas-gerais",
+    },
+    "DF": {
+        "url_param": "DF",
+        "banca": "BRASILIA",
+        "portalbrasil_slug": "brasilia-df",
+    },
+    "RN": {
+        "url_param": "RN",
+        "banca": "RIO-GRANDE-NORTE",
+        "portalbrasil_slug": "rio-grande-do-norte",
+    },
+    "RS": {
+        "url_param": "RS",
+        "banca": "RIO-GRANDE-SUL",
+        "portalbrasil_slug": "rio-grande-do-sul",
+    },
+    "SE": {
+        "url_param": "SE",
+        "banca": "SERGIPE",
+        "portalbrasil_slug": "sergipe",
+    },
+    "PR": {
+        "url_param": "PR",
+        "banca": "PARANA",
+        "portalbrasil_slug": "parana",
+    },
 }
 
 BASE_URL = "https://www.resultadofacil.com.br"
 
 
 # =============================================================================
-# FUNCOES DE SCRAPING COM FIRECRAWL
+# LOGGING HELPERS
 # =============================================================================
+
+def log_info(estado: str, fonte: str, msg: str):
+    """Log informativo com formato padronizado"""
+    print(f"[{estado}] 📡 {fonte}: {msg}")
+
+def log_success(estado: str, fonte: str, msg: str):
+    """Log de sucesso"""
+    print(f"[{estado}] ✅ {fonte}: {msg}")
+
+def log_warning(estado: str, fonte: str, msg: str):
+    """Log de aviso"""
+    print(f"[{estado}] ⚠️  {fonte}: {msg}")
+
+def log_error(estado: str, fonte: str, msg: str):
+    """Log de erro"""
+    print(f"[{estado}] ❌ {fonte}: {msg}")
+
+def log_fallback(estado: str, de: str, para: str, motivo: str):
+    """Log de fallback entre fontes"""
+    print(f"[{estado}] 🔄 FALLBACK: {de} → {para} (motivo: {motivo})")
+
+
+# =============================================================================
+# FONTE 2: PORTALBRASIL.NET (BACKUP)
+# =============================================================================
+
+def scrape_portalbrasil(estado: str, data: str, banca: str) -> list:
+    """
+    Scrape do PortalBrasil.net - fonte secundária com bicho incluso
+    """
+    import requests
+    from bs4 import BeautifulSoup
+
+    config = ESTADOS_CONFIG.get(estado)
+    if not config or not config.get("portalbrasil_slug"):
+        log_warning(estado, "PortalBrasil", "Estado não configurado para esta fonte")
+        return []
+
+    url = f"{FONTE_PORTALBRASIL['base_url']}/jogodobicho/{config['portalbrasil_slug']}/"
+    log_info(estado, "PortalBrasil", f"Acessando: {url}")
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "pt-BR,pt;q=0.9",
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        html = response.text
+        log_info(estado, "PortalBrasil", f"HTML recebido: {len(html)} bytes")
+
+        soup = BeautifulSoup(html, "html.parser")
+        resultados = parse_portalbrasil(soup, data, banca, estado)
+
+        if resultados:
+            log_success(estado, "PortalBrasil", f"Encontrados {len(resultados)} resultados")
+        else:
+            log_warning(estado, "PortalBrasil", "Nenhum resultado encontrado")
+
+        return resultados
+
+    except requests.exceptions.Timeout:
+        log_error(estado, "PortalBrasil", "Timeout ao acessar")
+        return []
+    except requests.exceptions.RequestException as e:
+        log_error(estado, "PortalBrasil", f"Erro de conexão: {e}")
+        return []
+    except Exception as e:
+        log_error(estado, "PortalBrasil", f"Erro inesperado: {e}")
+        return []
+
+
+def parse_portalbrasil(soup, data: str, banca: str, estado: str) -> list:
+    """
+    Parser específico para PortalBrasil.net
+    Formato: "9866-17 (Macaco)" = milhar-grupo (bicho)
+    """
+    resultados = []
+
+    # PortalBrasil usa estrutura com h3 ou h4 para títulos das loterias
+    # Exemplo: "12h00 – Alvorada MG"
+    headers = soup.find_all(['h2', 'h3', 'h4'])
+
+    for header in headers:
+        header_text = header.get_text(strip=True)
+
+        # Busca horário no formato "12h00" ou "12:00"
+        horario_match = re.search(r'(\d{1,2})[h:H](\d{2})', header_text)
+        if not horario_match:
+            continue
+
+        hora = horario_match.group(1).zfill(2)
+        minuto = horario_match.group(2)
+        horario = f"{hora}:{minuto}"
+
+        # Identifica loteria
+        loteria = identificar_loteria(header_text)
+
+        # Busca os prêmios após o header
+        # PortalBrasil usa formato: "1º: 9866-17 (Macaco)"
+        premios = []
+
+        # Procura no próximo elemento ou nos irmãos
+        next_elem = header.find_next_sibling()
+        content_text = ""
+
+        # Coleta texto dos próximos elementos até encontrar outro header
+        for _ in range(10):
+            if next_elem is None:
+                break
+            if next_elem.name in ['h2', 'h3', 'h4', 'hr']:
+                break
+            content_text += " " + next_elem.get_text()
+            next_elem = next_elem.find_next_sibling()
+
+        # Também verifica o parent
+        parent = header.find_parent()
+        if parent:
+            content_text += " " + parent.get_text()
+
+        # Extrai prêmios no formato "1º: 9866-17 (Macaco)" ou "9866-17 (Macaco)"
+        # Padrão: 4 dígitos + hífen + 2 dígitos + bicho entre parênteses
+        premio_pattern = r'(\d{4})-(\d{2})\s*\(([^)]+)\)'
+        matches = re.findall(premio_pattern, content_text)
+
+        if matches:
+            for milhar, grupo, bicho in matches[:7]:
+                premios.append({
+                    "milhar": milhar,
+                    "grupo": grupo,
+                    "bicho": bicho.strip(),
+                })
+
+        # Fallback: busca só milhares se não encontrou padrão completo
+        if len(premios) < 5:
+            milhar_pattern = r'[1-7][ºª°]\s*[:\-]?\s*(\d{4})'
+            milhar_matches = re.findall(milhar_pattern, content_text)
+            if len(milhar_matches) >= 5:
+                premios = [{"milhar": m, "grupo": "", "bicho": ""} for m in milhar_matches[:7]]
+
+        if len(premios) >= 5:
+            resultados.append({
+                "data": data,
+                "horario": horario,
+                "banca": banca,
+                "loteria": loteria,
+                "premios": premios,
+                "fonte": "PortalBrasil",
+            })
+            log_info(estado, "PortalBrasil", f"  → {horario} {loteria}: 1º={premios[0]['milhar']} ({premios[0].get('bicho', '')})")
+
+    return resultados
+
+
+# =============================================================================
+# FONTE 1: RESULTADOFACIL + FALLBACKS
+# =============================================================================
+
+def scrape_resultadofacil_requests(url: str, estado: str, data: str, banca: str) -> list:
+    """
+    Scrape ResultadoFacil usando requests direto (fallback do Firecrawl)
+    """
+    import requests
+    from bs4 import BeautifulSoup
+
+    log_info(estado, "ResultadoFacil", "Tentando via requests direto...")
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "pt-BR,pt;q=0.9",
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        html_content = response.text
+        log_info(estado, "ResultadoFacil", f"HTML recebido: {len(html_content)} bytes")
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        resultados = parse_resultados(soup, data, banca)
+
+        if resultados:
+            log_success(estado, "ResultadoFacil", f"Encontrados {len(resultados)} resultados via requests")
+        else:
+            log_warning(estado, "ResultadoFacil", "Nenhum resultado via requests")
+
+        return resultados
+
+    except Exception as e:
+        log_error(estado, "ResultadoFacil", f"Erro requests: {e}")
+        return []
+
 
 @app.function(image=image, secrets=[supabase_secret, firecrawl_secret], timeout=300)
 def scrape_estado_firecrawl(estado: str, data: Optional[str] = None) -> dict:
     """
-    Scrape um estado usando Firecrawl
+    Scrape inteligente com múltiplas fontes:
+    1. ResultadoFacil via Firecrawl
+    2. ResultadoFacil via requests (se Firecrawl falhar)
+    3. PortalBrasil (se ResultadoFacil não tiver resultados)
     """
     from firecrawl import Firecrawl
     from bs4 import BeautifulSoup
 
     config = ESTADOS_CONFIG.get(estado)
     if not config:
+        log_error(estado, "Sistema", "Estado não configurado")
         return {"estado": estado, "error": "Estado não configurado", "resultados": []}
 
     data_scrape = data or datetime.now().strftime("%Y-%m-%d")
-    url = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
+    url_resultadofacil = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
 
-    print(f"[{estado}] Acessando via Firecrawl: {url}")
+    print(f"\n{'='*60}")
+    print(f"[{estado}] 🎯 INICIANDO SCRAPE - {config['banca']} - {data_scrape}")
+    print(f"{'='*60}")
 
     resultados = []
+    fonte_utilizada = None
+    tentativas = []
+
+    # =========================================================================
+    # TENTATIVA 1: ResultadoFacil via Firecrawl
+    # =========================================================================
+    log_info(estado, "Firecrawl", f"Acessando: {url_resultadofacil}")
 
     try:
-        # Inicializa Firecrawl
         api_key = os.environ.get("FIRECRAWL_API_KEY")
         if not api_key:
-            return {"estado": estado, "error": "FIRECRAWL_API_KEY não encontrada", "resultados": []}
+            log_error(estado, "Firecrawl", "API key não encontrada")
+            tentativas.append({"fonte": "Firecrawl", "status": "erro", "motivo": "API key ausente"})
+        else:
+            firecrawl = Firecrawl(api_key=api_key)
 
-        firecrawl = Firecrawl(api_key=api_key)
+            response = firecrawl.scrape(
+                url_resultadofacil,
+                formats=["html", "markdown"],
+                wait_for=5000,
+                timeout=30000,
+            )
 
-        # Scrape a página
-        response = firecrawl.scrape(url, formats=["html", "markdown"])
+            if response:
+                html_content = getattr(response, "html", "") or ""
+                markdown_content = getattr(response, "markdown", "") or ""
 
-        if not response:
-            return {"estado": estado, "error": "Firecrawl retornou erro", "resultados": []}
+                log_info(estado, "Firecrawl", f"HTML: {len(html_content)} bytes | Markdown: {len(markdown_content)} bytes")
 
-        # Firecrawl retorna objeto Document com atributos
-        html_content = getattr(response, "html", "") or ""
-        markdown_content = getattr(response, "markdown", "") or ""
+                if html_content:
+                    soup = BeautifulSoup(html_content, "html.parser")
+                    resultados = parse_resultados(soup, data_scrape, config['banca'])
 
-        print(f"[{estado}] HTML: {len(html_content)} bytes, Markdown: {len(markdown_content)} bytes")
+                if not resultados and markdown_content:
+                    log_info(estado, "Firecrawl", "Tentando parse via Markdown...")
+                    resultados = parse_markdown(markdown_content, data_scrape, config['banca'])
 
-        # Parse com BeautifulSoup
-        if html_content:
-            soup = BeautifulSoup(html_content, "html.parser")
-            resultados = parse_resultados(soup, data_scrape, config['banca'])
-
-        # Se não encontrou pelo HTML, tenta pelo Markdown
-        if not resultados and markdown_content:
-            print(f"[{estado}] Tentando parse pelo Markdown...")
-            resultados = parse_markdown(markdown_content, data_scrape, config['banca'])
-
-        print(f"[{estado}] Resultados encontrados: {len(resultados)}")
+                if resultados:
+                    log_success(estado, "Firecrawl", f"✓ {len(resultados)} resultados encontrados")
+                    fonte_utilizada = "Firecrawl/ResultadoFacil"
+                    tentativas.append({"fonte": "Firecrawl", "status": "sucesso", "resultados": len(resultados)})
+                else:
+                    log_warning(estado, "Firecrawl", "HTML recebido mas sem resultados parseáveis")
+                    tentativas.append({"fonte": "Firecrawl", "status": "sem_dados", "html_size": len(html_content)})
+            else:
+                log_warning(estado, "Firecrawl", "Resposta vazia")
+                tentativas.append({"fonte": "Firecrawl", "status": "erro", "motivo": "resposta vazia"})
 
     except Exception as e:
-        print(f"[{estado}] Erro: {e}")
-        import traceback
-        traceback.print_exc()
-        return {"estado": estado, "error": str(e), "resultados": []}
+        error_msg = str(e)
+        if "Rate Limit" in error_msg:
+            log_warning(estado, "Firecrawl", "Rate limit atingido")
+            tentativas.append({"fonte": "Firecrawl", "status": "rate_limit"})
+        else:
+            log_error(estado, "Firecrawl", f"Erro: {error_msg[:100]}")
+            tentativas.append({"fonte": "Firecrawl", "status": "erro", "motivo": error_msg[:50]})
+
+    # =========================================================================
+    # TENTATIVA 2: ResultadoFacil via requests (se Firecrawl falhou)
+    # =========================================================================
+    if not resultados:
+        log_fallback(estado, "Firecrawl", "Requests", "sem resultados ou erro")
+
+        resultados = scrape_resultadofacil_requests(url_resultadofacil, estado, data_scrape, config['banca'])
+
+        if resultados:
+            fonte_utilizada = "Requests/ResultadoFacil"
+            tentativas.append({"fonte": "Requests/ResultadoFacil", "status": "sucesso", "resultados": len(resultados)})
+        else:
+            tentativas.append({"fonte": "Requests/ResultadoFacil", "status": "sem_dados"})
+
+    # =========================================================================
+    # TENTATIVA 3: PortalBrasil (se ResultadoFacil não tiver resultados)
+    # =========================================================================
+    if not resultados:
+        log_fallback(estado, "ResultadoFacil", "PortalBrasil", "sem resultados")
+
+        resultados = scrape_portalbrasil(estado, data_scrape, config['banca'])
+
+        if resultados:
+            fonte_utilizada = "PortalBrasil"
+            tentativas.append({"fonte": "PortalBrasil", "status": "sucesso", "resultados": len(resultados)})
+        else:
+            tentativas.append({"fonte": "PortalBrasil", "status": "sem_dados"})
+
+    # =========================================================================
+    # RESUMO FINAL
+    # =========================================================================
+    print(f"\n[{estado}] 📊 RESUMO:")
+    for t in tentativas:
+        status_icon = "✅" if t["status"] == "sucesso" else "⚠️" if t["status"] == "sem_dados" else "❌"
+        print(f"[{estado}]    {status_icon} {t['fonte']}: {t['status']}" + (f" ({t.get('resultados', 0)} resultados)" if t.get('resultados') else ""))
+
+    if resultados:
+        print(f"[{estado}] ✅ SUCESSO: {len(resultados)} resultados via {fonte_utilizada}")
+    else:
+        print(f"[{estado}] ⚠️  SEM RESULTADOS em nenhuma fonte")
+
+    print(f"{'='*60}\n")
 
     return {
         "estado": estado,
         "banca": config['banca'],
-        "url": url,
+        "url": url_resultadofacil,
         "resultados": resultados,
+        "fonte_utilizada": fonte_utilizada,
+        "tentativas": tentativas,
         "error": None
     }
 
@@ -252,26 +586,50 @@ def buscar_info_tabela(table) -> tuple:
 
 
 def parse_markdown(markdown: str, data: str, banca: str) -> list:
-    """Parser pelo conteúdo Markdown"""
+    """Parser pelo conteúdo Markdown - múltiplas estratégias"""
     resultados = []
 
-    # Busca padrões no markdown
-    # Formato típico: ## 21:20, CORUJA ... | 1º | 3238 | ...
-
-    # Divide por seções (headers)
-    sections = re.split(r'\n##?\s+', markdown)
+    # Divide por seções (headers ou linhas em branco múltiplas)
+    sections = re.split(r'\n##?\s+|\n{3,}', markdown)
 
     for section in sections:
-        # Busca horário na seção
-        horario_match = re.search(r'(\d{1,2})[h:H](\d{2})', section)
+        # Estratégia 1: Busca horário no formato 12h, 12h00, 12:00
+        horario_match = re.search(r'(\d{1,2})[h:H](\d{2})?', section)
         if not horario_match:
             continue
 
-        horario = f"{horario_match.group(1).zfill(2)}:{horario_match.group(2)}"
-        loteria = identificar_loteria(section[:200])  # Primeiros 200 chars
+        hora = horario_match.group(1).zfill(2)
+        minuto = horario_match.group(2) or "00"
+        horario = f"{hora}:{minuto}"
 
-        # Busca prêmios (4 dígitos)
+        loteria = identificar_loteria(section[:300])
+
+        # Múltiplas estratégias para extrair prêmios
+        premios_matches = []
+
+        # Estratégia 1: | 1234 | (tabelas markdown)
         premios_matches = re.findall(r'\|\s*(\d{4})\s*\|', section)
+
+        # Estratégia 2: Linhas com "1º" seguido de número
+        if len(premios_matches) < 5:
+            premios_matches = re.findall(r'[1-7][ºª°]\s*[:\|]?\s*(\d{4})', section)
+
+        # Estratégia 3: Números de 4 dígitos em sequência (após filtrar datas/horários)
+        if len(premios_matches) < 5:
+            # Remove datas e horários conhecidos
+            section_clean = re.sub(r'\d{4}-\d{2}-\d{2}', '', section)
+            section_clean = re.sub(r'\d{1,2}[h:H]\d{2}', '', section_clean)
+            section_clean = re.sub(r'\d{2}/\d{2}/\d{4}', '', section_clean)
+
+            # Busca milhares restantes
+            all_milhares = re.findall(r'\b(\d{4})\b', section_clean)
+            if len(all_milhares) >= 5:
+                premios_matches = all_milhares[:7]
+
+        # Estratégia 4: Busca bicho + milhar (ex: "Avestruz 1234")
+        if len(premios_matches) < 5:
+            bicho_pattern = r'(?:Avestruz|Águia|Burro|Borboleta|Cachorro|Cabra|Carneiro|Camelo|Cobra|Coelho|Cavalo|Elefante|Galo|Gato|Jacaré|Leão|Macaco|Porco|Pavão|Peru|Touro|Tigre|Urso|Veado|Vaca)\s*[:\-]?\s*(\d{4})'
+            premios_matches = re.findall(bicho_pattern, section, re.IGNORECASE)
 
         if len(premios_matches) >= 5:
             premios = [{"milhar": m, "bicho": ""} for m in premios_matches[:7]]
@@ -291,22 +649,69 @@ def identificar_loteria(texto: str) -> str:
     texto_upper = texto.upper()
 
     # Ordem importa: mais específico primeiro
+    # RIO DE JANEIRO
     if "CORUJA" in texto_upper:
         return "CORUJA"
-    if "MALUCA" in texto_upper:
-        return "MALUCA"
     if "PTM" in texto_upper:
         return "PTM"
     if "PTV" in texto_upper:
         return "PTV"
     if "PTN" in texto_upper:
         return "PTN"
+
+    # BAHIA
+    if "MALUCA" in texto_upper:
+        return "MALUCA"
+
+    # BRASILIA / DF
     if "LBR" in texto_upper:
         return "LBR"
+
+    # CEARA
     if "LOTECE" in texto_upper:
         return "LOTECE"
+
+    # PERNAMBUCO
     if "LOTEP" in texto_upper:
         return "LOTEP"
+
+    # MINAS GERAIS
+    if "ALVORADA" in texto_upper:
+        return "ALVORADA"
+    if "MINAS DIA" in texto_upper:
+        return "MINAS-DIA"
+    if "MINAS NOITE" in texto_upper:
+        return "MINAS-NOITE"
+    if "PREFERIDA" in texto_upper:
+        return "PREFERIDA"
+
+    # RIO GRANDE DO SUL
+    if "GAUCHA" in texto_upper or "GAÚCHA" in texto_upper:
+        return "GAUCHA"
+
+    # PARANA
+    if "PARANA" in texto_upper or "PARANÁ" in texto_upper:
+        return "PARANA"
+
+    # GOIAS
+    if "LOOK" in texto_upper:
+        return "LOOK"
+    if "GOIAS" in texto_upper or "GOIÁS" in texto_upper:
+        return "GOIAS"
+
+    # SAO PAULO
+    if "PAULISTA" in texto_upper:
+        return "PAULISTA"
+
+    # NACIONAL
+    if "NACIONAL" in texto_upper:
+        return "NACIONAL"
+
+    # FEDERAL
+    if "FEDERAL" in texto_upper:
+        return "FEDERAL"
+
+    # PT genérico (Rio)
     if re.search(r'\bPT\b', texto_upper):
         return "PT"
 
@@ -470,7 +875,12 @@ def teste_firecrawl(estado: str = "RJ", data: Optional[str] = None) -> dict:
         firecrawl = Firecrawl(api_key=api_key)
 
         print("Chamando Firecrawl...")
-        response = firecrawl.scrape(url, formats=["html", "markdown"])
+        response = firecrawl.scrape(
+            url,
+            formats=["html", "markdown"],
+            wait_for=5000,
+            timeout=30000,
+        )
 
         resultado["firecrawl_success"] = True if response else False
 
@@ -926,21 +1336,54 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
 
 @app.local_entrypoint()
 def main(
-    comando: str = "teste",
+    comando: str = "scrape",
     estado: str = "RJ",
     data: Optional[str] = None,
 ):
     """
     Comandos:
-        teste  - Testa scrape de um estado
+        scrape - Scrape inteligente de um estado (com múltiplas fontes e logs)
+        teste  - Testa somente Firecrawl (debug)
         todos  - Scrape de todos os estados
 
     Exemplos:
-        modal run modal_scraper_v2.py
+        modal run modal_scraper_v2.py --comando scrape --estado MG --data 2026-01-30
         modal run modal_scraper_v2.py --comando teste --estado RJ --data 2026-01-29
         modal run modal_scraper_v2.py --comando todos --data 2026-01-29
     """
-    if comando == "teste":
+    if comando == "scrape":
+        # Usa a função principal com múltiplas fontes e logs detalhados
+        print(f"\n{'#'*70}")
+        print(f"# SCRAPE INTELIGENTE: {estado} - {data or 'hoje'}")
+        print(f"{'#'*70}\n")
+
+        resultado = scrape_estado_firecrawl.remote(estado, data)
+
+        print(f"\n{'#'*70}")
+        print(f"# RESULTADO FINAL")
+        print(f"{'#'*70}")
+        print(f"Estado: {resultado.get('estado')}")
+        print(f"Banca: {resultado.get('banca')}")
+        print(f"Fonte utilizada: {resultado.get('fonte_utilizada', 'N/A')}")
+        print(f"Total de resultados: {len(resultado.get('resultados', []))}")
+
+        if resultado.get('tentativas'):
+            print(f"\nTentativas:")
+            for t in resultado.get('tentativas', []):
+                print(f"  - {t}")
+
+        if resultado.get('resultados'):
+            print(f"\nResultados encontrados:")
+            for r in resultado.get('resultados', [])[:5]:
+                premios = r.get('premios', [])
+                p1 = premios[0]['milhar'] if premios else 'N/A'
+                bicho = premios[0].get('bicho', '') if premios else ''
+                print(f"  {r['horario']} {r['loteria']}: 1º={p1} {bicho}")
+
+        if resultado.get('error'):
+            print(f"\n❌ ERRO: {resultado.get('error')}")
+
+    elif comando == "teste":
         print(f"Testando Firecrawl com {estado}...")
         resultado = teste_firecrawl.remote(estado, data)
 
@@ -975,4 +1418,4 @@ def main(
 
     else:
         print(f"Comando: {comando}")
-        print("Comandos válidos: teste, todos")
+        print("Comandos válidos: scrape, teste, todos")

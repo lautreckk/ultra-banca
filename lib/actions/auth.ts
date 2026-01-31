@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { logAudit, trackUserLogin, trackUserSignup } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
-import { dispatchLeadWebhook } from '@/lib/webhooks/dispatcher';
+import { dispatchLeadWebhook, dispatchWithdrawalWebhook } from '@/lib/webhooks/dispatcher';
 
 /**
  * Rastreia o login de um usuário (chamado após sucesso no cliente)
@@ -101,6 +101,11 @@ export async function trackWithdrawalRequest(
         chave_pix: chavePix.slice(0, 4) + '****', // Mascara a chave
         timestamp: new Date().toISOString(),
       },
+    });
+
+    // Disparar webhook de saque (CRM/Integrações externas)
+    dispatchWithdrawalWebhook(withdrawalId).catch((err) => {
+      console.error('Error dispatching withdrawal webhook:', err);
     });
 
     return { success: true };

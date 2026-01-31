@@ -125,7 +125,7 @@ export default function PremiadasPorDataPage() {
                           const premio = resultado[`premio_${i}` as keyof Resultado] as string | null;
                           return (
                             <div key={i} className="text-center">
-                              <span className="text-xs text-gray-500">{i}º</span>
+                              <span className="text-xs text-gray-300">{i}º</span>
                               <p className="font-mono text-white text-sm">{premio || '-'}</p>
                             </div>
                           );
@@ -142,11 +142,11 @@ export default function PremiadasPorDataPage() {
               <div className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/20 rounded-xl p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-400">Apostas Premiadas</p>
+                    <p className="text-sm text-gray-300">Apostas Premiadas</p>
                     <p className="text-2xl font-bold text-white">{apostas.length}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">Total em Prêmios</p>
+                    <p className="text-sm text-gray-300">Total em Prêmios</p>
                     <p className="text-2xl font-bold text-emerald-400">{formatCurrency(totalPremios)}</p>
                   </div>
                 </div>
@@ -175,14 +175,14 @@ export default function PremiadasPorDataPage() {
                       <div className="flex items-start justify-between">
                         <div>
                           {aposta.profiles && (
-                            <p className="text-sm text-gray-400">{aposta.profiles.nome}</p>
+                            <p className="text-sm text-gray-300">{aposta.profiles.nome}</p>
                           )}
                           <p className="text-white font-medium capitalize">
                             {aposta.tipo} - {aposta.modalidade}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Prêmio</p>
+                          <p className="text-xs text-gray-300">Prêmio</p>
                           <p className="text-lg font-bold text-emerald-400">
                             {formatCurrency(aposta.premio_valor)}
                           </p>
@@ -200,18 +200,18 @@ export default function PremiadasPorDataPage() {
                         ))}
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-gray-300">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {aposta.horarios.join(', ')}
                         </span>
                         {aposta.pule && (
-                          <span className="text-gray-600">Pule: {aposta.pule}</span>
+                          <span className="text-gray-400">Pule: {aposta.pule}</span>
                         )}
                       </div>
 
                       <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-sm">
-                        <span className="text-gray-500">
+                        <span className="text-gray-300">
                           Aposta: {formatCurrency(aposta.valor_total)}
                         </span>
                         <span className="text-emerald-400 font-medium flex items-center gap-1">

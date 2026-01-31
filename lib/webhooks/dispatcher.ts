@@ -11,7 +11,8 @@ export interface WebhookPayload {
   event: string;
   event_id: string;
   timestamp: string;
-  lead?: LeadPayload;
+  data?: LeadPayload; // Campo principal para ScaleCore e outros CRMs
+  lead?: LeadPayload; // Mantido para compatibilidade legada
   platform: {
     name: string;
     environment: string;
@@ -126,9 +127,11 @@ async function sendWebhook(
     .digest('hex');
 
   // Preparar headers
+  // Usa 'x-signature' para compatibilidade com ScaleCore e outros CRMs
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Webhook-Signature': `sha256=${signature}`,
+    'x-signature': signature,
+    'X-Webhook-Signature': `sha256=${signature}`, // Mantém compatibilidade legada
     'X-Webhook-Event': eventType,
     'X-Webhook-Timestamp': timestamp,
     'X-Webhook-Id': eventId,
@@ -351,22 +354,196 @@ export async function dispatchLeadWebhook(userId: string): Promise<void> {
         }
       : null;
 
-    // Disparar webhook
+    // Montar dados do lead
+    const leadData: LeadPayload = {
+      id: profile.id,
+      cpf: cpfFormatado,
+      nome: profile.nome || 'Nome nao informado',
+      telefone,
+      email,
+      codigo_convite: profile.codigo_convite || null,
+      indicado_por: profile.indicado_por || null,
+      signup_ip: profile.signup_ip || null,
+      signup_location: signupLocation,
+      created_at: profile.created_at,
+    };
+
+    // Disparar webhook com ambos os formatos para compatibilidade
+    // - 'data' para ScaleCore e CRMs modernos
+    // - 'lead' para sistemas legados
     await dispatchWebhooks('lead.created', {
-      lead: {
-        id: profile.id,
-        cpf: cpfFormatado,
-        nome: profile.nome || 'Nome nao informado',
-        telefone,
-        email,
-        codigo_convite: profile.codigo_convite || null,
-        indicado_por: profile.indicado_por || null,
-        signup_ip: profile.signup_ip || null,
-        signup_location: signupLocation,
-        created_at: profile.created_at,
-      },
+      data: leadData,
+      lead: leadData,
     });
   } catch (err) {
     console.error('[Webhook] Error dispatching lead webhook:', err);
+  }
+}
+
+// =============================================
+// DEPOSIT WEBHOOK DISPATCHER
+// =============================================
+
+export interface DepositPayload {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_cpf: string;
+  user_phone: string | null;
+  amount: number;
+  status: string;
+  payment_method: string | null;
+  created_at: string;
+  paid_at: string | null;
+}
+
+/**
+ * Dispara webhook de deposit.created
+ * Chamado quando um depósito é confirmado
+ */
+export async function dispatchDepositWebhook(
+  depositId: string,
+  userId: string
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+
+    // Buscar dados do depósito
+    const { data: deposit, error: depositError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', depositId)
+      .single();
+
+    if (depositError || !deposit) {
+      // Tentar buscar de pagamentos (tabela alternativa)
+      const { data: pagamento, error: pagamentoError } = await supabase
+        .from('pagamentos')
+        .select('*')
+        .eq('id', depositId)
+        .single();
+
+      if (pagamentoError || !pagamento) {
+        console.error('[Webhook] Deposit not found:', depositId);
+        return;
+      }
+
+      // Buscar perfil do usuário
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nome, cpf, telefone')
+        .eq('id', userId)
+        .single();
+
+      const depositData: DepositPayload = {
+        id: pagamento.id,
+        user_id: userId,
+        user_name: profile?.nome || 'Nome nao informado',
+        user_cpf: profile?.cpf || '',
+        user_phone: profile?.telefone || null,
+        amount: Number(pagamento.valor),
+        status: pagamento.status,
+        payment_method: pagamento.metodo_pagamento,
+        created_at: pagamento.created_at,
+        paid_at: pagamento.paid_at,
+      };
+
+      await dispatchWebhooks('deposit.created', {
+        data: depositData,
+      });
+      return;
+    }
+
+    // Buscar perfil do usuário
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nome, cpf, telefone')
+      .eq('id', userId)
+      .single();
+
+    const depositData: DepositPayload = {
+      id: deposit.id,
+      user_id: userId,
+      user_name: profile?.nome || 'Nome nao informado',
+      user_cpf: profile?.cpf || '',
+      user_phone: profile?.telefone || null,
+      amount: Number(deposit.amount),
+      status: deposit.status,
+      payment_method: deposit.provider,
+      created_at: deposit.created_at,
+      paid_at: deposit.verified_at,
+    };
+
+    await dispatchWebhooks('deposit.created', {
+      data: depositData,
+    });
+  } catch (err) {
+    console.error('[Webhook] Error dispatching deposit webhook:', err);
+  }
+}
+
+// =============================================
+// WITHDRAWAL WEBHOOK DISPATCHER
+// =============================================
+
+export interface WithdrawalPayload {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_cpf: string;
+  user_phone: string | null;
+  amount: number;
+  net_amount: number;
+  fee: number;
+  pix_key: string;
+  pix_key_type: string;
+  status: string;
+  created_at: string;
+}
+
+/**
+ * Dispara webhook de withdrawal.created
+ * Chamado quando um saque é solicitado
+ */
+export async function dispatchWithdrawalWebhook(
+  withdrawalId: string
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+
+    // Buscar dados do saque
+    const { data: saque, error } = await supabase
+      .from('saques')
+      .select('*, profiles:user_id(nome, cpf, telefone)')
+      .eq('id', withdrawalId)
+      .single();
+
+    if (error || !saque) {
+      console.error('[Webhook] Withdrawal not found:', withdrawalId);
+      return;
+    }
+
+    const profile = saque.profiles as { nome: string; cpf: string; telefone: string | null } | null;
+
+    const withdrawalData: WithdrawalPayload = {
+      id: saque.id,
+      user_id: saque.user_id,
+      user_name: profile?.nome || 'Nome nao informado',
+      user_cpf: profile?.cpf || '',
+      user_phone: profile?.telefone || null,
+      amount: Number(saque.valor),
+      net_amount: Number(saque.valor_liquido),
+      fee: Number(saque.taxa),
+      pix_key: saque.chave_pix,
+      pix_key_type: saque.tipo_chave,
+      status: saque.status,
+      created_at: saque.created_at,
+    };
+
+    await dispatchWebhooks('withdrawal.created', {
+      data: withdrawalData,
+    });
+  } catch (err) {
+    console.error('[Webhook] Error dispatching withdrawal webhook:', err);
   }
 }

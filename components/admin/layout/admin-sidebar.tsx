@@ -47,29 +47,21 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  // ========== VISÃO GERAL ==========
   {
     label: 'Dashboard',
     href: '/admin/dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
+
+  // ========== GESTÃO DE USUÁRIOS ==========
   {
     label: 'Clientes',
     href: '/admin/clientes',
     icon: <Users className="h-5 w-5" />,
   },
-  {
-    label: 'Leads Inativos',
-    href: '/admin/leads-inativos',
-    icon: <UserX className="h-5 w-5" />,
-  },
-  {
-    label: 'Financeiro',
-    icon: <Wallet className="h-5 w-5" />,
-    children: [
-      { label: 'Depósitos', href: '/admin/financeiro/depositos', icon: <ArrowDownToLine className="h-4 w-4" /> },
-      { label: 'Saques', href: '/admin/financeiro/saques', icon: <ArrowUpFromLine className="h-4 w-4" /> },
-    ],
-  },
+
+  // ========== CORE DO NEGÓCIO ==========
   {
     label: 'Apostas',
     icon: <Receipt className="h-5 w-5" />,
@@ -82,6 +74,16 @@ const navItems: NavItem[] = [
       { label: 'Verificação', href: '/admin/verificacao', icon: <CheckCircle className="h-4 w-4" /> },
     ],
   },
+
+  // ========== FINANCEIRO ==========
+  {
+    label: 'Financeiro',
+    icon: <Wallet className="h-5 w-5" />,
+    children: [
+      { label: 'Depósitos', href: '/admin/financeiro/depositos', icon: <ArrowDownToLine className="h-4 w-4" /> },
+      { label: 'Saques', href: '/admin/financeiro/saques', icon: <ArrowUpFromLine className="h-4 w-4" /> },
+    ],
+  },
   {
     label: 'Pagamentos',
     icon: <CreditCard className="h-5 w-5" />,
@@ -91,6 +93,8 @@ const navItems: NavItem[] = [
       { label: 'WashPay', href: '/admin/pagamentos/washpay' },
     ],
   },
+
+  // ========== MARKETING ==========
   {
     label: 'Promoções',
     href: '/admin/promocoes',
@@ -112,8 +116,17 @@ const navItems: NavItem[] = [
       { label: 'Enviar', href: '/admin/whatsapp/enviar', icon: <Send className="h-4 w-4" /> },
     ],
   },
+
+  // ========== RECUPERAÇÃO ==========
   {
-    label: 'Integracoes',
+    label: 'Leads Inativos',
+    href: '/admin/leads-inativos',
+    icon: <UserX className="h-5 w-5" />,
+  },
+
+  // ========== TÉCNICO / SISTEMA ==========
+  {
+    label: 'Integrações',
     icon: <Webhook className="h-5 w-5" />,
     children: [
       { label: 'Webhooks', href: '/admin/webhooks', icon: <ExternalLink className="h-4 w-4" /> },
@@ -143,7 +156,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Financeiro', 'Apostas', 'Pagamentos', 'WhatsApp', 'Integracoes']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = () => {

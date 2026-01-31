@@ -14,6 +14,17 @@ interface DrawerProps {
 export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }: DrawerProps) {
   const [isVisible, setIsVisible] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
+  const [isDesktop, setIsDesktop] = React.useState(false);
+
+  // Detecta se é desktop
+  React.useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   React.useEffect(() => {
     if (open) {
@@ -42,6 +53,26 @@ export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }:
 
   if (!isVisible) return null;
 
+  // Estilos diferentes para mobile (slide) e desktop (modal centralizado)
+  const panelStyle: React.CSSProperties = isDesktop
+    ? {
+        // Desktop: modal centralizado com fade/scale
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: isAnimating
+          ? 'translate(-50%, -50%) scale(1)'
+          : 'translate(-50%, -50%) scale(0.95)',
+        opacity: isAnimating ? 1 : 0,
+        paddingTop: 'env(safe-area-inset-top)',
+      }
+    : {
+        // Mobile: slide da direita
+        transform: isAnimating ? 'translateX(0)' : 'translateX(100%)',
+        WebkitTransform: isAnimating ? 'translateX(0)' : 'translateX(100%)',
+        paddingTop: 'env(safe-area-inset-top)',
+      };
+
   return (
     <>
       {/* Overlay */}
@@ -60,15 +91,20 @@ export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }:
 
       {/* Drawer Panel */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-50 w-[280px] bg-white transition-transform duration-300 ease-out"
-        style={{
-          transform: isAnimating ? 'translateX(0)' : 'translateX(100%)',
-          WebkitTransform: isAnimating ? 'translateX(0)' : 'translateX(100%)',
-          paddingTop: 'env(safe-area-inset-top)',
-        }}
+        className={cn(
+          'fixed z-50 bg-white transition-all duration-300 ease-out',
+          // Mobile: slide from right
+          !isDesktop && 'top-0 right-0 bottom-0 w-[280px]',
+          // Desktop: centered modal
+          isDesktop && 'w-[400px] max-w-[90vw] rounded-xl shadow-2xl max-h-[80vh]'
+        )}
+        style={panelStyle}
       >
         {/* Header */}
-        <div className="flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4">
+        <div className={cn(
+          'flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4',
+          isDesktop && 'rounded-t-xl'
+        )}>
           <span className="font-semibold text-gray-800">{title}</span>
           <button
             onClick={onClose}
@@ -85,9 +121,13 @@ export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }:
 
         {/* Content */}
         <div
-          className="overflow-y-auto overscroll-contain"
+          className={cn(
+            'overflow-y-auto overscroll-contain',
+            isDesktop && 'rounded-b-xl'
+          )}
           style={{
-            height: 'calc(100% - 56px)',
+            height: isDesktop ? 'auto' : 'calc(100% - 56px)',
+            maxHeight: isDesktop ? 'calc(80vh - 56px)' : undefined,
             WebkitOverflowScrolling: 'touch',
           }}
         >

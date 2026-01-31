@@ -55,6 +55,8 @@ const initialFormData: WebhookFormData = {
 
 const eventOptions = [
   { value: 'lead.created', label: 'Lead Criado', description: 'Dispara quando um novo usuario se cadastra' },
+  { value: 'deposit.created', label: 'Deposito Confirmado', description: 'Dispara quando um deposito e aprovado' },
+  { value: 'withdrawal.created', label: 'Saque Solicitado', description: 'Dispara quando um saque e solicitado' },
 ];
 
 export default function AdminWebhooksPage() {

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { executeTrigger } from './evolution';
+import { dispatchDepositWebhook } from '@/lib/webhooks/dispatcher';
 
 // =============================================
 // DEPOSITS
@@ -160,6 +161,11 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
     console.error('Erro ao disparar gatilho de depósito:', error);
     // Não falha a operação se o gatilho falhar
   }
+
+  // Disparar webhook de depósito (CRM/Integrações externas)
+  dispatchDepositWebhook(depositId, deposit.user_id).catch((err) => {
+    console.error('Erro ao disparar webhook de depósito:', err);
+  });
 
   return { success: true };
 }

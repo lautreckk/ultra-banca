@@ -359,27 +359,31 @@ export async function testWebhook(id: string): Promise<{
   const eventId = crypto.randomUUID();
   const timestamp = new Date().toISOString();
 
+  // Payload de teste com ambos os formatos para compatibilidade
+  const leadData = {
+    id: '00000000-0000-0000-0000-000000000000',
+    cpf: '000.000.000-00',
+    nome: 'Lead de Teste',
+    telefone: '+5511999999999',
+    email: 'teste@ultrabanca.app',
+    codigo_convite: 'TEST123',
+    indicado_por: null,
+    signup_ip: '127.0.0.1',
+    signup_location: {
+      city: 'Sao Paulo',
+      region: 'SP',
+      country: 'Brasil',
+    },
+    created_at: timestamp,
+  };
+
   const testPayload = {
     event: 'test.webhook',
     event_id: eventId,
     timestamp,
     test: true,
-    lead: {
-      id: '00000000-0000-0000-0000-000000000000',
-      cpf: '000.000.000-00',
-      nome: 'Lead de Teste',
-      telefone: '+5511999999999',
-      email: 'teste@ultrabanca.app',
-      codigo_convite: 'TEST123',
-      indicado_por: null,
-      signup_ip: '127.0.0.1',
-      signup_location: {
-        city: 'Sao Paulo',
-        region: 'SP',
-        country: 'Brasil',
-      },
-      created_at: timestamp,
-    },
+    data: leadData, // Formato ScaleCore/CRMs modernos
+    lead: leadData, // Compatibilidade legada
     platform: {
       name: 'Ultra Banca',
       environment: process.env.NODE_ENV || 'development',
@@ -395,9 +399,11 @@ export async function testWebhook(id: string): Promise<{
     .digest('hex');
 
   // Preparar headers
+  // Usa 'x-signature' para compatibilidade com ScaleCore e outros CRMs
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Webhook-Signature': `sha256=${signature}`,
+    'x-signature': signature,
+    'X-Webhook-Signature': `sha256=${signature}`, // Mantém compatibilidade legada
     'X-Webhook-Event': 'test.webhook',
     'X-Webhook-Timestamp': timestamp,
     'X-Webhook-Id': eventId,

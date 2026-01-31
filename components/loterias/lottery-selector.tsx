@@ -234,20 +234,22 @@ export function LotterySelector({
       <div className="h-32" />
 
       {/* Fixed Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 space-y-3">
-        <button
-          onClick={onConfirm}
-          disabled={selectedLotteries.length === 0}
-          className="w-full h-12 bg-[#E5A220] rounded-lg font-semibold text-white disabled:opacity-50"
-        >
-          Confirmar
-        </button>
-        <button
-          onClick={onBack}
-          className="w-full h-12 bg-zinc-900 rounded-lg font-semibold text-white"
-        >
-          Voltar
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <div className="max-w-md mx-auto space-y-3">
+          <button
+            onClick={onConfirm}
+            disabled={selectedLotteries.length === 0}
+            className="w-full h-12 bg-[#E5A220] rounded-lg font-semibold text-white disabled:opacity-50"
+          >
+            Confirmar
+          </button>
+          <button
+            onClick={onBack}
+            className="w-full h-12 bg-zinc-900 rounded-lg font-semibold text-white"
+          >
+            Voltar
+          </button>
+        </div>
       </div>
     </div>
   );
