@@ -117,37 +117,41 @@ export default function FinalizarApostaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A202C]">
-      <BetHeader title="FINALIZAR APOSTA" onBack={() => router.back()} />
+    <div className="min-h-screen bg-gray-300 flex justify-center">
+      <div className="w-full max-w-md bg-zinc-50 min-h-screen shadow-xl flex flex-col">
+        <BetHeader title="FINALIZAR APOSTA" onBack={() => router.back()} />
 
-      {/* Success Toast */}
-      {showToast && (
-        <div className="fixed top-16 left-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-2">
-            <Check className="h-5 w-5" />
-            <span>Pule registrada com sucesso. Boa sorte!!!</span>
+        {/* Success Toast */}
+        {showToast && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
+            <div className="bg-green-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5" />
+                <span>Pule registrada com sucesso. Boa sorte!!!</span>
+              </div>
+              <button onClick={() => setShowToast(false)}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <button onClick={() => setShowToast(false)}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
+        )}
 
-      {/* Error Toast */}
-      {error && (
-        <div className="fixed top-16 left-4 right-4 z-50 bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-2">
-            <X className="h-5 w-5" />
-            <span>{error}</span>
+        {/* Error Toast */}
+        {error && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
+            <div className="bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-2">
+                <X className="h-5 w-5" />
+                <span>{error}</span>
+              </div>
+              <button onClick={() => setError(null)}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <button onClick={() => setError(null)}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
+        )}
 
-      <div className="bg-gray-100 min-h-screen p-4">
-        <div className="max-w-md mx-auto">
+        <div className="flex-1 bg-gray-100 p-4">
         {/* Receipt Card */}
         <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4">
           {/* Pule # */}
