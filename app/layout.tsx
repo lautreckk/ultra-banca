@@ -4,6 +4,7 @@ import './globals.css';
 import { ConfigProvider } from '@/contexts/platform-config-context';
 import { ThemeInjector } from '@/components/theme-injector';
 import { getPlatformConfig } from '@/lib/admin/actions/platform-config';
+import { PaymentWatcherProvider } from '@/components/shared/payment-watcher-provider';
 
 // ============================================================================
 // SECURITY: Sanitização de Scripts para prevenir XSS
@@ -218,7 +219,9 @@ export default async function RootLayout({
       <body className={`${poppins.variable} font-sans antialiased`}>
         <ConfigProvider config={config}>
           <ThemeInjector />
-          {children}
+          <PaymentWatcherProvider>
+            {children}
+          </PaymentWatcherProvider>
         </ConfigProvider>
       </body>
     </html>
