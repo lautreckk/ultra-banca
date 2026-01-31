@@ -1334,22 +1334,129 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
 # CLI
 # =============================================================================
 
+@app.function(image=image, secrets=[supabase_secret, firecrawl_secret], timeout=1800)
+def scrape_ultimos_dias(dias: int = 7) -> dict:
+    """
+    Scrape dos últimos N dias para todos os estados
+    """
+    from supabase import create_client
+    import time
+
+    supabase_url = os.environ["SUPABASE_URL"]
+    supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    supabase = create_client(supabase_url, supabase_key)
+
+    hoje = datetime.now()
+    resultados_total = []
+    resumo_por_dia = {}
+
+    print(f"\n{'='*70}")
+    print(f"SCRAPE DOS ÚLTIMOS {dias} DIAS")
+    print(f"{'='*70}\n")
+
+    for i in range(dias):
+        data_scrape = (hoje - timedelta(days=i)).strftime("%Y-%m-%d")
+        print(f"\n{'='*70}")
+        print(f"DIA {i+1}/{dias}: {data_scrape}")
+        print(f"{'='*70}")
+
+        todos_resultados = []
+        erros = []
+
+        for estado in list(ESTADOS_CONFIG.keys()):
+            try:
+                resultado = scrape_estado_firecrawl.remote(estado, data_scrape)
+
+                if resultado.get("error"):
+                    erros.append(f"{estado}: {resultado['error']}")
+                else:
+                    todos_resultados.extend(resultado.get("resultados", []))
+                    print(f"[{estado}] OK: {len(resultado.get('resultados', []))} resultados")
+
+                # Delay entre estados
+                time.sleep(2)
+
+            except Exception as e:
+                erros.append(f"{estado}: {str(e)}")
+                print(f"[{estado}] Exceção: {e}")
+
+        # Salvar no Supabase
+        upserted = 0
+        for r in todos_resultados:
+            premios = r.get("premios", [])
+            if len(premios) < 5:
+                continue
+            try:
+                supabase.table("resultados").upsert({
+                    "data": r["data"],
+                    "horario": r["horario"],
+                    "banca": r["banca"],
+                    "loteria": r["loteria"],
+                    "premio_1": premios[0]["milhar"] if len(premios) > 0 else None,
+                    "premio_2": premios[1]["milhar"] if len(premios) > 1 else None,
+                    "premio_3": premios[2]["milhar"] if len(premios) > 2 else None,
+                    "premio_4": premios[3]["milhar"] if len(premios) > 3 else None,
+                    "premio_5": premios[4]["milhar"] if len(premios) > 4 else None,
+                    "premio_6": premios[5]["milhar"] if len(premios) > 5 else None,
+                    "premio_7": premios[6]["milhar"] if len(premios) > 6 else None,
+                    "bicho_1": premios[0].get("bicho", "") if len(premios) > 0 else None,
+                    "bicho_2": premios[1].get("bicho", "") if len(premios) > 1 else None,
+                    "bicho_3": premios[2].get("bicho", "") if len(premios) > 2 else None,
+                    "bicho_4": premios[3].get("bicho", "") if len(premios) > 3 else None,
+                    "bicho_5": premios[4].get("bicho", "") if len(premios) > 4 else None,
+                    "bicho_6": premios[5].get("bicho", "") if len(premios) > 5 else None,
+                    "bicho_7": premios[6].get("bicho", "") if len(premios) > 6 else None,
+                }, on_conflict="data,horario,banca,loteria").execute()
+                upserted += 1
+            except Exception:
+                pass
+
+        resumo_por_dia[data_scrape] = {
+            "scraped": len(todos_resultados),
+            "upserted": upserted,
+            "erros": len(erros),
+        }
+        resultados_total.extend(todos_resultados)
+
+        print(f"\n📊 Resumo {data_scrape}: {len(todos_resultados)} scraped, {upserted} upserted")
+
+        # Verificar apostas do dia
+        verificar_premios_v2.remote(data_scrape)
+
+    print(f"\n{'='*70}")
+    print(f"RESUMO FINAL - {dias} DIAS")
+    print(f"{'='*70}")
+    for data_str, stats in resumo_por_dia.items():
+        print(f"  {data_str}: {stats['scraped']} scraped, {stats['upserted']} upserted, {stats['erros']} erros")
+    print(f"\nTOTAL: {len(resultados_total)} resultados")
+
+    return {
+        "success": True,
+        "dias": dias,
+        "total_resultados": len(resultados_total),
+        "resumo_por_dia": resumo_por_dia,
+    }
+
+
 @app.local_entrypoint()
 def main(
     comando: str = "scrape",
     estado: str = "RJ",
     data: Optional[str] = None,
+    dias: int = 7,
 ):
     """
     Comandos:
-        scrape - Scrape inteligente de um estado (com múltiplas fontes e logs)
-        teste  - Testa somente Firecrawl (debug)
-        todos  - Scrape de todos os estados
+        scrape   - Scrape inteligente de um estado (com múltiplas fontes e logs)
+        teste    - Testa somente Firecrawl (debug)
+        todos    - Scrape de todos os estados para uma data
+        historico - Scrape dos últimos N dias (padrão: 7)
 
     Exemplos:
         modal run modal_scraper_v2.py --comando scrape --estado MG --data 2026-01-30
         modal run modal_scraper_v2.py --comando teste --estado RJ --data 2026-01-29
         modal run modal_scraper_v2.py --comando todos --data 2026-01-29
+        modal run modal_scraper_v2.py --comando historico --dias 7
     """
     if comando == "scrape":
         # Usa a função principal com múltiplas fontes e logs detalhados
@@ -1416,6 +1523,13 @@ def main(
         resultado = scrape_todos_v2.remote(data)
         print(f"\nResultado: {resultado}")
 
+    elif comando == "historico":
+        print(f"\n{'#'*70}")
+        print(f"# SCRAPE HISTÓRICO: ÚLTIMOS {dias} DIAS")
+        print(f"{'#'*70}\n")
+        resultado = scrape_ultimos_dias.remote(dias)
+        print(f"\nResultado final: {resultado}")
+
     else:
         print(f"Comando: {comando}")
-        print("Comandos válidos: scrape, teste, todos")
+        print("Comandos válidos: scrape, teste, todos, historico")

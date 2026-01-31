@@ -9,8 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
 import { trackPurchase, trackInitiateCheckout, generateEventId } from '@/lib/tracking/facebook';
-
-const quickAmounts = [10, 20, 50, 100, 200, 500];
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 interface PaymentData {
   id: string;
@@ -34,6 +33,21 @@ export default function RecargaPixPage() {
   const supabase = createClient();
   const router = useRouter();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('deposito');
+  const config = usePlatformConfig();
+
+  // Valores de depósito do config
+  const depositMin = config.deposit_min || 10;
+  const depositMax = config.deposit_max || 10000;
+
+  // Gera valores rápidos baseados no mínimo
+  const quickAmounts = [
+    depositMin,
+    depositMin * 2,
+    depositMin * 5,
+    depositMin * 10,
+    depositMin * 20,
+    depositMin * 50,
+  ].filter(v => v <= depositMax);
 
   const handleAmountChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -54,8 +68,13 @@ export default function RecargaPixPage() {
       return;
     }
 
-    if (valorNum < 5) {
-      setError('Valor mínimo: R$ 5,00');
+    if (valorNum < depositMin) {
+      setError(`Valor mínimo: ${formatCurrency(depositMin)}`);
+      return;
+    }
+
+    if (valorNum > depositMax) {
+      setError(`Valor máximo: ${formatCurrency(depositMax)}`);
       return;
     }
 
@@ -303,7 +322,7 @@ export default function RecargaPixPage() {
                   className="w-full rounded-lg border border-gray-300 py-3 pl-12 pr-4 text-lg font-semibold"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Valor mínimo: R$ 5,00</p>
+              <p className="text-xs text-gray-500 mt-1">Valor mínimo: {formatCurrency(depositMin)}</p>
             </div>
 
             {/* Quick Amounts */}
@@ -342,7 +361,7 @@ export default function RecargaPixPage() {
               <h3 className="font-medium text-gray-900 mb-2">Informações:</h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• O depósito é instantâneo via PIX</li>
-                <li>• Valor mínimo: R$ 5,00</li>
+                <li>• Valor mínimo: {formatCurrency(depositMin)}</li>
                 <li>• Sem taxa de depósito</li>
                 <li>• Saldo disponível imediatamente após confirmação</li>
               </ul>
