@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +23,40 @@ export function ValueSelector({
   data,
   className,
 }: ValueSelectorProps) {
+  const [inputValue, setInputValue] = useState(value.toFixed(2).replace('.', ','));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sincroniza quando o valor externo muda (pelos botões rápidos)
+  useEffect(() => {
+    setInputValue(value.toFixed(2).replace('.', ','));
+  }, [value]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let rawValue = e.target.value;
+
+    // Remove tudo que não seja número ou vírgula
+    rawValue = rawValue.replace(/[^\d,]/g, '');
+
+    // Garante apenas uma vírgula
+    const parts = rawValue.split(',');
+    if (parts.length > 2) {
+      rawValue = parts[0] + ',' + parts.slice(1).join('');
+    }
+
+    // Limita a 2 casas decimais
+    if (parts.length === 2 && parts[1].length > 2) {
+      rawValue = parts[0] + ',' + parts[1].slice(0, 2);
+    }
+
+    setInputValue(rawValue);
+
+    // Converte para número e atualiza
+    const numValue = parseFloat(rawValue.replace(',', '.')) || 0;
+    if (numValue >= 0) {
+      onChange(numValue);
+    }
+  };
+
   const handleQuickAdd = (amount: number) => {
     const newValue = value + amount;
     onChange(newValue);
@@ -30,10 +64,8 @@ export function ValueSelector({
 
   const handleClear = () => {
     onChange(0.1);
+    setInputValue('0,10');
   };
-
-  // Format value for display
-  const displayValue = value.toFixed(2).replace('.', ',');
 
   return (
     <div className={cn('bg-white min-h-screen', className)}>
@@ -64,7 +96,15 @@ export function ValueSelector({
       <div className="px-4">
         <div className="flex items-center justify-between h-14 px-4 border border-gray-200 rounded-lg bg-white">
           <span className="text-gray-500 font-medium">R$</span>
-          <span className="text-xl font-bold text-gray-900">{displayValue}</span>
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="decimal"
+            value={inputValue}
+            onChange={handleInputChange}
+            className="flex-1 text-xl font-bold text-gray-900 text-center bg-transparent outline-none"
+            placeholder="0,00"
+          />
           <button
             onClick={handleClear}
             className="text-gray-400 text-sm hover:text-gray-600"
