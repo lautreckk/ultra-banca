@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2, Loader2 } from 'lucide-react';
+import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
 import { formatCurrency } from '@/lib/utils/format-currency';
@@ -10,6 +10,7 @@ import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
 import { trackPurchase, trackInitiateCheckout, generateEventId } from '@/lib/tracking/facebook';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { usePaymentContext } from '@/components/shared/payment-watcher-provider';
 
 interface PaymentData {
   id: string;
@@ -34,6 +35,7 @@ export default function RecargaPixPage() {
   const router = useRouter();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('deposito');
   const config = usePlatformConfig();
+  const { addPayment, confirmedPayment, removePayment } = usePaymentContext();
 
   // Valores de depósito do config
   const depositMin = config.deposit_min || 10;
@@ -50,8 +52,21 @@ export default function RecargaPixPage() {
   ].filter(v => v <= depositMax);
 
   const handleAmountChange = (value: string) => {
-    const numericValue = value.replace(/\D/g, '');
-    setAmount(numericValue);
+    // Permite apenas números, vírgula e ponto
+    let sanitized = value.replace(/[^\d,\.]/g, '');
+    // Substitui vírgula por ponto (padrão brasileiro)
+    sanitized = sanitized.replace(',', '.');
+    // Remove pontos extras (mantém apenas o último como decimal)
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
+    }
+    // Limita a 2 casas decimais
+    if (sanitized.includes('.')) {
+      const [intPart, decPart] = sanitized.split('.');
+      sanitized = intPart + '.' + (decPart?.slice(0, 2) || '');
+    }
+    setAmount(sanitized);
     setError('');
   };
 
@@ -61,7 +76,7 @@ export default function RecargaPixPage() {
   };
 
   const handleGeneratePix = async () => {
-    const valorNum = parseInt(amount);
+    const valorNum = parseFloat(amount);
 
     if (!valorNum || valorNum <= 0) {
       setError('Informe um valor válido');
@@ -115,6 +130,13 @@ export default function RecargaPixPage() {
       });
       setStatus('PENDING');
 
+      // Adiciona ao sistema global de verificacao em background
+      addPayment({
+        id: data.pagamento.id,
+        valor: data.pagamento.valor,
+        orderNumber: data.pagamento.orderNumber,
+      });
+
       // Dispara evento InitiateCheckout no Facebook Pixel
       const eventId = generateEventId('checkout', data.pagamento.id);
       trackInitiateCheckout(valorNum, eventId);
@@ -158,9 +180,13 @@ export default function RecargaPixPage() {
 
       if (data.status === 'PAID') {
         setStatus('PAID');
+        // Remove do watcher global (verificacao local pegou primeiro)
+        removePayment(paymentData.id);
         return true;
       } else if (data.status === 'CANCELLED') {
         setStatus('CANCELLED');
+        // Remove do watcher global
+        removePayment(paymentData.id);
         return true;
       }
 
@@ -169,7 +195,7 @@ export default function RecargaPixPage() {
       console.error('Error checking payment status:', error);
       return false;
     }
-  }, [paymentData, supabase]);
+  }, [paymentData, supabase, removePayment]);
 
   // Poll for payment status (a cada 10 segundos para escalar bem com 1000+ usuários)
   useEffect(() => {
@@ -190,6 +216,13 @@ export default function RecargaPixPage() {
       clearInterval(interval);
     };
   }, [paymentData, status, checkPaymentStatus]);
+
+  // Escuta confirmacao de pagamento do watcher global
+  useEffect(() => {
+    if (confirmedPayment && paymentData && confirmedPayment.id === paymentData.id) {
+      setStatus('PAID');
+    }
+  }, [confirmedPayment, paymentData]);
 
   // Track purchase and show ad popup when payment is confirmed
   useEffect(() => {
@@ -232,6 +265,10 @@ export default function RecargaPixPage() {
   };
 
   const handleNewPix = () => {
+    // Remove do watcher global se existir
+    if (paymentData) {
+      removePayment(paymentData.id);
+    }
     setPaymentData(null);
     setAmount('');
     setQrCodeDataUrl('');
@@ -314,8 +351,8 @@ export default function RecargaPixPage() {
                   R$
                 </span>
                 <input
-                  type="tel"
-                  inputMode="numeric"
+                  type="text"
+                  inputMode="decimal"
                   value={amount}
                   onChange={(e) => handleAmountChange(e.target.value)}
                   placeholder="0,00"
@@ -350,7 +387,7 @@ export default function RecargaPixPage() {
             {/* Generate Button */}
             <button
               onClick={handleGeneratePix}
-              disabled={loading || !amount || parseInt(amount) <= 0}
+              disabled={loading || !amount || parseFloat(amount) <= 0 || isNaN(parseFloat(amount))}
               className="w-full rounded-lg bg-[#1A202C] py-3 font-bold text-white disabled:opacity-50"
             >
               {loading ? 'Gerando PIX...' : 'Gerar PIX'}
