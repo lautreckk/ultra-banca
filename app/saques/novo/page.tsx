@@ -204,10 +204,10 @@ export default function NovoSaquePage() {
       <PageLayout title="Saque Solicitado" showBack>
         <div className="bg-white min-h-screen p-4">
           <div className="text-center py-12">
-            <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Saque Solicitado!</h2>
+            <CheckCircle className="h-20 w-20 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Saque Pendente</h2>
             <p className="text-gray-600 mb-6">
-              Seu saque está sendo processado e será enviado em breve.
+              Seu saque foi registrado e está aguardando aprovação. Você será notificado assim que for processado.
             </p>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left max-w-sm mx-auto">
