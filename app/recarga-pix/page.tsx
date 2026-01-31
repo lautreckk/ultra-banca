@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2 } from 'lucide-react';
+import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2, Gift } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
 import { formatCurrency } from '@/lib/utils/format-currency';
@@ -21,6 +21,12 @@ interface PaymentData {
   orderNumber: string;
 }
 
+interface BonusTier {
+  deposito_minimo: number;
+  bonus_percentual: number;
+  bonus_maximo: number | null;
+}
+
 export default function RecargaPixPage() {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,10 +42,53 @@ export default function RecargaPixPage() {
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('deposito');
   const config = usePlatformConfig();
   const { addPayment, confirmedPayment, removePayment } = usePaymentContext();
+  const [bonusTiers, setBonusTiers] = useState<BonusTier[]>([]);
 
   // Valores de depósito do config
   const depositMin = config.deposit_min || 10;
   const depositMax = config.deposit_max || 10000;
+
+  // Buscar faixas de bônus ativas
+  useEffect(() => {
+    const fetchBonusTiers = async () => {
+      const { data } = await supabase
+        .from('bonus_deposito_config')
+        .select('deposito_minimo, bonus_percentual, bonus_maximo')
+        .eq('ativo', true)
+        .order('deposito_minimo', { ascending: true });
+
+      if (data && data.length > 0) {
+        setBonusTiers(data.map(t => ({
+          deposito_minimo: Number(t.deposito_minimo),
+          bonus_percentual: Number(t.bonus_percentual),
+          bonus_maximo: t.bonus_maximo ? Number(t.bonus_maximo) : null,
+        })));
+      }
+    };
+
+    fetchBonusTiers();
+  }, [supabase]);
+
+  // Calcular bônus para o valor atual
+  const calculateBonusForAmount = (valor: number): { percentual: number; bonus: number } | null => {
+    if (!bonusTiers.length || valor <= 0) return null;
+
+    // Encontrar a maior faixa aplicável (deposito_minimo <= valor)
+    const applicableTier = [...bonusTiers]
+      .reverse()
+      .find(t => valor >= t.deposito_minimo);
+
+    if (!applicableTier) return null;
+
+    let bonus = valor * (applicableTier.bonus_percentual / 100);
+    if (applicableTier.bonus_maximo && bonus > applicableTier.bonus_maximo) {
+      bonus = applicableTier.bonus_maximo;
+    }
+
+    return { percentual: applicableTier.bonus_percentual, bonus };
+  };
+
+  const currentBonus = amount ? calculateBonusForAmount(parseFloat(amount) || 0) : null;
 
   // Gera valores rápidos baseados no mínimo
   const quickAmounts = [
@@ -341,6 +390,28 @@ export default function RecargaPixPage() {
               </div>
             )}
 
+            {/* Bonus Banner */}
+            {bonusTiers.length > 0 && (
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gift className="h-5 w-5" />
+                  <span className="font-bold">Bônus de Depósito Ativo!</span>
+                </div>
+                <div className="space-y-1 text-sm">
+                  {bonusTiers.map((tier, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <span>A partir de {formatCurrency(tier.deposito_minimo)}:</span>
+                      <span className="font-bold">
+                        +{tier.bonus_percentual}%
+                        {tier.bonus_maximo && <span className="font-normal text-green-100"> (máx {formatCurrency(tier.bonus_maximo)})</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-green-100 mt-2">* Bônus creditado em saldo promocional para apostas</p>
+              </div>
+            )}
+
             {/* Amount Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -360,6 +431,16 @@ export default function RecargaPixPage() {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">Valor mínimo: {formatCurrency(depositMin)}</p>
+
+              {/* Bonus Preview */}
+              {currentBonus && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700">
+                    <span className="font-medium">+{currentBonus.percentual}% de bônus:</span>{' '}
+                    <span className="font-bold text-green-600">+{formatCurrency(currentBonus.bonus)}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Quick Amounts */}
