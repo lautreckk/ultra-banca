@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Building2,
+  Briefcase,
   Users,
   LogOut,
   Menu,
@@ -26,6 +27,11 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     href: '/admin-master/dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
+  },
+  {
+    label: 'Clientes',
+    href: '/admin-master/clientes',
+    icon: <Briefcase className="h-5 w-5" />,
   },
   {
     label: 'Plataformas',

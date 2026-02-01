@@ -21,6 +21,10 @@ const DEFAULT_PLATFORM_ID = 'ff61b7a2-1098-4bc4-99c5-5afb600fbc57';
 // DEFINIÇÃO DE ROTAS
 // ============================================================================
 
+// Rotas do contexto ADMIN-MASTER (Super Admin)
+const ADMIN_MASTER_PREFIX = '/admin-master';
+const ADMIN_MASTER_AUTH_ROUTES = ['/admin-master/login'];
+
 // Rotas do contexto ADMIN
 const ADMIN_PREFIX = '/admin';
 const ADMIN_AUTH_ROUTES = ['/admin/login'];
@@ -62,7 +66,17 @@ const BANCA_PROTECTED_ROUTES = [
 // HELPERS
 // ============================================================================
 
+function isAdminMasterRoute(pathname: string): boolean {
+  return pathname.startsWith(ADMIN_MASTER_PREFIX);
+}
+
+function isAdminMasterAuthRoute(pathname: string): boolean {
+  return ADMIN_MASTER_AUTH_ROUTES.includes(pathname);
+}
+
 function isAdminRoute(pathname: string): boolean {
+  // Excluir rotas admin-master da verificação de admin
+  if (isAdminMasterRoute(pathname)) return false;
   return pathname.startsWith(ADMIN_PREFIX);
 }
 
@@ -224,6 +238,11 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO A: USUÁRIO NÃO ESTÁ LOGADO
   // ============================================================================
   if (!user) {
+    // A0: Tentando acessar área admin-master -> Redirecionar para /admin-master/login
+    if (isAdminMasterRoute(pathname) && !isAdminMasterAuthRoute(pathname)) {
+      return redirect(request, '/admin-master/login');
+    }
+
     // A1: Tentando acessar área admin -> Redirecionar para /admin/login
     if (isAdminRoute(pathname) && !isAdminAuthRoute(pathname)) {
       return redirect(request, '/admin/login');
@@ -293,6 +312,29 @@ export async function updateSession(request: NextRequest) {
       return redirect(request, '/promotor/login');
     }
     return redirect(request, '/login');
+  }
+
+  // ============================================================================
+  // CENÁRIO B0: ROTAS ADMIN-MASTER (requer super_admin)
+  // ============================================================================
+  if (isAdminMasterRoute(pathname)) {
+    // Apenas super_admin pode acessar admin-master
+    if (!isSuperAdmin) {
+      // Se é admin mas não super_admin, redirecionar para dashboard normal
+      if (isAdmin) {
+        return redirect(request, '/admin/dashboard');
+      }
+      // Se não é admin, redirecionar para home
+      return redirect(request, '/');
+    }
+
+    // Super admin na página de login do admin-master
+    if (isAdminMasterAuthRoute(pathname)) {
+      return redirect(request, '/admin-master/dashboard');
+    }
+
+    // Super admin em área admin-master protegida -> Permitir
+    return supabaseResponse;
   }
 
   // ============================================================================

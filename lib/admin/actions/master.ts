@@ -38,7 +38,7 @@ export async function requireSuperAdmin() {
   const { isSuperAdmin, user } = await checkSuperAdmin();
 
   if (!user) {
-    redirect('/admin/login');
+    redirect('/admin-master/login');
   }
 
   if (!isSuperAdmin) {
@@ -54,6 +54,8 @@ export async function requireSuperAdmin() {
 
 export interface Platform {
   id: string;
+  client_id: string | null;
+  client_name?: string;
   domain: string;
   slug: string;
   name: string;
@@ -75,7 +77,10 @@ export async function getPlatforms(): Promise<Platform[]> {
 
   const { data: platforms, error } = await supabase
     .from('platforms')
-    .select('*')
+    .select(`
+      *,
+      clients(name)
+    `)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -109,6 +114,7 @@ export async function getPlatforms(): Promise<Platform[]> {
 
       return {
         ...platform,
+        client_name: (platform.clients as unknown as { name: string })?.name || null,
         total_users: usersResult.count || 0,
         total_deposits: totalDeposits,
         total_bets: betsResult.count || 0,
@@ -138,6 +144,7 @@ export async function getPlatformById(id: string): Promise<Platform | null> {
 }
 
 export interface CreatePlatformData {
+  client_id: string;
   domain: string;
   slug: string;
   name: string;
@@ -176,9 +183,21 @@ export async function createPlatform(
     return { success: false, error: 'Slug já está em uso' };
   }
 
+  // Verificar se cliente existe
+  const { data: client } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('id', data.client_id)
+    .single();
+
+  if (!client) {
+    return { success: false, error: 'Cliente não encontrado' };
+  }
+
   const { data: platform, error } = await supabase
     .from('platforms')
     .insert({
+      client_id: data.client_id,
       domain: data.domain,
       slug: data.slug,
       name: data.name,
@@ -505,4 +524,33 @@ export async function searchUsersForAdmin(
     cpf: u.cpf,
     platform_name: (u.platforms as unknown as { name: string })?.name || 'N/A',
   }));
+}
+
+// =============================================
+// CLIENTS LIST (for platform creation dropdown)
+// =============================================
+
+export interface ClientOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export async function getClientsForSelect(): Promise<ClientOption[]> {
+  await requireSuperAdmin();
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('clients')
+    .select('id, name, slug')
+    .eq('ativo', true)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching clients:', error);
+    return [];
+  }
+
+  return data || [];
 }

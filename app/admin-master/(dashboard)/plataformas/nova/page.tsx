@@ -1,17 +1,23 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { createPlatform } from '@/lib/admin/actions/master';
-import { Building2, ArrowLeft, Loader2 } from 'lucide-react';
+import { useState, useEffect, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createPlatform, getClientsForSelect, type ClientOption } from '@/lib/admin/actions/master';
+import { Building2, ArrowLeft, Loader2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NovaPlataformaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedClientId = searchParams.get('client_id');
+
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [loadingClients, setLoadingClients] = useState(true);
 
   const [form, setForm] = useState({
+    client_id: preselectedClientId || '',
     name: '',
     domain: '',
     slug: '',
@@ -20,6 +26,17 @@ export default function NovaPlataformaPage() {
     color_primary: '#FFD700',
     active_gateway: 'bspay',
   });
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  async function loadClients() {
+    setLoadingClients(true);
+    const data = await getClientsForSelect();
+    setClients(data);
+    setLoadingClients(false);
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -41,7 +58,7 @@ export default function NovaPlataformaPage() {
     e.preventDefault();
     setError(null);
 
-    if (!form.name || !form.domain || !form.slug) {
+    if (!form.client_id || !form.name || !form.domain || !form.slug) {
       setError('Preencha todos os campos obrigatorios');
       return;
     }
@@ -83,6 +100,43 @@ export default function NovaPlataformaPage() {
               {error}
             </div>
           )}
+
+          {/* Cliente */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-purple-400" />
+              Cliente
+            </h3>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">
+                Cliente *
+              </label>
+              {loadingClients ? (
+                <div className="flex items-center gap-2 text-zinc-500 py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Carregando clientes...</span>
+                </div>
+              ) : (
+                <select
+                  name="client_id"
+                  value={form.client_id}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                >
+                  <option value="">Selecione um cliente</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name} ({client.slug})
+                    </option>
+                  ))}
+                </select>
+              )}
+              <p className="mt-1 text-xs text-zinc-500">
+                Cliente ao qual esta plataforma pertence
+              </p>
+            </div>
+          </div>
 
           {/* Basic Info */}
           <div className="space-y-4">

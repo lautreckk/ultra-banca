@@ -3,13 +3,12 @@
 import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  getPlatforms,
-  deletePlatform,
-  updatePlatform,
-  type Platform,
-} from '@/lib/admin/actions/master';
+  getClients,
+  deleteClient,
+  updateClient,
+  type Client,
+} from '@/lib/admin/actions/clients';
 import {
-  Building2,
   Briefcase,
   Plus,
   Edit,
@@ -17,55 +16,49 @@ import {
   ToggleLeft,
   ToggleRight,
   Loader2,
-  ExternalLink,
+  Building2,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
-
-export default function PlataformasPage() {
+export default function ClientesPage() {
   const router = useRouter();
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPlatforms();
+    loadClients();
   }, []);
 
-  async function loadPlatforms() {
+  async function loadClients() {
     setLoading(true);
-    const data = await getPlatforms();
-    setPlatforms(data);
+    const data = await getClients();
+    setClients(data);
     setLoading(false);
   }
 
-  async function handleToggleActive(platform: Platform) {
-    setActionLoading(platform.id);
-    const result = await updatePlatform(platform.id, { ativo: !platform.ativo });
+  async function handleToggleActive(client: Client) {
+    setActionLoading(client.id);
+    const result = await updateClient(client.id, { ativo: !client.ativo });
     if (result.success) {
-      await loadPlatforms();
+      await loadClients();
     } else {
       alert(result.error);
     }
     setActionLoading(null);
   }
 
-  async function handleDelete(platform: Platform) {
-    if (!confirm(`Tem certeza que deseja excluir a plataforma "${platform.name}"?`)) {
+  async function handleDelete(client: Client) {
+    if (!confirm(`Tem certeza que deseja excluir o cliente "${client.name}"?`)) {
       return;
     }
 
-    setActionLoading(platform.id);
-    const result = await deletePlatform(platform.id);
+    setActionLoading(client.id);
+    const result = await deleteClient(client.id);
     if (result.success) {
-      await loadPlatforms();
+      await loadClients();
     } else {
       alert(result.error);
     }
@@ -85,18 +78,18 @@ export default function PlataformasPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Building2 className="h-8 w-8 text-purple-400" />
+          <Briefcase className="h-8 w-8 text-purple-400" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Plataformas</h1>
-            <p className="text-zinc-400">Gerencie todas as bancas do sistema</p>
+            <h1 className="text-2xl font-bold text-white">Clientes</h1>
+            <p className="text-zinc-400">Gerencie os clientes do Scarface SaaS</p>
           </div>
         </div>
         <Link
-          href="/admin-master/plataformas/nova"
+          href="/admin-master/clientes/novo"
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
         >
           <Plus className="h-4 w-4" />
-          Nova Plataforma
+          Novo Cliente
         </Link>
       </div>
 
@@ -107,22 +100,16 @@ export default function PlataformasPage() {
             <thead className="bg-zinc-900/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                  Plataforma
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                   Cliente
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                  Dominio
+                  Contato
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                  Gateway
+                  Plataformas
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                   Usuarios
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                  Faturamento
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                   Status
@@ -133,85 +120,78 @@ export default function PlataformasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {platforms.map((platform) => (
-                <tr key={platform.id} className="hover:bg-zinc-800/30">
+              {clients.map((client) => (
+                <tr key={client.id} className="hover:bg-zinc-800/30">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: platform.color_primary }}
-                      >
-                        {platform.name.charAt(0)}
+                      <div className="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold">
+                        {client.logo_url ? (
+                          <img
+                            src={client.logo_url}
+                            alt={client.name}
+                            className="w-full h-full object-contain rounded-lg"
+                          />
+                        ) : (
+                          client.name.charAt(0)
+                        )}
                       </div>
                       <div>
-                        <p className="font-medium text-white">{platform.name}</p>
-                        <p className="text-sm text-zinc-500">{platform.slug}</p>
+                        <p className="font-medium text-white">{client.name}</p>
+                        <p className="text-sm text-zinc-500">{client.slug}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    {platform.client_name ? (
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4 text-purple-400" />
-                        <span className="text-zinc-300">{platform.client_name}</span>
-                      </div>
-                    ) : (
-                      <span className="text-zinc-500">-</span>
-                    )}
+                    <div>
+                      <p className="text-zinc-300">{client.email || '-'}</p>
+                      <p className="text-sm text-zinc-500">{client.phone || '-'}</p>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
-                    <a
-                      href={`https://${platform.domain}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 flex items-center gap-1"
-                    >
-                      {platform.domain}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <div className="flex items-center gap-2 text-zinc-300">
+                      <Building2 className="h-4 w-4 text-purple-400" />
+                      <span>{client.total_platforms || 0}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-zinc-300 uppercase text-sm">
-                    {platform.active_gateway}
-                  </td>
-                  <td className="px-6 py-4 text-zinc-300">
-                    {platform.total_users?.toLocaleString() || 0}
-                  </td>
-                  <td className="px-6 py-4 text-green-400">
-                    {formatCurrency(platform.total_deposits || 0)}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-zinc-300">
+                      <Users className="h-4 w-4 text-purple-400" />
+                      <span>{client.total_users?.toLocaleString() || 0}</span>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => handleToggleActive(platform)}
-                      disabled={actionLoading === platform.id}
+                      onClick={() => handleToggleActive(client)}
+                      disabled={actionLoading === client.id}
                       className="flex items-center gap-2"
                     >
-                      {actionLoading === platform.id ? (
+                      {actionLoading === client.id ? (
                         <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
-                      ) : platform.ativo ? (
+                      ) : client.ativo ? (
                         <ToggleRight className="h-6 w-6 text-green-400" />
                       ) : (
                         <ToggleLeft className="h-6 w-6 text-zinc-500" />
                       )}
                       <span
                         className={`text-sm ${
-                          platform.ativo ? 'text-green-400' : 'text-zinc-500'
+                          client.ativo ? 'text-green-400' : 'text-zinc-500'
                         }`}
                       >
-                        {platform.ativo ? 'Ativo' : 'Inativo'}
+                        {client.ativo ? 'Ativo' : 'Inativo'}
                       </span>
                     </button>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/admin-master/plataformas/${platform.id}`}
+                        href={`/admin-master/clientes/${client.id}`}
                         className="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-white transition-colors"
                       >
                         <Edit className="h-4 w-4" />
                       </Link>
                       <button
-                        onClick={() => handleDelete(platform)}
-                        disabled={actionLoading === platform.id}
+                        onClick={() => handleDelete(client)}
+                        disabled={actionLoading === client.id}
                         className="p-2 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors disabled:opacity-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -220,10 +200,10 @@ export default function PlataformasPage() {
                   </td>
                 </tr>
               ))}
-              {platforms.length === 0 && (
+              {clients.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-zinc-500">
-                    Nenhuma plataforma cadastrada
+                  <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
+                    Nenhum cliente cadastrado
                   </td>
                 </tr>
               )}
