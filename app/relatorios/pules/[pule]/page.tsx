@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { PageLayout } from '@/components/layout';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { Loader2, Share2, AlertCircle } from 'lucide-react';
+import { Loader2, Share2, AlertCircle, XCircle, Clock } from 'lucide-react';
 
 interface ApostaDetalhada {
   id: string;
@@ -28,6 +28,79 @@ export default function PuleDetalhePage({ params }: { params: Promise<{ pule: st
   const [loading, setLoading] = useState(true);
   const [aposta, setAposta] = useState<ApostaDetalhada | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // Check if bet can be cancelled (at least 1 hour before first draw)
+  const canCancelBet = (bet: ApostaDetalhada): { allowed: boolean; reason?: string } => {
+    // Only pending bets can be cancelled
+    if (bet.status !== 'pendente') {
+      return { allowed: false, reason: 'Apenas apostas pendentes podem ser canceladas' };
+    }
+
+    // Get the earliest draw time
+    const drawTimes = bet.horarios.map(h => {
+      const [hours, minutes] = h.split(':').map(Number);
+      return hours * 60 + minutes; // Convert to minutes
+    });
+    const earliestDrawMinutes = Math.min(...drawTimes);
+    const earliestDrawTime = `${String(Math.floor(earliestDrawMinutes / 60)).padStart(2, '0')}:${String(earliestDrawMinutes % 60).padStart(2, '0')}`;
+
+    // Create date-time for the draw
+    const drawDate = new Date(bet.data_jogo + 'T' + earliestDrawTime + ':00');
+    const now = new Date();
+
+    // Calculate cutoff time (1 hour before draw)
+    const cutoffTime = new Date(drawDate.getTime() - 60 * 60 * 1000);
+
+    if (now >= cutoffTime) {
+      const diffMinutes = Math.round((drawDate.getTime() - now.getTime()) / (60 * 1000));
+      if (diffMinutes > 0) {
+        return { allowed: false, reason: `Prazo expirado. Faltam apenas ${diffMinutes} minutos para o sorteio das ${earliestDrawTime}` };
+      }
+      return { allowed: false, reason: 'O sorteio ja ocorreu ou esta em andamento' };
+    }
+
+    return { allowed: true };
+  };
+
+  const handleCancelBet = async () => {
+    if (!aposta) return;
+
+    setCancelling(true);
+    const supabase = createClient();
+
+    try {
+      // Call the cancel_bet function
+      const { error: cancelError } = await supabase.rpc('cancel_bet', {
+        p_aposta_id: aposta.id
+      });
+
+      if (cancelError) {
+        alert(cancelError.message || 'Erro ao cancelar aposta');
+        setCancelling(false);
+        return;
+      }
+
+      // Reload the bet data
+      const { data: updatedBet } = await supabase
+        .from('apostas')
+        .select('*')
+        .eq('id', aposta.id)
+        .single();
+
+      if (updatedBet) {
+        setAposta(updatedBet);
+      }
+
+      setShowCancelConfirm(false);
+      alert('Aposta cancelada com sucesso! O valor foi estornado para seu saldo.');
+    } catch (err) {
+      alert('Erro ao cancelar aposta');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     const fetchAposta = async () => {
@@ -280,6 +353,35 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
           </div>
         )}
 
+        {/* Cancel Button (if allowed) */}
+        {aposta.status === 'pendente' && (() => {
+          const cancelCheck = canCancelBet(aposta);
+          return (
+            <div className="space-y-2">
+              {cancelCheck.allowed ? (
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500 py-4 text-white active:bg-red-600"
+                >
+                  <XCircle className="h-5 w-5" />
+                  <span className="font-semibold">Cancelar Aposta</span>
+                </button>
+              ) : (
+                <div className="rounded-lg bg-zinc-100 p-3">
+                  <div className="flex items-start gap-2">
+                    <Clock className="h-5 w-5 text-zinc-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-zinc-700">Cancelamento indisponivel</p>
+                      <p className="text-xs text-zinc-500">{cancelCheck.reason}</p>
+                      <p className="text-xs text-zinc-400 mt-1">Prazo: ate 1 hora antes do sorteio</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Share Button */}
         <button
           onClick={handleShare}
@@ -289,6 +391,48 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
           <span className="font-semibold">Compartilhar</span>
         </button>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <XCircle className="h-6 w-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900">Cancelar Aposta?</h3>
+                <p className="text-sm text-zinc-500">Esta acao nao pode ser desfeita</p>
+              </div>
+            </div>
+
+            <div className="mb-4 rounded-lg bg-zinc-100 p-3">
+              <p className="text-sm text-zinc-600">
+                O valor de <strong className="text-zinc-900">{formatCurrency(aposta?.valor_total || 0)}</strong> sera
+                estornado para seu saldo.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                disabled={cancelling}
+                className="flex-1 rounded-lg bg-zinc-200 py-3 font-semibold text-zinc-700 active:bg-zinc-300 disabled:opacity-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleCancelBet}
+                disabled={cancelling}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 py-3 font-semibold text-white active:bg-red-600 disabled:opacity-50"
+              >
+                {cancelling && <Loader2 className="h-4 w-4 animate-spin" />}
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 }
