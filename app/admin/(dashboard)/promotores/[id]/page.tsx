@@ -434,7 +434,7 @@ function DeleteModal({ promotor, isOpen, onClose, onConfirm }: DeleteModalProps)
             Cancelar
           </Button>
           <Button
-            variant="destructive"
+            variant="danger"
             className="flex-1"
             onClick={handleDelete}
             disabled={!canDelete || isDeleting}
