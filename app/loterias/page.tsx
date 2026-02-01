@@ -4,33 +4,78 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Moon, Calculator, Clock, Dog, Loader2 } from 'lucide-react';
-import { getLastBetAndBuildUrl } from '@/lib/actions/apostas';
+import { Moon, Calculator, Clock, Dog, Loader2, X, Repeat } from 'lucide-react';
+import { getRecentBets, buildRepeatBetUrl, type BetSummary } from '@/lib/actions/apostas';
 
 export default function LoteriasPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [recentBets, setRecentBets] = useState<BetSummary[]>([]);
+  const [selectedBetLoading, setSelectedBetLoading] = useState<string | null>(null);
 
   const handleRepetirPule = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await getLastBetAndBuildUrl();
+      const result = await getRecentBets(20);
 
-      if (!result.success || !result.url) {
+      if (!result.success || !result.bets || result.bets.length === 0) {
         setError(result.error || 'Nenhuma aposta encontrada para repetir');
         return;
       }
 
-      router.push(result.url);
+      setRecentBets(result.bets);
+      setShowModal(true);
     } catch (err) {
-      setError('Erro ao buscar última aposta');
-      console.error('Error repeating bet:', err);
+      setError('Erro ao buscar apostas');
+      console.error('Error fetching bets:', err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSelectBet = async (bet: BetSummary) => {
+    setSelectedBetLoading(bet.id);
+    try {
+      const url = await buildRepeatBetUrl(bet);
+      router.push(url);
+    } catch (err) {
+      setError('Erro ao processar aposta');
+      console.error('Error building bet URL:', err);
+      setSelectedBetLoading(null);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const getTipoLabel = (tipo: string) => {
+    const labels: Record<string, string> = {
+      'loterias': 'LOTERIAS',
+      'quininha': 'QUININHA',
+      'seninha': 'SENINHA',
+      'lotinha': 'LOTINHA',
+    };
+    return labels[tipo] || tipo.toUpperCase();
+  };
+
+  const getTipoColor = (tipo: string) => {
+    const colors: Record<string, string> = {
+      'loterias': 'bg-amber-500',
+      'quininha': 'bg-blue-500',
+      'seninha': 'bg-green-500',
+      'lotinha': 'bg-pink-500',
+    };
+    return colors[tipo] || 'bg-gray-500';
   };
 
   return (
@@ -173,6 +218,73 @@ export default function LoteriasPage() {
           <span className="font-semibold text-white">TABELA DE BICHOS</span>
         </Link>
       </div>
+
+      {/* Modal de Seleção de Pule */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowModal(false)} />
+          <div className="relative bg-white w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#1A202C]">
+              <h2 className="text-lg font-bold text-white">Selecione um Pule</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Lista de Pules */}
+            <div className="flex-1 overflow-y-auto">
+              {recentBets.map((bet) => (
+                <button
+                  key={bet.id}
+                  onClick={() => handleSelectBet(bet)}
+                  disabled={selectedBetLoading === bet.id}
+                  className="w-full flex items-center gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  {/* Tipo Badge */}
+                  <div className={`${getTipoColor(bet.tipo)} px-2 py-1 rounded text-xs font-bold text-white min-w-[70px] text-center`}>
+                    {getTipoLabel(bet.tipo)}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">#{bet.pule}</span>
+                      <span className="text-xs text-gray-500">{formatDate(bet.created_at)}</span>
+                    </div>
+                    <div className="text-sm text-gray-600 mt-0.5">
+                      {bet.modalidade.toUpperCase()} - {bet.palpites.length} palpite{bet.palpites.length > 1 ? 's' : ''}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[200px]">
+                      {bet.palpites.slice(0, 3).join(', ')}{bet.palpites.length > 3 ? '...' : ''}
+                    </div>
+                  </div>
+
+                  {/* Valor */}
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">R$ {formatCurrency(bet.valor_total)}</div>
+                    {selectedBetLoading === bet.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-auto mt-1" />
+                    ) : (
+                      <Repeat className="h-4 w-4 text-gray-400 ml-auto mt-1" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <p className="text-xs text-gray-500 text-center">
+                Mostrando os últimos {recentBets.length} pules
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

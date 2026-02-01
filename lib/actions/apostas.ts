@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 
-export interface LastBet {
+export interface BetSummary {
   id: string;
   tipo: string;
   modalidade: string;
@@ -19,9 +19,50 @@ export interface LastBet {
 }
 
 /**
- * Gera a URL para repetir uma aposta baseada nos dados da última aposta
+ * Busca as últimas apostas do usuário autenticado
  */
-function buildRepeatBetUrl(bet: LastBet): string {
+export async function getRecentBets(limit: number = 20): Promise<{ success: boolean; bets?: BetSummary[]; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
+
+    const { data, error } = await supabase
+      .from('apostas')
+      .select('id, tipo, modalidade, colocacao, palpites, horarios, loterias, data_jogo, valor_unitario, valor_total, multiplicador, pule, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data || data.length === 0) {
+      return { success: false, error: 'Nenhuma aposta encontrada' };
+    }
+
+    const bets: BetSummary[] = data.map(d => ({
+      ...d,
+      valor_unitario: Number(d.valor_unitario),
+      valor_total: Number(d.valor_total),
+      multiplicador: Number(d.multiplicador),
+    }));
+
+    return { success: true, bets };
+  } catch (error) {
+    console.error('Error fetching recent bets:', error);
+    return { success: false, error: 'Erro ao buscar apostas' };
+  }
+}
+
+/**
+ * Gera a URL para repetir uma aposta baseada nos dados
+ */
+export async function buildRepeatBetUrl(bet: BetSummary): Promise<string> {
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
@@ -54,49 +95,5 @@ function buildRepeatBetUrl(bet: LastBet): string {
     default:
       // Fallback para loterias
       return '/loterias/loterias';
-  }
-}
-
-/**
- * Busca a última aposta do usuário autenticado e retorna a URL para repetir
- */
-export async function getLastBetAndBuildUrl(): Promise<{ success: boolean; url?: string; error?: string }> {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { success: false, error: 'Usuário não autenticado' };
-    }
-
-    const { data, error } = await supabase
-      .from('apostas')
-      .select('id, tipo, modalidade, colocacao, palpites, horarios, loterias, data_jogo, valor_unitario, valor_total, multiplicador, pule, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No rows returned
-        return { success: false, error: 'Nenhuma aposta encontrada' };
-      }
-      return { success: false, error: error.message };
-    }
-
-    const bet: LastBet = {
-      ...data,
-      valor_unitario: Number(data.valor_unitario),
-      valor_total: Number(data.valor_total),
-      multiplicador: Number(data.multiplicador),
-    };
-
-    const url = buildRepeatBetUrl(bet);
-
-    return { success: true, url };
-  } catch (error) {
-    console.error('Error fetching last bet:', error);
-    return { success: false, error: 'Erro ao buscar última aposta' };
   }
 }
