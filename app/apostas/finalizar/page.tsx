@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Home, Share2, Printer, Check, X, Loader2 } from 'lucide-react';
 import { BetHeader } from '@/components/layout';
-import { useBetStore } from '@/stores/bet-store';
+import { useBetStore, BetItem } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById, getSubLoteriaById } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
@@ -18,30 +18,32 @@ export default function FinalizarApostaPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
-  const [puleNumber, setPuleNumber] = useState<string | null>(null);
+  const [puleNumbers, setPuleNumbers] = useState<string[]>([]);
   const [confirmationTime, setConfirmationTime] = useState<string | null>(null);
   const [novoSaldo, setNovoSaldo] = useState<number | null>(null);
 
   const supabase = createClient();
 
-  // Get the last item added (or could show all items)
-  const item = items[items.length - 1];
-
-  if (!item) {
+  // Redirect if no items
+  if (items.length === 0) {
     router.push('/');
     return null;
   }
 
-  const modalidadeInfo = getModalidadeById(item.modalidade);
-  const colocacaoInfo = getColocacaoById(item.colocacao);
-
-  // Format date
-  const dateObj = new Date(item.data + 'T00:00:00');
+  // Get date from first item for display
+  const firstItem = items[0];
+  const dateObj = new Date(firstItem.data + 'T00:00:00');
   const formattedDate = dateObj.toLocaleDateString('pt-BR');
 
-  // Calculate total and possible prize
-  const valorTotal = item.palpites.length * item.valorUnitario * Math.max(item.loterias.length, 1);
-  const possivelPremio = item.valorUnitario * item.multiplicador;
+  // Calculate totals across ALL items
+  const calcularTotalItem = (item: BetItem) => {
+    return item.palpites.length * item.valorUnitario * Math.max(item.loterias.length, 1);
+  };
+
+  const valorTotalGeral = items.reduce((acc, item) => acc + calcularTotalItem(item), 0);
+
+  // Get all unique lotteries across all items
+  const todasLoterias = [...new Set(items.flatMap(item => item.loterias))];
 
   const handleVoltar = () => {
     if (isConfirmed) {
@@ -55,31 +57,37 @@ export default function FinalizarApostaPage() {
     setError(null);
 
     try {
-      // Chama a funcao BLINDADA do banco de dados
-      const { data, error: rpcError } = await supabase.rpc('place_bet', {
-        p_tipo: item.tipo || 'loterias',
-        p_modalidade: item.modalidade,
-        p_colocacao: item.colocacao,
-        p_palpites: item.palpites,
-        p_horarios: item.horarios || [],
-        p_loterias: item.loterias || [],
-        p_data_jogo: item.data,
-        p_valor_unitario: item.valorUnitario,
-        p_multiplicador: item.multiplicador || 1,
-      });
+      const pules: string[] = [];
+      let ultimoSaldo: number | null = null;
 
-      if (rpcError) {
-        throw new Error(rpcError.message);
+      // Process each bet item
+      for (const item of items) {
+        const { data, error: rpcError } = await supabase.rpc('place_bet', {
+          p_tipo: item.tipo || 'loterias',
+          p_modalidade: item.modalidade,
+          p_colocacao: item.colocacao,
+          p_palpites: item.palpites,
+          p_horarios: item.horarios || [],
+          p_loterias: item.loterias || [],
+          p_data_jogo: item.data,
+          p_valor_unitario: item.valorUnitario,
+          p_multiplicador: item.multiplicador || 1,
+        });
+
+        if (rpcError) {
+          throw new Error(rpcError.message);
+        }
+
+        if (data && !data.success) {
+          throw new Error(data.error || 'Erro ao registrar aposta');
+        }
+
+        pules.push(data.pule);
+        ultimoSaldo = data.saldo_restante;
       }
 
-      // Verifica se a funcao retornou erro
-      if (data && !data.success) {
-        throw new Error(data.error || 'Erro ao registrar aposta');
-      }
-
-      // Sucesso! O banco garantiu a transacao atomica
-      setPuleNumber(data.pule);
-      setNovoSaldo(data.saldo_restante);
+      setPuleNumbers(pules);
+      setNovoSaldo(ultimoSaldo);
 
       // Set confirmation time
       const now = new Date();
@@ -103,11 +111,10 @@ export default function FinalizarApostaPage() {
   };
 
   const handleCompartilhar = () => {
-    // Share functionality
     if (navigator.share) {
       navigator.share({
         title: `Minha Aposta - ${config.site_name}`,
-        text: `Pule #${puleNumber} - ${modalidadeInfo?.nome} - R$ ${valorTotal.toFixed(2).replace('.', ',')}`,
+        text: `Pules #${puleNumbers.join(', #')} - R$ ${valorTotalGeral.toFixed(2).replace('.', ',')}`,
       });
     }
   };
@@ -127,7 +134,7 @@ export default function FinalizarApostaPage() {
             <div className="bg-green-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
               <div className="flex items-center gap-2">
                 <Check className="h-5 w-5" />
-                <span>Pule registrada com sucesso. Boa sorte!!!</span>
+                <span>{items.length > 1 ? 'Pules registradas' : 'Pule registrada'} com sucesso. Boa sorte!!!</span>
               </div>
               <button onClick={() => setShowToast(false)}>
                 <X className="h-5 w-5" />
@@ -156,7 +163,9 @@ export default function FinalizarApostaPage() {
         <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4">
           {/* Pule # */}
           <div className="text-sm font-medium text-gray-700 mb-2">
-            PULE #{puleNumber || ''}
+            {puleNumbers.length > 0
+              ? `PULE #${puleNumbers.join(', #')}`
+              : `${items.length} ${items.length > 1 ? 'APOSTAS' : 'APOSTA'}`}
           </div>
 
           {/* Banca Name & Logo */}
@@ -208,7 +217,7 @@ export default function FinalizarApostaPage() {
 
           {/* Selected Lotteries */}
           <div className="mb-4">
-            {item.loterias.map((loteriaId) => {
+            {todasLoterias.map((loteriaId) => {
               const loteria = getSubLoteriaById(loteriaId);
               return (
                 <div key={loteriaId} className="flex items-center justify-between text-sm">
@@ -224,7 +233,7 @@ export default function FinalizarApostaPage() {
                 </div>
               );
             })}
-            {item.loterias.length === 0 && (
+            {todasLoterias.length === 0 && (
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
                 <span>Todas as loterias</span>
@@ -239,34 +248,46 @@ export default function FinalizarApostaPage() {
             <div className="flex-1 border-t border-gray-300" />
           </div>
 
-          {/* Modalidade & Colocacao */}
-          <div className="mb-3">
-            <div className="font-bold text-gray-900">
-              {modalidadeInfo?.nome || item.modalidade.toUpperCase()} - {colocacaoInfo?.nome || item.colocacao.toUpperCase()}
-            </div>
-          </div>
+          {/* ALL ITEMS - Loop through each bet */}
+          {items.map((item, index) => {
+            const modalidadeInfo = getModalidadeById(item.modalidade);
+            const colocacaoInfo = getColocacaoById(item.colocacao);
+            const valorTotalItem = calcularTotalItem(item);
+            const possivelPremio = item.valorUnitario * item.multiplicador;
 
-          {/* Palpites */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {item.palpites.map((palpite) => (
-              <span
-                key={palpite}
-                className="inline-flex items-center px-2 py-1 border border-gray-400 rounded text-sm font-medium text-gray-900"
-              >
-                {palpite}
-              </span>
-            ))}
-          </div>
+            return (
+              <div key={item.id || index} className={index > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}>
+                {/* Modalidade & Colocacao */}
+                <div className="mb-3">
+                  <div className="font-bold text-gray-900">
+                    {modalidadeInfo?.nome || item.modalidade.toUpperCase()} - {colocacaoInfo?.nome || item.colocacao.toUpperCase()}
+                  </div>
+                </div>
 
-          {/* Value & Prize */}
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-sm text-gray-700">
-              {item.valorUnitario.toFixed(2).replace('.', ',')} / CADA
-            </span>
-            <span className="text-sm text-green-600 font-medium">
-              Possivel Premio: R$ {possivelPremio.toFixed(2).replace('.', ',')}
-            </span>
-          </div>
+                {/* Palpites */}
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {item.palpites.map((palpite) => (
+                    <span
+                      key={palpite}
+                      className="inline-flex items-center px-2 py-1 border border-gray-400 rounded text-sm font-medium text-gray-900"
+                    >
+                      {palpite}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Value & Prize */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-700">
+                    R$ {valorTotalItem.toFixed(2).replace('.', ',')} ({item.valorUnitario.toFixed(2).replace('.', ',')} / CADA)
+                  </span>
+                  <span className="text-sm text-green-600 font-medium">
+                    Premio: R$ {possivelPremio.toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
 
           {/* Dashed Separator */}
           <div className="border-t-2 border-dashed border-gray-300 my-4" />
@@ -274,8 +295,13 @@ export default function FinalizarApostaPage() {
           {/* Total */}
           <div className="text-center py-2">
             <span className="text-xl font-bold text-gray-900">
-              TOTAL: R$ {valorTotal.toFixed(2).replace('.', ',')}
+              TOTAL: R$ {valorTotalGeral.toFixed(2).replace('.', ',')}
             </span>
+            {items.length > 1 && (
+              <p className="text-sm text-gray-500 mt-1">
+                ({items.length} apostas)
+              </p>
+            )}
           </div>
 
           {/* Dashed Separator */}

@@ -27,7 +27,7 @@ export function ColocacaoClient({
   multiplicadorDB,
 }: ColocacaoClientProps) {
   const router = useRouter();
-  const { addItem } = useBetStore();
+  const { addPendingItem, pendingItems, finalizePendingItems, clearPendingItems } = useBetStore();
 
   const [step, setStep] = useState<Step>('palpite');
   const [palpites, setPalpites] = useState<string[]>([]);
@@ -112,27 +112,52 @@ export function ColocacaoClient({
     setStep('resumo');
   };
 
+  // Adiciona aposta atual aos pendentes e navega para adicionar mais
   const handleMaisApostas = () => {
-    router.push(`/loterias/${tipo}/${data}`);
-  };
+    if (palpites.length === 0) return;
 
-  const handleConfirmarLoterias = () => {
-    if (palpites.length === 0 || selectedLotteries.length === 0) return;
-
-    // Extrai horários das loterias selecionadas
-    const horarios = getHorariosFromLotteries(selectedLotteries);
-
-    addItem({
+    // Salva a aposta atual como pendente (sem loterias ainda)
+    addPendingItem({
       tipo: tipo as TipoJogo,
       data,
       modalidade,
       colocacao,
       palpites,
-      horarios,
-      loterias: selectedLotteries,
       valorUnitario,
       multiplicador: multiplicadorEfetivo,
     });
+
+    // Navega para selecionar outra modalidade
+    router.push(`/loterias/${tipo}/${data}`);
+  };
+
+  // Adiciona aposta atual aos pendentes e vai para seleção de loterias
+  const handleAvancarParaLoterias = () => {
+    if (palpites.length === 0) return;
+
+    // Salva a aposta atual como pendente
+    addPendingItem({
+      tipo: tipo as TipoJogo,
+      data,
+      modalidade,
+      colocacao,
+      palpites,
+      valorUnitario,
+      multiplicador: multiplicadorEfetivo,
+    });
+
+    setStep('loterias');
+  };
+
+  // Confirma as loterias e finaliza todas as apostas pendentes
+  const handleConfirmarLoterias = () => {
+    if (pendingItems.length === 0 || selectedLotteries.length === 0) return;
+
+    // Extrai horários das loterias selecionadas
+    const horarios = getHorariosFromLotteries(selectedLotteries);
+
+    // Finaliza todas as apostas pendentes com as loterias selecionadas
+    finalizePendingItems(selectedLotteries, horarios);
 
     router.push('/apostas/finalizar');
   };
@@ -149,6 +174,8 @@ export function ColocacaoClient({
         setStep('valor');
         break;
       case 'loterias':
+        // Ao voltar da seleção de loterias, removemos o último item pendente
+        // (o que acabamos de adicionar ao ir para loterias)
         setStep('resumo');
         break;
     }
@@ -165,6 +192,15 @@ export function ColocacaoClient({
       case 'loterias':
         return 'SELECIONAR LOTERIAS';
     }
+  };
+
+  // Calcula total de todas as apostas pendentes + a atual
+  const calcularTotalPendentes = () => {
+    const totalPendentes = pendingItems.reduce(
+      (acc, item) => acc + item.palpites.length * item.valorUnitario,
+      0
+    );
+    return totalPendentes;
   };
 
   // Render palpite input step
@@ -285,14 +321,21 @@ export function ColocacaoClient({
           colocacao={colocacaoInfo?.nome || colocacao}
           palpites={palpites}
           valorUnitario={valorUnitario}
+          pendingItems={pendingItems}
           onMaisApostas={handleMaisApostas}
-          onAvancar={() => setStep('loterias')}
+          onAvancar={handleAvancarParaLoterias}
         />
       </div>
     );
   }
 
   // Render lottery selection step
+  // Calcula o total considerando TODAS as apostas pendentes
+  const totalPendentes = pendingItems.reduce(
+    (acc, item) => acc + item.palpites.length * item.valorUnitario,
+    0
+  );
+
   return (
     <div className="min-h-screen bg-zinc-50">
       <BetHeader title={getHeaderTitle()} onBack={handleBack} />
@@ -302,8 +345,9 @@ export function ColocacaoClient({
         onToggleLottery={handleToggleLottery}
         onConfirm={handleConfirmarLoterias}
         onBack={handleBack}
-        total={palpites.length * valorUnitario * Math.max(selectedLotteries.length, 1)}
+        total={totalPendentes * Math.max(selectedLotteries.length, 1)}
         dataJogo={data}
+        pendingItemsCount={pendingItems.length}
       />
     </div>
   );

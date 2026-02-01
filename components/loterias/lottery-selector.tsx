@@ -13,6 +13,7 @@ interface LotterySelectorProps {
   total?: number;
   className?: string;
   dataJogo?: string; // Data da aposta no formato YYYY-MM-DD
+  pendingItemsCount?: number; // Quantidade de apostas pendentes
 }
 
 export function LotterySelector({
@@ -23,6 +24,7 @@ export function LotterySelector({
   total = 0,
   className,
   dataJogo,
+  pendingItemsCount = 1,
 }: LotterySelectorProps) {
   const [expandedBancas, setExpandedBancas] = useState<string[]>(['rio_federal']);
 
@@ -108,7 +110,12 @@ export function LotterySelector({
     <div className={cn('bg-white min-h-screen', className)}>
       {/* Total Row */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <span className="font-bold text-gray-900">Total</span>
+        <div>
+          <span className="font-bold text-gray-900">Total</span>
+          {pendingItemsCount > 1 && (
+            <span className="text-sm text-gray-500 ml-2">({pendingItemsCount} apostas)</span>
+          )}
+        </div>
         <span className="font-bold text-gray-900">R$ {totalValue}</span>
       </div>
 

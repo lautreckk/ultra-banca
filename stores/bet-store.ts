@@ -5,8 +5,21 @@ import { persist } from 'zustand/middleware';
 import { BetItem, BetSelection, TipoJogo } from '@/types/bet';
 import { getSubLoteriaById } from '@/lib/constants';
 
+// Aposta pendente (sem loterias selecionadas ainda)
+export interface PendingBet {
+  id: string;
+  tipo: TipoJogo;
+  data: string;
+  modalidade: string;
+  colocacao: string;
+  palpites: string[];
+  valorUnitario: number;
+  multiplicador: number;
+}
+
 interface BetStore {
   items: BetItem[];
+  pendingItems: PendingBet[]; // Apostas aguardando seleção de loterias
   currentSelection: BetSelection;
 
   // Cart actions
@@ -15,6 +28,13 @@ interface BetStore {
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
+
+  // Pending items actions
+  addPendingItem: (item: Omit<PendingBet, 'id'>) => void;
+  removePendingItem: (id: string) => void;
+  clearPendingItems: () => void;
+  finalizePendingItems: (loterias: string[], horarios: string[]) => void;
+  getPendingCount: () => number;
 
   // Selection actions
   setTipo: (tipo: TipoJogo) => void;
@@ -45,6 +65,7 @@ export const useBetStore = create<BetStore>()(
   persist(
     (set, get) => ({
       items: [],
+      pendingItems: [],
       currentSelection: initialSelection,
 
       addItem: (item) =>
@@ -57,7 +78,7 @@ export const useBetStore = create<BetStore>()(
           items: state.items.filter((i) => i.id !== id),
         })),
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], pendingItems: [] }),
 
       getTotal: () => {
         const items = get().items;
@@ -68,6 +89,43 @@ export const useBetStore = create<BetStore>()(
       },
 
       getItemCount: () => get().items.length,
+
+      // Pending items actions
+      addPendingItem: (item) =>
+        set((state) => ({
+          pendingItems: [...state.pendingItems, { ...item, id: crypto.randomUUID() }],
+        })),
+
+      removePendingItem: (id) =>
+        set((state) => ({
+          pendingItems: state.pendingItems.filter((i) => i.id !== id),
+        })),
+
+      clearPendingItems: () => set({ pendingItems: [] }),
+
+      finalizePendingItems: (loterias, horarios) =>
+        set((state) => {
+          // Converte todas as apostas pendentes em apostas finais
+          const newItems: BetItem[] = state.pendingItems.map((pending) => ({
+            id: crypto.randomUUID(),
+            tipo: pending.tipo,
+            data: pending.data,
+            modalidade: pending.modalidade,
+            colocacao: pending.colocacao,
+            palpites: pending.palpites,
+            horarios,
+            loterias,
+            valorUnitario: pending.valorUnitario,
+            multiplicador: pending.multiplicador,
+          }));
+
+          return {
+            items: [...state.items, ...newItems],
+            pendingItems: [],
+          };
+        }),
+
+      getPendingCount: () => get().pendingItems.length,
 
       setTipo: (tipo) =>
         set((state) => ({
@@ -169,7 +227,10 @@ export const useBetStore = create<BetStore>()(
     }),
     {
       name: 'bet-cart',
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({ items: state.items, pendingItems: state.pendingItems }),
     }
   )
 );
+
+// Re-export BetItem type for convenience
+export type { BetItem };
