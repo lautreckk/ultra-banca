@@ -1,6 +1,8 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { logAudit } from '@/lib/security/tracker';
+import { AuditActions } from '@/lib/security/audit-actions';
 
 export interface UserProfile {
   id: string;
@@ -309,6 +311,16 @@ export async function updateUserBalance(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
+  // Obter admin atual
+  const { data: { user: admin } } = await supabase.auth.getUser();
+
+  // Buscar saldos anteriores e nome do usuário
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('saldo, saldo_bonus, nome')
+    .eq('id', userId)
+    .single();
+
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -319,6 +331,31 @@ export async function updateUserBalance(
 
   if (error) {
     return { success: false, error: error.message };
+  }
+
+  // Registrar no log de auditoria
+  const saldoAnterior = Number(currentProfile?.saldo) || 0;
+  const saldoBonusAnterior = Number(currentProfile?.saldo_bonus) || 0;
+  const diferencaSaldo = saldo - saldoAnterior;
+  const diferencaBonus = saldoBonus - saldoBonusAnterior;
+
+  if (diferencaSaldo !== 0 || diferencaBonus !== 0) {
+    await logAudit({
+      actorId: admin?.id || null,
+      action: AuditActions.BALANCE_ADJUSTED,
+      entity: `user:${userId}`,
+      details: {
+        user_id: userId,
+        user_name: currentProfile?.nome || 'N/A',
+        saldo_anterior: saldoAnterior,
+        saldo_novo: saldo,
+        diferenca_saldo: diferencaSaldo,
+        saldo_bonus_anterior: saldoBonusAnterior,
+        saldo_bonus_novo: saldoBonus,
+        diferenca_bonus: diferencaBonus,
+        timestamp: new Date().toISOString(),
+      },
+    });
   }
 
   return { success: true };
@@ -336,6 +373,16 @@ export async function updateUserProfile(
   data: UpdateUserProfileData
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+
+  // Obter admin atual
+  const { data: { user: admin } } = await supabase.auth.getUser();
+
+  // Buscar dados anteriores do usuário
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('cpf, saldo, saldo_bonus, nome')
+    .eq('id', userId)
+    .single();
 
   // Atualizar dados na tabela profiles (CPF, saldo, saldo_bonus)
   const profileUpdates: Record<string, unknown> = {};
@@ -359,6 +406,50 @@ export async function updateUserProfile(
     if (profileError) {
       return { success: false, error: `Erro ao atualizar perfil: ${profileError.message}` };
     }
+
+    // Verificar se houve alteração de saldo para logar BALANCE_ADJUSTED
+    const saldoAnterior = Number(currentProfile?.saldo) || 0;
+    const saldoBonusAnterior = Number(currentProfile?.saldo_bonus) || 0;
+    const novoSaldo = data.saldo !== undefined ? data.saldo : saldoAnterior;
+    const novoSaldoBonus = data.saldoBonus !== undefined ? data.saldoBonus : saldoBonusAnterior;
+    const diferencaSaldo = novoSaldo - saldoAnterior;
+    const diferencaBonus = novoSaldoBonus - saldoBonusAnterior;
+
+    if (diferencaSaldo !== 0 || diferencaBonus !== 0) {
+      await logAudit({
+        actorId: admin?.id || null,
+        action: AuditActions.BALANCE_ADJUSTED,
+        entity: `user:${userId}`,
+        details: {
+          user_id: userId,
+          user_name: currentProfile?.nome || 'N/A',
+          saldo_anterior: saldoAnterior,
+          saldo_novo: novoSaldo,
+          diferenca_saldo: diferencaSaldo,
+          saldo_bonus_anterior: saldoBonusAnterior,
+          saldo_bonus_novo: novoSaldoBonus,
+          diferenca_bonus: diferencaBonus,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // Logar USER_UPDATED para outras alterações (CPF)
+    if (data.cpf !== undefined && data.cpf !== currentProfile?.cpf) {
+      await logAudit({
+        actorId: admin?.id || null,
+        action: AuditActions.USER_UPDATED,
+        entity: `user:${userId}`,
+        details: {
+          user_id: userId,
+          user_name: currentProfile?.nome || 'N/A',
+          field: 'cpf',
+          old_value: currentProfile?.cpf ? currentProfile.cpf.slice(0, 3) + '.***.***-' + currentProfile.cpf.slice(-2) : null,
+          new_value: data.cpf.slice(0, 3) + '.***.***-' + data.cpf.slice(-2),
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
   }
 
   // Atualizar senha usando o cliente Admin com Service Role Key
@@ -372,6 +463,20 @@ export async function updateUserProfile(
     if (passwordError) {
       return { success: false, error: `Erro ao atualizar senha: ${passwordError.message}` };
     }
+
+    // Logar alteração de senha
+    await logAudit({
+      actorId: admin?.id || null,
+      action: AuditActions.USER_UPDATED,
+      entity: `user:${userId}`,
+      details: {
+        user_id: userId,
+        user_name: currentProfile?.nome || 'N/A',
+        field: 'password',
+        change: 'Senha alterada pelo administrador',
+        timestamp: new Date().toISOString(),
+      },
+    });
   }
 
   return { success: true };
