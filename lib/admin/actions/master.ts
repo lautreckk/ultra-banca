@@ -282,6 +282,7 @@ export interface PlatformAdmin {
   platform_id: string;
   platform_name?: string;
   user_name?: string;
+  user_cpf?: string;
   user_email?: string;
   permissions: Record<string, boolean>;
   created_at: string;
@@ -428,6 +429,59 @@ export async function unlinkAdminFromPlatform(
   }
 
   return { success: true };
+}
+
+export async function getPlatformAdminsByPlatform(
+  platformId: string
+): Promise<PlatformAdmin[]> {
+  await requireSuperAdmin();
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('platform_admins')
+    .select(`
+      id,
+      user_id,
+      platform_id,
+      permissions,
+      created_at,
+      platforms(name)
+    `)
+    .eq('platform_id', platformId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching platform admins:', error);
+    return [];
+  }
+
+  // Buscar informações dos usuários
+  const adminsWithUsers = await Promise.all(
+    (data || []).map(async (admin) => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nome, cpf')
+        .eq('id', admin.user_id)
+        .single();
+
+      const { data: authUser } = await supabase.auth.admin.getUserById(admin.user_id);
+
+      return {
+        id: admin.id,
+        user_id: admin.user_id,
+        platform_id: admin.platform_id,
+        platform_name: (admin.platforms as unknown as { name: string })?.name || 'N/A',
+        user_name: profile?.nome || 'N/A',
+        user_cpf: profile?.cpf || 'N/A',
+        user_email: authUser?.user?.email || 'N/A',
+        permissions: admin.permissions || {},
+        created_at: admin.created_at,
+      };
+    })
+  );
+
+  return adminsWithUsers;
 }
 
 // =============================================
