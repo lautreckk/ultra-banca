@@ -1,16 +1,65 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Moon, Calculator, Clock, Dog } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Moon, Calculator, Clock, Dog, Loader2 } from 'lucide-react';
+import { getLastBetAndBuildUrl } from '@/lib/actions/apostas';
 
 export default function LoteriasPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRepetirPule = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await getLastBetAndBuildUrl();
+
+      if (!result.success || !result.url) {
+        setError(result.error || 'Nenhuma aposta encontrada para repetir');
+        return;
+      }
+
+      router.push(result.url);
+    } catch (err) {
+      setError('Erro ao buscar última aposta');
+      console.error('Error repeating bet:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed top-16 left-4 right-4 z-50 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg">
+          <span className="text-sm">{error}</span>
+          <button onClick={() => setError(null)} className="absolute top-2 right-2 text-white/80">
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Repetir Pule Button */}
       <div className="p-4">
-        <button className="w-full rounded-lg border-2 border-[#E5A220] bg-[#1A202C] py-3 font-bold text-white">
-          REPETIR PULE
+        <button
+          onClick={handleRepetirPule}
+          disabled={isLoading}
+          className="w-full rounded-lg border-2 border-[#E5A220] bg-[#1A202C] py-3 font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Carregando...
+            </>
+          ) : (
+            'REPETIR PULE'
+          )}
         </button>
       </div>
 
