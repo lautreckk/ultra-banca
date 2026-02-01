@@ -34,15 +34,21 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-8" style={{ backgroundColor: config.color_background }}>
       {/* Logo - Dinâmica do banco de dados */}
       <div className="mb-10 flex flex-col items-center">
-        <Image
-          src={config.logo_url || '/images/logo.png'}
-          alt={config.site_name}
-          width={250}
-          height={100}
-          className="mb-2 object-contain"
-          priority
-          unoptimized={config.logo_url?.includes('supabase.co')}
-        />
+        {config.logo_url ? (
+          <Image
+            src={config.logo_url}
+            alt={config.site_name}
+            width={250}
+            height={100}
+            className="mb-2 object-contain"
+            priority
+            unoptimized={config.logo_url.includes('supabase.co')}
+          />
+        ) : (
+          <div className="mb-2 flex h-[100px] w-[250px] items-center justify-center rounded-lg bg-surface">
+            <span className="text-2xl font-bold text-primary">{config.site_name}</span>
+          </div>
+        )}
       </div>
 
       <Suspense fallback={

@@ -143,15 +143,27 @@ async function resolvePlatformByDomain(
   host: string
 ): Promise<PlatformResult | null> {
   // Remove porta se existir (localhost:3000)
-  const domain = host.split(':')[0];
+  let domain = host.split(':')[0];
+
+  // Normalizar: remover www. e converter para minúsculas
+  domain = domain.toLowerCase().replace(/^www\./, '');
+
+  // DEBUG: Log para rastrear resolução de domínio
+  console.log('[MULTI-TENANT] Resolvendo:', { host, domain });
 
   // 1. Tentar pelo domínio completo
-  const { data: platform } = await supabase
+  const { data: platform, error } = await supabase
     .from('platforms')
     .select('id, domain, slug, name, ativo')
     .eq('domain', domain)
     .eq('ativo', true)
     .single();
+
+  console.log('[MULTI-TENANT] Query resultado:', {
+    found: !!platform,
+    name: platform?.name,
+    error: error?.message
+  });
 
   if (platform) {
     return { platformId: platform.id, platform };
@@ -221,9 +233,20 @@ export async function updateSession(request: NextRequest) {
   const host = request.headers.get('host') || 'localhost';
   const platformResult = await resolvePlatformByDomain(supabase, host);
 
+  // Log quando fallback é usado
+  if (!platformResult) {
+    console.warn('[MULTI-TENANT] ⚠️ FALLBACK PARA DEFAULT:', { host });
+  }
+
   // Se não encontrou plataforma e não é localhost, poderia redirecionar para erro
   // Por enquanto, usamos fallback para default para não quebrar em desenvolvimento
   const platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
+
+  console.log('[MULTI-TENANT] Final:', {
+    host,
+    platformId,
+    name: platformResult?.platform?.name || 'DEFAULT'
+  });
 
   // Armazenar platform_id em cookie para acesso em server actions
   supabaseResponse.cookies.set('platform_id', platformId, {
