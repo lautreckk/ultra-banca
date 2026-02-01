@@ -3,10 +3,66 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { PlatformConfig, defaultConfig } from '@/contexts/platform-config-context';
+import { getPlatformId } from '@/lib/utils/platform';
 
+/**
+ * getPlatformConfig - MULTI-TENANT
+ *
+ * Busca configuracoes da plataforma atual baseado no platform_id do cookie.
+ * Se nao encontrar, tenta buscar da tabela legada platform_config.
+ */
 export async function getPlatformConfig(): Promise<PlatformConfig> {
   const supabase = await createClient();
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
+  // Primeiro, tentar buscar da tabela platforms (multi-tenant)
+  const { data: platform, error: platformError } = await supabase
+    .from('platforms')
+    .select('*')
+    .eq('id', platformId)
+    .single();
+
+  if (platform && !platformError) {
+    // Usar dados da tabela platforms (multi-tenant)
+    return {
+      id: platform.id,
+      site_name: platform.name || defaultConfig.site_name,
+      site_description: platform.site_description || defaultConfig.site_description,
+      logo_url: platform.logo_url || defaultConfig.logo_url,
+      favicon_url: platform.favicon_url || defaultConfig.favicon_url,
+      color_primary: platform.color_primary || defaultConfig.color_primary,
+      color_primary_dark: platform.color_primary_dark || defaultConfig.color_primary_dark,
+      color_background: platform.color_background || defaultConfig.color_background,
+      color_surface: platform.color_surface || defaultConfig.color_surface,
+      color_accent_teal: platform.color_accent_teal || defaultConfig.color_accent_teal,
+      color_accent_green: platform.color_accent_green || defaultConfig.color_accent_green,
+      color_text_primary: platform.color_text_primary || defaultConfig.color_text_primary,
+      social_whatsapp: platform.social_whatsapp,
+      social_instagram: platform.social_instagram,
+      social_telegram: platform.social_telegram,
+      promotor_link: platform.promotor_link,
+      active_gateway: platform.active_gateway || defaultConfig.active_gateway,
+      deposit_min: Number(platform.deposit_min) || defaultConfig.deposit_min,
+      deposit_max: Number(platform.deposit_max) || defaultConfig.deposit_max,
+      withdrawal_min: Number(platform.withdrawal_min) || defaultConfig.withdrawal_min,
+      withdrawal_max: Number(platform.withdrawal_max) || defaultConfig.withdrawal_max,
+      withdrawal_fee_percent: Number(platform.withdrawal_fee_percent) || defaultConfig.withdrawal_fee_percent,
+      withdrawal_mode: platform.withdrawal_mode || defaultConfig.withdrawal_mode,
+      bet_min: Number(platform.bet_min) || defaultConfig.bet_min,
+      bet_max: Number(platform.bet_max) || defaultConfig.bet_max,
+      max_payout_per_bet: Number(platform.max_payout_per_bet) || defaultConfig.max_payout_per_bet,
+      max_payout_daily: Number(platform.max_payout_daily) || defaultConfig.max_payout_daily,
+      facebook_pixel_id: platform.facebook_pixel_id,
+      facebook_access_token: platform.facebook_access_token,
+      google_analytics_id: platform.google_analytics_id,
+      custom_head_scripts: platform.custom_head_scripts,
+      production_mode: platform.production_mode ?? defaultConfig.production_mode,
+    };
+  }
+
+  // Fallback: buscar da tabela legada platform_config (para compatibilidade)
   const { data, error } = await supabase
     .from('platform_config')
     .select('id, site_name, site_description, logo_url, favicon_url, color_primary, color_primary_dark, color_background, color_surface, color_accent_teal, color_accent_green, color_text_primary, social_whatsapp, social_instagram, social_telegram, promotor_link, active_gateway, deposit_min, deposit_max, withdrawal_min, withdrawal_max, withdrawal_fee_percent, withdrawal_mode, bet_min, bet_max, max_payout_per_bet, max_payout_daily, facebook_pixel_id, facebook_access_token, google_analytics_id, custom_head_scripts, production_mode')
@@ -54,29 +110,58 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
   };
 }
 
+/**
+ * updatePlatformConfig - MULTI-TENANT
+ *
+ * Atualiza configuracoes da plataforma atual na tabela platforms.
+ * Mantém compatibilidade com a tabela legada platform_config.
+ */
 export async function updatePlatformConfig(
   updates: Partial<PlatformConfig>
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  // Remove id from updates if present (we use it for filtering, not updating)
-  const { id, ...updateData } = updates;
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
 
-  const { error } = await supabase
-    .from('platform_config')
+  // Remove id from updates if present (we use it for filtering, not updating)
+  const { id, site_name, ...updateData } = updates;
+
+  // Mapear site_name para name (campo na tabela platforms)
+  const platformUpdates: Record<string, unknown> = { ...updateData };
+  if (site_name !== undefined) {
+    platformUpdates.name = site_name;
+  }
+
+  // Primeiro, tentar atualizar na tabela platforms (multi-tenant)
+  const { error: platformError } = await supabase
+    .from('platforms')
     .update({
-      ...updateData,
+      ...platformUpdates,
       updated_at: new Date().toISOString(),
     })
-    .not('id', 'is', null); // Update the singleton row
+    .eq('id', platformId);
 
-  if (error) {
-    console.error('Error updating platform config:', error);
-    return { success: false, error: error.message };
+  if (platformError) {
+    console.error('Error updating platform:', platformError);
+
+    // Fallback: tentar atualizar na tabela legada platform_config
+    const { error } = await supabase
+      .from('platform_config')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .not('id', 'is', null);
+
+    if (error) {
+      console.error('Error updating platform config:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   // Revalidate ALL pages that use the config
-  revalidatePath('/', 'layout'); // Revalida todo o layout raiz e páginas filhas
+  revalidatePath('/', 'layout');
   revalidatePath('/admin/configuracoes');
   revalidatePath('/login');
   revalidatePath('/cadastro');

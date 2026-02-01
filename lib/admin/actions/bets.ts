@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface Bet {
   id: string;
@@ -44,6 +45,9 @@ export async function getBets(params: BetsListParams = {}): Promise<BetsListResu
   const { page = 1, pageSize = 20, status, search, dateFrom, dateTo } = params;
   const offset = (page - 1) * pageSize;
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   let query = supabase
     .from('apostas')
     .select(`
@@ -64,7 +68,8 @@ export async function getBets(params: BetsListParams = {}): Promise<BetsListResu
       premio_valor,
       created_at,
       profiles!inner(nome, cpf)
-    `, { count: 'exact' });
+    `, { count: 'exact' })
+    .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (status) {
     query = query.eq('status', status);

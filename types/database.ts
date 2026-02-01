@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   public: {
     Tables: {
       admin_roles: {
@@ -52,6 +57,7 @@ export type Database = {
           modalidade: string
           multiplicador: number
           palpites: string[]
+          platform_id: string
           premio_valor: number | null
           pule: string | null
           status: string | null
@@ -70,6 +76,7 @@ export type Database = {
           modalidade: string
           multiplicador: number
           palpites: string[]
+          platform_id: string
           premio_valor?: number | null
           pule?: string | null
           status?: string | null
@@ -88,6 +95,7 @@ export type Database = {
           modalidade?: string
           multiplicador?: number
           palpites?: string[]
+          platform_id?: string
           premio_valor?: number | null
           pule?: string | null
           status?: string | null
@@ -97,6 +105,13 @@ export type Database = {
           valor_unitario?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "apostas_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "apostas_user_id_fkey"
             columns: ["user_id"]
@@ -139,6 +154,422 @@ export type Database = {
         }
         Relationships: []
       }
+      bonus_deposito_aplicados: {
+        Row: {
+          config_id: string | null
+          created_at: string | null
+          id: string
+          pagamento_id: string
+          percentual_aplicado: number
+          user_id: string
+          valor_bonus: number
+          valor_deposito: number
+        }
+        Insert: {
+          config_id?: string | null
+          created_at?: string | null
+          id?: string
+          pagamento_id: string
+          percentual_aplicado: number
+          user_id: string
+          valor_bonus: number
+          valor_deposito: number
+        }
+        Update: {
+          config_id?: string | null
+          created_at?: string | null
+          id?: string
+          pagamento_id?: string
+          percentual_aplicado?: number
+          user_id?: string
+          valor_bonus?: number
+          valor_deposito?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_deposito_aplicados_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "bonus_deposito_config"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_deposito_aplicados_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_deposito_aplicados_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bonus_deposito_config: {
+        Row: {
+          ativo: boolean
+          bonus_maximo: number | null
+          bonus_percentual: number
+          created_at: string | null
+          created_by: string | null
+          deposito_minimo: number
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          bonus_maximo?: number | null
+          bonus_percentual: number
+          created_at?: string | null
+          created_by?: string | null
+          deposito_minimo: number
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          bonus_maximo?: number | null
+          bonus_percentual?: number
+          created_at?: string | null
+          created_by?: string | null
+          deposito_minimo?: number
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      comissoes_indicacao: {
+        Row: {
+          aposta_id: string
+          created_at: string | null
+          id: string
+          indicado_id: string
+          indicador_id: string
+          percentual: number
+          status: string | null
+          valor_aposta: number
+          valor_comissao: number
+        }
+        Insert: {
+          aposta_id: string
+          created_at?: string | null
+          id?: string
+          indicado_id: string
+          indicador_id: string
+          percentual?: number
+          status?: string | null
+          valor_aposta: number
+          valor_comissao: number
+        }
+        Update: {
+          aposta_id?: string
+          created_at?: string | null
+          id?: string
+          indicado_id?: string
+          indicador_id?: string
+          percentual?: number
+          status?: string | null
+          valor_aposta?: number
+          valor_comissao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_indicacao_aposta_id_fkey"
+            columns: ["aposta_id"]
+            isOneToOne: false
+            referencedRelation: "apostas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_indicacao_indicado_id_fkey"
+            columns: ["indicado_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_indicacao_indicador_id_fkey"
+            columns: ["indicador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evolution_config: {
+        Row: {
+          ativo: boolean | null
+          base_url: string
+          created_at: string | null
+          global_apikey: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          base_url: string
+          created_at?: string | null
+          global_apikey: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          base_url?: string
+          created_at?: string | null
+          global_apikey?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      evolution_instances: {
+        Row: {
+          created_at: string | null
+          id: string
+          instance_apikey: string | null
+          instance_name: string
+          phone_number: string | null
+          qrcode_base64: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          instance_apikey?: string | null
+          instance_name: string
+          phone_number?: string | null
+          qrcode_base64?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instance_apikey?: string | null
+          instance_name?: string
+          phone_number?: string | null
+          qrcode_base64?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      evolution_messages_log: {
+        Row: {
+          error_message: string | null
+          id: string
+          instance_id: string | null
+          message_content: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string | null
+          trigger_type: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          instance_id?: string | null
+          message_content?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string | null
+          trigger_type?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          instance_id?: string | null
+          message_content?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string | null
+          trigger_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_messages_log_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "evolution_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evolution_trigger_messages: {
+        Row: {
+          caption: string | null
+          content: string | null
+          created_at: string | null
+          delay_seconds: number | null
+          id: string
+          message_type: string
+          order_index: number
+          trigger_id: string | null
+        }
+        Insert: {
+          caption?: string | null
+          content?: string | null
+          created_at?: string | null
+          delay_seconds?: number | null
+          id?: string
+          message_type: string
+          order_index?: number
+          trigger_id?: string | null
+        }
+        Update: {
+          caption?: string | null
+          content?: string | null
+          created_at?: string | null
+          delay_seconds?: number | null
+          id?: string
+          message_type?: string
+          order_index?: number
+          trigger_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_trigger_messages_trigger_id_fkey"
+            columns: ["trigger_id"]
+            isOneToOne: false
+            referencedRelation: "evolution_triggers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evolution_triggers: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          instance_id: string | null
+          trigger_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          instance_id?: string | null
+          trigger_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          instance_id?: string | null
+          trigger_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_triggers_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "evolution_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_config: {
+        Row: {
+          ativo: boolean | null
+          client_id: string | null
+          client_secret: string | null
+          config: Json | null
+          created_at: string | null
+          gateway_name: string
+          id: string
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          client_id?: string | null
+          client_secret?: string | null
+          config?: Json | null
+          created_at?: string | null
+          gateway_name: string
+          id?: string
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          client_id?: string | null
+          client_secret?: string | null
+          config?: Json | null
+          created_at?: string | null
+          gateway_name?: string
+          id?: string
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      modalidades_config: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          codigo: string
+          created_at: string | null
+          id: string
+          multiplicador: number
+          nome: string
+          ordem: number | null
+          posicoes_1_10: boolean | null
+          posicoes_1_5: boolean | null
+          posicoes_1_6: boolean | null
+          posicoes_1_7: boolean | null
+          posicoes_5_6: boolean | null
+          updated_at: string | null
+          valor_maximo: number | null
+          valor_minimo: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          codigo: string
+          created_at?: string | null
+          id?: string
+          multiplicador: number
+          nome: string
+          ordem?: number | null
+          posicoes_1_10?: boolean | null
+          posicoes_1_5?: boolean | null
+          posicoes_1_6?: boolean | null
+          posicoes_1_7?: boolean | null
+          posicoes_5_6?: boolean | null
+          updated_at?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          codigo?: string
+          created_at?: string | null
+          id?: string
+          multiplicador?: number
+          nome?: string
+          ordem?: number | null
+          posicoes_1_10?: boolean | null
+          posicoes_1_5?: boolean | null
+          posicoes_1_6?: boolean | null
+          posicoes_1_7?: boolean | null
+          posicoes_5_6?: boolean | null
+          updated_at?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Relationships: []
+      }
       pagamentos: {
         Row: {
           aposta_id: string | null
@@ -149,6 +580,7 @@ export type Database = {
           pix_copy_paste: string | null
           pix_expiration: string | null
           pix_qr_code: string | null
+          platform_id: string
           status: string
           tipo: string | null
           updated_at: string | null
@@ -167,6 +599,7 @@ export type Database = {
           pix_copy_paste?: string | null
           pix_expiration?: string | null
           pix_qr_code?: string | null
+          platform_id: string
           status?: string
           tipo?: string | null
           updated_at?: string | null
@@ -185,6 +618,7 @@ export type Database = {
           pix_copy_paste?: string | null
           pix_expiration?: string | null
           pix_qr_code?: string | null
+          platform_id?: string
           status?: string
           tipo?: string | null
           updated_at?: string | null
@@ -203,6 +637,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pagamentos_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pagamentos_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -210,6 +651,322 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      page_views: {
+        Row: {
+          created_at: string | null
+          device_type: string | null
+          game_type: string | null
+          id: string
+          page_path: string
+          page_type: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_type?: string | null
+          game_type?: string | null
+          id?: string
+          page_path: string
+          page_type?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_type?: string | null
+          game_type?: string | null
+          id?: string
+          page_path?: string
+          page_type?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_admins: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          permissions: Json | null
+          platform_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          permissions?: Json | null
+          platform_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          permissions?: Json | null
+          platform_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_admins_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_config: {
+        Row: {
+          active_gateway: string | null
+          bet_max: number | null
+          bet_min: number | null
+          color_accent_green: string | null
+          color_accent_teal: string | null
+          color_background: string | null
+          color_primary: string | null
+          color_primary_dark: string | null
+          color_surface: string | null
+          color_text_primary: string | null
+          comissao_promotor_automatica: boolean | null
+          created_at: string | null
+          custom_head_scripts: string | null
+          deposit_max: number | null
+          deposit_min: number | null
+          facebook_access_token: string | null
+          facebook_pixel_id: string | null
+          favicon_url: string | null
+          google_analytics_id: string | null
+          id: string
+          logo_url: string | null
+          max_payout_daily: number | null
+          max_payout_per_bet: number | null
+          production_mode: boolean | null
+          promotor_link: string | null
+          site_description: string | null
+          site_name: string | null
+          social_instagram: string | null
+          social_telegram: string | null
+          social_whatsapp: string | null
+          updated_at: string | null
+          withdrawal_fee_percent: number | null
+          withdrawal_max: number | null
+          withdrawal_min: number | null
+          withdrawal_mode: string | null
+        }
+        Insert: {
+          active_gateway?: string | null
+          bet_max?: number | null
+          bet_min?: number | null
+          color_accent_green?: string | null
+          color_accent_teal?: string | null
+          color_background?: string | null
+          color_primary?: string | null
+          color_primary_dark?: string | null
+          color_surface?: string | null
+          color_text_primary?: string | null
+          comissao_promotor_automatica?: boolean | null
+          created_at?: string | null
+          custom_head_scripts?: string | null
+          deposit_max?: number | null
+          deposit_min?: number | null
+          facebook_access_token?: string | null
+          facebook_pixel_id?: string | null
+          favicon_url?: string | null
+          google_analytics_id?: string | null
+          id?: string
+          logo_url?: string | null
+          max_payout_daily?: number | null
+          max_payout_per_bet?: number | null
+          production_mode?: boolean | null
+          promotor_link?: string | null
+          site_description?: string | null
+          site_name?: string | null
+          social_instagram?: string | null
+          social_telegram?: string | null
+          social_whatsapp?: string | null
+          updated_at?: string | null
+          withdrawal_fee_percent?: number | null
+          withdrawal_max?: number | null
+          withdrawal_min?: number | null
+          withdrawal_mode?: string | null
+        }
+        Update: {
+          active_gateway?: string | null
+          bet_max?: number | null
+          bet_min?: number | null
+          color_accent_green?: string | null
+          color_accent_teal?: string | null
+          color_background?: string | null
+          color_primary?: string | null
+          color_primary_dark?: string | null
+          color_surface?: string | null
+          color_text_primary?: string | null
+          comissao_promotor_automatica?: boolean | null
+          created_at?: string | null
+          custom_head_scripts?: string | null
+          deposit_max?: number | null
+          deposit_min?: number | null
+          facebook_access_token?: string | null
+          facebook_pixel_id?: string | null
+          favicon_url?: string | null
+          google_analytics_id?: string | null
+          id?: string
+          logo_url?: string | null
+          max_payout_daily?: number | null
+          max_payout_per_bet?: number | null
+          production_mode?: boolean | null
+          promotor_link?: string | null
+          site_description?: string | null
+          site_name?: string | null
+          social_instagram?: string | null
+          social_telegram?: string | null
+          social_whatsapp?: string | null
+          updated_at?: string | null
+          withdrawal_fee_percent?: number | null
+          withdrawal_max?: number | null
+          withdrawal_min?: number | null
+          withdrawal_mode?: string | null
+        }
+        Relationships: []
+      }
+      platforms: {
+        Row: {
+          active_gateway: string | null
+          ativo: boolean | null
+          bet_max: number | null
+          bet_min: number | null
+          color_accent_green: string | null
+          color_accent_teal: string | null
+          color_background: string | null
+          color_primary: string | null
+          color_primary_dark: string | null
+          color_surface: string | null
+          color_text_primary: string | null
+          comissao_promotor_automatica: boolean | null
+          created_at: string | null
+          custom_head_scripts: string | null
+          deposit_max: number | null
+          deposit_min: number | null
+          domain: string
+          facebook_access_token: string | null
+          facebook_pixel_id: string | null
+          favicon_url: string | null
+          gateway_credentials: Json | null
+          google_analytics_id: string | null
+          id: string
+          logo_url: string | null
+          max_payout_daily: number | null
+          max_payout_per_bet: number | null
+          name: string
+          production_mode: boolean | null
+          promotor_link: string | null
+          site_description: string | null
+          slug: string
+          social_instagram: string | null
+          social_telegram: string | null
+          social_whatsapp: string | null
+          updated_at: string | null
+          withdrawal_fee_percent: number | null
+          withdrawal_max: number | null
+          withdrawal_min: number | null
+          withdrawal_mode: string | null
+        }
+        Insert: {
+          active_gateway?: string | null
+          ativo?: boolean | null
+          bet_max?: number | null
+          bet_min?: number | null
+          color_accent_green?: string | null
+          color_accent_teal?: string | null
+          color_background?: string | null
+          color_primary?: string | null
+          color_primary_dark?: string | null
+          color_surface?: string | null
+          color_text_primary?: string | null
+          comissao_promotor_automatica?: boolean | null
+          created_at?: string | null
+          custom_head_scripts?: string | null
+          deposit_max?: number | null
+          deposit_min?: number | null
+          domain: string
+          facebook_access_token?: string | null
+          facebook_pixel_id?: string | null
+          favicon_url?: string | null
+          gateway_credentials?: Json | null
+          google_analytics_id?: string | null
+          id?: string
+          logo_url?: string | null
+          max_payout_daily?: number | null
+          max_payout_per_bet?: number | null
+          name: string
+          production_mode?: boolean | null
+          promotor_link?: string | null
+          site_description?: string | null
+          slug: string
+          social_instagram?: string | null
+          social_telegram?: string | null
+          social_whatsapp?: string | null
+          updated_at?: string | null
+          withdrawal_fee_percent?: number | null
+          withdrawal_max?: number | null
+          withdrawal_min?: number | null
+          withdrawal_mode?: string | null
+        }
+        Update: {
+          active_gateway?: string | null
+          ativo?: boolean | null
+          bet_max?: number | null
+          bet_min?: number | null
+          color_accent_green?: string | null
+          color_accent_teal?: string | null
+          color_background?: string | null
+          color_primary?: string | null
+          color_primary_dark?: string | null
+          color_surface?: string | null
+          color_text_primary?: string | null
+          comissao_promotor_automatica?: boolean | null
+          created_at?: string | null
+          custom_head_scripts?: string | null
+          deposit_max?: number | null
+          deposit_min?: number | null
+          domain?: string
+          facebook_access_token?: string | null
+          facebook_pixel_id?: string | null
+          favicon_url?: string | null
+          gateway_credentials?: Json | null
+          google_analytics_id?: string | null
+          id?: string
+          logo_url?: string | null
+          max_payout_daily?: number | null
+          max_payout_per_bet?: number | null
+          name?: string
+          production_mode?: boolean | null
+          promotor_link?: string | null
+          site_description?: string | null
+          slug?: string
+          social_instagram?: string | null
+          social_telegram?: string | null
+          social_whatsapp?: string | null
+          updated_at?: string | null
+          withdrawal_fee_percent?: number | null
+          withdrawal_max?: number | null
+          withdrawal_min?: number | null
+          withdrawal_mode?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -222,6 +979,7 @@ export type Database = {
           last_location: Json | null
           last_login: string | null
           nome: string
+          platform_id: string
           saldo: number | null
           saldo_bonus: number | null
           signup_ip: string | null
@@ -237,6 +995,7 @@ export type Database = {
           last_location?: Json | null
           last_login?: string | null
           nome: string
+          platform_id: string
           saldo?: number | null
           saldo_bonus?: number | null
           signup_ip?: string | null
@@ -252,6 +1011,7 @@ export type Database = {
           last_location?: Json | null
           last_login?: string | null
           nome?: string
+          platform_id?: string
           saldo?: number | null
           saldo_bonus?: number | null
           signup_ip?: string | null
@@ -261,6 +1021,303 @@ export type Database = {
           {
             foreignKeyName: "profiles_indicado_por_fkey"
             columns: ["indicado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promocoes: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          id: string
+          percentual: number | null
+          tipo: string
+          titulo: string
+          updated_at: string | null
+          valor: number | null
+          valor_maximo: number | null
+          valor_minimo: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          percentual?: number | null
+          tipo: string
+          titulo: string
+          updated_at?: string | null
+          valor?: number | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          id?: string
+          percentual?: number | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string | null
+          valor?: number | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promocoes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotor_comissoes: {
+        Row: {
+          created_at: string | null
+          id: string
+          percentual_aplicado: number
+          promotor_id: string
+          referencia_id: string
+          tipo: string
+          user_id: string
+          valor_base: number
+          valor_comissao: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          percentual_aplicado: number
+          promotor_id: string
+          referencia_id: string
+          tipo: string
+          user_id: string
+          valor_base: number
+          valor_comissao: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          percentual_aplicado?: number
+          promotor_id?: string
+          referencia_id?: string
+          tipo?: string
+          user_id?: string
+          valor_base?: number
+          valor_comissao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotor_comissoes_promotor_id_fkey"
+            columns: ["promotor_id"]
+            isOneToOne: false
+            referencedRelation: "promotores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotor_comissoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotor_referidos: {
+        Row: {
+          created_at: string | null
+          id: string
+          promotor_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          promotor_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          promotor_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotor_referidos_promotor_id_fkey"
+            columns: ["promotor_id"]
+            isOneToOne: false
+            referencedRelation: "promotores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotor_referidos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotor_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          promotor_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          promotor_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          promotor_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotor_roles_promotor_id_fkey"
+            columns: ["promotor_id"]
+            isOneToOne: false
+            referencedRelation: "promotores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotores: {
+        Row: {
+          ativo: boolean
+          codigo_afiliado: string
+          comissao_deposito_percentual: number | null
+          comissao_perda_percentual: number | null
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          nome: string
+          platform_id: string
+          saldo: number
+          telefone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo_afiliado: string
+          comissao_deposito_percentual?: number | null
+          comissao_perda_percentual?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          id?: string
+          nome: string
+          platform_id: string
+          saldo?: number
+          telefone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo_afiliado?: string
+          comissao_deposito_percentual?: number | null
+          comissao_perda_percentual?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          platform_id?: string
+          saldo?: number
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotores_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      propagandas: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          gatilhos: string[]
+          id: string
+          imagem_url: string
+          link_url: string | null
+          prioridade: number | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          gatilhos?: string[]
+          id?: string
+          imagem_url: string
+          link_url?: string | null
+          prioridade?: number | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          gatilhos?: string[]
+          id?: string
+          imagem_url?: string
+          link_url?: string | null
+          prioridade?: number | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "propagandas_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -336,117 +1393,6 @@ export type Database = {
         }
         Relationships: []
       }
-      platform_config: {
-        Row: {
-          active_gateway: string | null
-          bet_max: number | null
-          bet_min: number | null
-          color_accent_green: string | null
-          color_accent_teal: string | null
-          color_background: string | null
-          color_primary: string | null
-          color_primary_dark: string | null
-          color_surface: string | null
-          color_text_primary: string | null
-          created_at: string | null
-          custom_head_scripts: string | null
-          deposit_max: number | null
-          deposit_min: number | null
-          facebook_access_token: string | null
-          facebook_pixel_id: string | null
-          favicon_url: string | null
-          google_analytics_id: string | null
-          id: string
-          logo_url: string | null
-          max_payout_daily: number | null
-          max_payout_per_bet: number | null
-          production_mode: boolean | null
-          promotor_link: string | null
-          site_description: string | null
-          site_name: string | null
-          social_instagram: string | null
-          social_telegram: string | null
-          social_whatsapp: string | null
-          updated_at: string | null
-          withdrawal_fee_percent: number | null
-          withdrawal_max: number | null
-          withdrawal_min: number | null
-          withdrawal_mode: string | null
-        }
-        Insert: {
-          active_gateway?: string | null
-          bet_max?: number | null
-          bet_min?: number | null
-          color_accent_green?: string | null
-          color_accent_teal?: string | null
-          color_background?: string | null
-          color_primary?: string | null
-          color_primary_dark?: string | null
-          color_surface?: string | null
-          color_text_primary?: string | null
-          created_at?: string | null
-          custom_head_scripts?: string | null
-          deposit_max?: number | null
-          deposit_min?: number | null
-          facebook_access_token?: string | null
-          facebook_pixel_id?: string | null
-          favicon_url?: string | null
-          google_analytics_id?: string | null
-          id?: string
-          logo_url?: string | null
-          max_payout_daily?: number | null
-          max_payout_per_bet?: number | null
-          production_mode?: boolean | null
-          promotor_link?: string | null
-          site_description?: string | null
-          site_name?: string | null
-          social_instagram?: string | null
-          social_telegram?: string | null
-          social_whatsapp?: string | null
-          updated_at?: string | null
-          withdrawal_fee_percent?: number | null
-          withdrawal_max?: number | null
-          withdrawal_min?: number | null
-          withdrawal_mode?: string | null
-        }
-        Update: {
-          active_gateway?: string | null
-          bet_max?: number | null
-          bet_min?: number | null
-          color_accent_green?: string | null
-          color_accent_teal?: string | null
-          color_background?: string | null
-          color_primary?: string | null
-          color_primary_dark?: string | null
-          color_surface?: string | null
-          color_text_primary?: string | null
-          created_at?: string | null
-          custom_head_scripts?: string | null
-          deposit_max?: number | null
-          deposit_min?: number | null
-          facebook_access_token?: string | null
-          facebook_pixel_id?: string | null
-          favicon_url?: string | null
-          google_analytics_id?: string | null
-          id?: string
-          logo_url?: string | null
-          max_payout_daily?: number | null
-          max_payout_per_bet?: number | null
-          production_mode?: boolean | null
-          promotor_link?: string | null
-          site_description?: string | null
-          site_name?: string | null
-          social_instagram?: string | null
-          social_telegram?: string | null
-          social_whatsapp?: string | null
-          updated_at?: string | null
-          withdrawal_fee_percent?: number | null
-          withdrawal_max?: number | null
-          withdrawal_min?: number | null
-          withdrawal_mode?: string | null
-        }
-        Relationships: []
-      }
       saques: {
         Row: {
           bspay_transaction_id: string | null
@@ -456,6 +1402,7 @@ export type Database = {
           external_id: string
           id: string
           paid_at: string | null
+          platform_id: string
           status: string
           taxa: number
           tipo_chave: string
@@ -472,6 +1419,7 @@ export type Database = {
           external_id: string
           id?: string
           paid_at?: string | null
+          platform_id: string
           status?: string
           taxa?: number
           tipo_chave: string
@@ -488,6 +1436,7 @@ export type Database = {
           external_id?: string
           id?: string
           paid_at?: string | null
+          platform_id?: string
           status?: string
           taxa?: number
           tipo_chave?: string
@@ -498,6 +1447,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "saques_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "saques_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -505,6 +1461,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_settings: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -514,6 +1500,7 @@ export type Database = {
           gateway_id: string | null
           id: string
           metadata: Json | null
+          platform_id: string
           provider: string | null
           status: string
           tipo: string | null
@@ -528,6 +1515,7 @@ export type Database = {
           gateway_id?: string | null
           id?: string
           metadata?: Json | null
+          platform_id: string
           provider?: string | null
           status?: string
           tipo?: string | null
@@ -542,6 +1530,7 @@ export type Database = {
           gateway_id?: string | null
           id?: string
           metadata?: Json | null
+          platform_id?: string
           provider?: string | null
           status?: string
           tipo?: string | null
@@ -551,7 +1540,118 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "transactions_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ultimo_ganhador: {
+        Row: {
+          data_hora: string
+          id: string
+          unidade: string
+          valor: number
+        }
+        Insert: {
+          data_hora?: string
+          id?: string
+          unidade: string
+          valor: number
+        }
+        Update: {
+          data_hora?: string
+          id?: string
+          unidade?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      verificacao_apostas: {
+        Row: {
+          aposta_id: string | null
+          created_at: string | null
+          ganhou: boolean | null
+          id: string
+          palpite: string | null
+          premio_calculado: number | null
+          premio_numero: string | null
+          premio_posicao: number | null
+          resultado_id: string | null
+        }
+        Insert: {
+          aposta_id?: string | null
+          created_at?: string | null
+          ganhou?: boolean | null
+          id?: string
+          palpite?: string | null
+          premio_calculado?: number | null
+          premio_numero?: string | null
+          premio_posicao?: number | null
+          resultado_id?: string | null
+        }
+        Update: {
+          aposta_id?: string | null
+          created_at?: string | null
+          ganhou?: boolean | null
+          id?: string
+          palpite?: string | null
+          premio_calculado?: number | null
+          premio_numero?: string | null
+          premio_posicao?: number | null
+          resultado_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verificacao_apostas_aposta_id_fkey"
+            columns: ["aposta_id"]
+            isOneToOne: false
+            referencedRelation: "apostas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verificacao_apostas_resultado_id_fkey"
+            columns: ["resultado_id"]
+            isOneToOne: false
+            referencedRelation: "resultados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visitor_presence: {
+        Row: {
+          current_page: string | null
+          id: string
+          last_seen_at: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          current_page?: string | null
+          id?: string
+          last_seen_at?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          current_page?: string | null
+          id?: string
+          last_seen_at?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitor_presence_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -695,7 +1795,130 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      invoke_scrape_resultados: { Args: never; Returns: undefined }
+      add_balance: {
+        Args: { p_amount: number; p_tipo?: string; p_user_id: string }
+        Returns: Json
+      }
+      debit_balance: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      get_platform_config: {
+        Args: Record<string, never>
+        Returns: {
+          active_gateway: string | null
+          bet_max: number | null
+          bet_min: number | null
+          color_accent_green: string | null
+          color_accent_teal: string | null
+          color_background: string | null
+          color_primary: string | null
+          color_primary_dark: string | null
+          color_surface: string | null
+          color_text_primary: string | null
+          comissao_promotor_automatica: boolean | null
+          created_at: string | null
+          custom_head_scripts: string | null
+          deposit_max: number | null
+          deposit_min: number | null
+          facebook_access_token: string | null
+          facebook_pixel_id: string | null
+          favicon_url: string | null
+          google_analytics_id: string | null
+          id: string
+          logo_url: string | null
+          max_payout_daily: number | null
+          max_payout_per_bet: number | null
+          production_mode: boolean | null
+          promotor_link: string | null
+          site_description: string | null
+          site_name: string | null
+          social_instagram: string | null
+          social_telegram: string | null
+          social_whatsapp: string | null
+          updated_at: string | null
+          withdrawal_fee_percent: number | null
+          withdrawal_max: number | null
+          withdrawal_min: number | null
+          withdrawal_mode: string | null
+        }
+      }
+      get_promotor_id: { Args: { checking_user_id: string }; Returns: string }
+      get_user_admin_platforms: { Args: Record<string, never>; Returns: string[] }
+      get_user_platform_id: { Args: Record<string, never>; Returns: string }
+      invoke_scrape_resultados: { Args: Record<string, never>; Returns: undefined }
+      is_admin:
+        | { Args: Record<string, never>; Returns: boolean }
+        | { Args: { checking_user_id: string }; Returns: boolean }
+      is_platform_admin: { Args: { p_platform_id: string }; Returns: boolean }
+      is_promotor: { Args: { checking_user_id: string }; Returns: boolean }
+      is_super_admin: { Args: Record<string, never>; Returns: boolean }
+      numero_to_grupo: { Args: { numero: string }; Returns: number }
+      place_bet:
+        | {
+            Args: {
+              p_colocacao: string
+              p_data_jogo: string
+              p_horarios: string[]
+              p_loterias: string[]
+              p_modalidade: string
+              p_multiplicador: number
+              p_palpites: string[]
+              p_tipo: string
+              p_valor_unitario: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_colocacao: string
+              p_data_jogo: string
+              p_horarios: string[]
+              p_loterias: string[]
+              p_modalidade: string
+              p_multiplicador?: number
+              p_palpites: string[]
+              p_tipo: string
+              p_valor_unitario: number
+            }
+            Returns: Json
+          }
+      process_pix_deposit:
+        | {
+            Args: {
+              p_amount: number
+              p_external_id: string
+              p_gateway_id: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_external_id: string
+              p_gateway_id: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+      verificar_apostas: {
+        Args: { p_data?: string; p_horario?: string }
+        Returns: Json
+      }
+      verificar_palpite: {
+        Args: {
+          p_colocacao: string
+          p_modalidade: string
+          p_palpite: string
+          p_resultado: Record<string, unknown>
+        }
+        Returns: {
+          ganhou: boolean
+          posicao_match: number
+          premio_numero: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -706,25 +1929,33 @@ export type Database = {
   }
 }
 
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-        Database["public"]["Views"])
-    ? (Database["public"]["Tables"] &
-        Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -732,20 +1963,24 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -753,22 +1988,66 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-    ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
       : never
     : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

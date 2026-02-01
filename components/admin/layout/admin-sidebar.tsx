@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -38,8 +38,10 @@ import {
   BarChart3,
   Percent,
   UserPlus,
+  Crown,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
+import { checkSuperAdmin } from '@/lib/admin/actions/master';
 
 interface NavItem {
   label: string;
@@ -170,6 +172,13 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    checkSuperAdmin().then(({ isSuperAdmin }) => {
+      setIsSuperAdmin(isSuperAdmin);
+    });
+  }, []);
 
   const handleLogout = () => {
     startTransition(async () => {
@@ -304,6 +313,23 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
             ))}
           </ul>
         </nav>
+
+        {/* Super Admin Link */}
+        {isSuperAdmin && (
+          <div className={cn('p-4 border-t border-zinc-800/50', !isOpen && 'hidden lg:block')}>
+            <Link
+              href="/admin-master"
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-purple-400 hover:bg-purple-500/10 transition-all duration-150 border border-purple-500/20',
+                !isOpen && 'lg:justify-center lg:px-2'
+              )}
+              title={!isOpen ? 'Painel Master' : undefined}
+            >
+              <Crown className="h-5 w-5" />
+              {isOpen && <span className="font-medium">Painel Master</span>}
+            </Link>
+          </div>
+        )}
 
         {/* Logout */}
         <div className={cn('p-4 border-t border-zinc-800/50', !isOpen && 'hidden lg:block')}>

@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface DashboardStats {
   totalGanhos: number;
@@ -26,6 +27,9 @@ export interface DashboardStats {
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient();
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   // Calcular datas uma única vez
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -35,6 +39,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // ============================================================================
   // EXECUTAR TODAS AS QUERIES EM PARALELO
+  // Todas as queries filtram por platform_id para isolamento multi-tenant
   // ============================================================================
   const [
     ganhosResult,
@@ -52,29 +57,34 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase
       .from('apostas')
       .select('premio_valor')
+      .eq('platform_id', platformId)
       .eq('status', 'ganhou'),
 
     // 2. Total de apostas (count)
     supabase
       .from('apostas')
-      .select('*', { count: 'exact', head: true }),
+      .select('*', { count: 'exact', head: true })
+      .eq('platform_id', platformId),
 
     // 3. Total de depósitos aprovados
     supabase
       .from('pagamentos')
       .select('valor')
+      .eq('platform_id', platformId)
       .eq('status', 'PAID'),
 
     // 4. Total de saques pagos
     supabase
       .from('saques')
       .select('valor')
+      .eq('platform_id', platformId)
       .eq('status', 'PAID'),
 
     // 5. Depósitos do dia
     supabase
       .from('pagamentos')
       .select('valor')
+      .eq('platform_id', platformId)
       .eq('status', 'PAID')
       .gte('paid_at', startOfDay),
 
@@ -82,6 +92,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase
       .from('pagamentos')
       .select('valor')
+      .eq('platform_id', platformId)
       .eq('status', 'PAID')
       .gte('paid_at', startOfWeek),
 
@@ -89,6 +100,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase
       .from('pagamentos')
       .select('valor')
+      .eq('platform_id', platformId)
       .eq('status', 'PAID')
       .gte('paid_at', startOfMonth),
 
@@ -96,18 +108,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase
       .from('saques')
       .select('valor')
+      .eq('platform_id', platformId)
       .gte('created_at', startOfDay),
 
     // 9. Apostas de hoje (count)
     supabase
       .from('apostas')
       .select('*', { count: 'exact', head: true })
+      .eq('platform_id', platformId)
       .gte('created_at', startOfDay),
 
     // 10. Usuários ativos (últimos 7 dias)
     supabase
       .from('apostas')
       .select('user_id')
+      .eq('platform_id', platformId)
       .gte('created_at', sevenDaysAgo),
   ]);
 
@@ -159,6 +174,9 @@ export interface RecentBet {
 export async function getRecentBets(limit = 7): Promise<RecentBet[]> {
   const supabase = await createClient();
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   // Já otimizado com JOIN (profiles!inner)
   const { data } = await supabase
     .from('apostas')
@@ -173,6 +191,7 @@ export async function getRecentBets(limit = 7): Promise<RecentBet[]> {
       created_at,
       profiles!inner(nome)
     `)
+    .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
     .in('status', ['ganhou', 'perdeu'])
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -202,6 +221,9 @@ export interface RecentDeposit {
 export async function getRecentDeposits(limit = 7): Promise<RecentDeposit[]> {
   const supabase = await createClient();
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   // Já otimizado com JOIN (profiles!inner)
   const { data } = await supabase
     .from('pagamentos')
@@ -213,6 +235,7 @@ export async function getRecentDeposits(limit = 7): Promise<RecentDeposit[]> {
       created_at,
       profiles!inner(nome)
     `)
+    .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
     .eq('tipo', 'deposito')
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -242,6 +265,9 @@ export interface RecentWithdrawal {
 export async function getPendingWithdrawals(limit = 7): Promise<RecentWithdrawal[]> {
   const supabase = await createClient();
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   // Já otimizado com JOIN (profiles!inner)
   const { data } = await supabase
     .from('saques')
@@ -256,6 +282,7 @@ export async function getPendingWithdrawals(limit = 7): Promise<RecentWithdrawal
       created_at,
       profiles!inner(nome)
     `)
+    .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
     .eq('status', 'PENDING')
     .order('created_at', { ascending: false })
     .limit(limit);

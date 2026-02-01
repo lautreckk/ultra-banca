@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
+import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
 // TYPES
@@ -91,9 +92,13 @@ export async function getPromotores(params: PromotoresListParams = {}): Promise<
   const { page = 1, pageSize = 20, search, status = 'todos' } = params;
   const offset = (page - 1) * pageSize;
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   let query = supabase
     .from('promotores')
-    .select('*', { count: 'exact' });
+    .select('*', { count: 'exact' })
+    .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
     query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%,codigo_afiliado.ilike.%${search}%`);
@@ -263,6 +268,9 @@ export async function createPromotor(data: CreatePromotorData): Promise<{ succes
     return { success: false, error: `Erro ao criar usuário: ${authError.message}` };
   }
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   // Criar registro do promotor
   const { data: promotor, error: promotorError } = await supabase
     .from('promotores')
@@ -275,6 +283,7 @@ export async function createPromotor(data: CreatePromotorData): Promise<{ succes
       comissao_deposito_percentual: data.comissao_deposito_percentual || null,
       comissao_perda_percentual: data.comissao_perda_percentual || null,
       created_by: admin?.id || null,
+      platform_id: platformId,  // MULTI-TENANT: Associar à plataforma atual
     })
     .select()
     .single();
@@ -772,9 +781,13 @@ export async function getPromotorStats(promotorId: string): Promise<PromotorStat
 export async function getComissaoAutomaticaSetting(): Promise<boolean> {
   const supabase = await createClient();
 
+  // MULTI-TENANT: Buscar da tabela platforms
+  const platformId = await getPlatformId();
+
   const { data } = await supabase
-    .from('platform_config')
+    .from('platforms')
     .select('comissao_promotor_automatica')
+    .eq('id', platformId)
     .single();
 
   return data?.comissao_promotor_automatica ?? true;
@@ -786,10 +799,13 @@ export async function updateComissaoAutomaticaSetting(value: boolean): Promise<{
   // Obter admin atual
   const { data: { user: admin } } = await supabase.auth.getUser();
 
+  // MULTI-TENANT: Atualizar na tabela platforms
+  const platformId = await getPlatformId();
+
   const { error } = await supabase
-    .from('platform_config')
+    .from('platforms')
     .update({ comissao_promotor_automatica: value })
-    .neq('id', '00000000-0000-0000-0000-000000000000'); // Atualiza qualquer registro
+    .eq('id', platformId);
 
   if (error) {
     return { success: false, error: error.message };
@@ -799,7 +815,7 @@ export async function updateComissaoAutomaticaSetting(value: boolean): Promise<{
   await logAudit({
     actorId: admin?.id || null,
     action: AuditActions.SETTINGS_UPDATED,
-    entity: 'platform_config',
+    entity: `platform:${platformId}`,
     details: {
       setting: 'comissao_promotor_automatica',
       value: value,

@@ -2,16 +2,20 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * SEGREGAÇÃO ESTRITA DE CONTEXTOS
+ * MIDDLEWARE MULTI-TENANT + SEGREGAÇÃO DE CONTEXTOS
  *
- * Este middleware trata Admin, Promotor e Banca como aplicativos separados.
- * Um admin NUNCA pode ver a área de apostas e um usuário comum NUNCA pode ver o admin.
- * Promotores têm seu próprio dashboard separado.
+ * Este middleware:
+ * 1. Resolve a plataforma pelo domínio da requisição
+ * 2. Armazena platform_id em cookies para uso em server actions
+ * 3. Trata Admin, Promotor e Banca como aplicativos separados
  *
  * Contexto ADMIN: /admin/*
  * Contexto PROMOTOR: /promotor/*
  * Contexto BANCA: Tudo que não é /admin/* nem /promotor/*
  */
+
+// ID da plataforma padrão (Banca Pantanal)
+const DEFAULT_PLATFORM_ID = 'ff61b7a2-1098-4bc4-99c5-5afb600fbc57';
 
 // ============================================================================
 // DEFINIÇÃO DE ROTAS
@@ -97,6 +101,74 @@ function redirect(request: NextRequest, pathname: string): NextResponse {
 }
 
 // ============================================================================
+// MULTI-TENANT: RESOLUÇÃO DE PLATAFORMA
+// ============================================================================
+
+interface PlatformResult {
+  platformId: string;
+  platform: {
+    id: string;
+    domain: string;
+    slug: string;
+    name: string;
+    ativo: boolean;
+  };
+}
+
+/**
+ * Resolve a plataforma pelo domínio da requisição.
+ * Tenta primeiro pelo domínio completo, depois pelo slug (subdomínio).
+ */
+async function resolvePlatformByDomain(
+  supabase: ReturnType<typeof createServerClient>,
+  host: string
+): Promise<PlatformResult | null> {
+  // Remove porta se existir (localhost:3000)
+  const domain = host.split(':')[0];
+
+  // 1. Tentar pelo domínio completo
+  const { data: platform } = await supabase
+    .from('platforms')
+    .select('id, domain, slug, name, ativo')
+    .eq('domain', domain)
+    .eq('ativo', true)
+    .single();
+
+  if (platform) {
+    return { platformId: platform.id, platform };
+  }
+
+  // 2. Tentar pelo slug (primeiro segmento do domínio)
+  // Ex: bancapantanal.vercel.app -> slug = bancapantanal
+  const subdomain = domain.split('.')[0];
+  const { data: platformBySlug } = await supabase
+    .from('platforms')
+    .select('id, domain, slug, name, ativo')
+    .eq('slug', subdomain)
+    .eq('ativo', true)
+    .single();
+
+  if (platformBySlug) {
+    return { platformId: platformBySlug.id, platform: platformBySlug };
+  }
+
+  // 3. Fallback: retornar plataforma default para localhost/desenvolvimento
+  if (domain === 'localhost' || domain === '127.0.0.1') {
+    const { data: defaultPlatform } = await supabase
+      .from('platforms')
+      .select('id, domain, slug, name, ativo')
+      .eq('id', DEFAULT_PLATFORM_ID)
+      .single();
+
+    if (defaultPlatform) {
+      return { platformId: defaultPlatform.id, platform: defaultPlatform };
+    }
+  }
+
+  return null;
+}
+
+// ============================================================================
 // MIDDLEWARE PRINCIPAL
 // ============================================================================
 
@@ -123,6 +195,25 @@ export async function updateSession(request: NextRequest) {
       },
     }
   );
+
+  // ============================================================================
+  // MULTI-TENANT: RESOLVER PLATAFORMA PELO DOMÍNIO
+  // ============================================================================
+  const host = request.headers.get('host') || 'localhost';
+  const platformResult = await resolvePlatformByDomain(supabase, host);
+
+  // Se não encontrou plataforma e não é localhost, poderia redirecionar para erro
+  // Por enquanto, usamos fallback para default para não quebrar em desenvolvimento
+  const platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
+
+  // Armazenar platform_id em cookie para acesso em server actions
+  supabaseResponse.cookies.set('platform_id', platformId, {
+    httpOnly: false, // Client precisa acessar para passar no signup
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365, // 1 ano
+  });
 
   // IMPORTANTE: Não adicione código entre createServerClient e getUser()
   const { data: { user } } = await supabase.auth.getUser();
@@ -165,7 +256,7 @@ export async function updateSession(request: NextRequest) {
   // ============================================================================
 
   // Queries performáticas: apenas verificam existência
-  const [adminRoleResult, promotorRoleResult] = await Promise.all([
+  const [adminRoleResult, promotorRoleResult, profileResult] = await Promise.all([
     supabase
       .from('admin_roles')
       .select('role')
@@ -176,10 +267,33 @@ export async function updateSession(request: NextRequest) {
       .select('promotor_id')
       .eq('user_id', user.id)
       .maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('platform_id')
+      .eq('id', user.id)
+      .maybeSingle(),
   ]);
 
   const isAdmin = !!adminRoleResult.data;
+  const isSuperAdmin = adminRoleResult.data?.role === 'super_admin';
   const isPromotor = !!promotorRoleResult.data;
+  const userPlatformId = profileResult.data?.platform_id;
+
+  // ============================================================================
+  // VERIFICAÇÃO DE PERTENCIMENTO À PLATAFORMA (Multi-Tenant)
+  // ============================================================================
+  // Admins podem administrar múltiplas plataformas, então não verificamos aqui.
+  // Para usuários comuns e promotores, verificamos se pertencem à plataforma atual.
+  if (!isAdmin && userPlatformId && userPlatformId !== platformId) {
+    // Usuário não pertence a esta plataforma
+    // Fazer logout e redirecionar para login
+    await supabase.auth.signOut();
+
+    if (isPromotorRoute(pathname)) {
+      return redirect(request, '/promotor/login');
+    }
+    return redirect(request, '/login');
+  }
 
   // ============================================================================
   // CENÁRIO B1: É ADMIN

@@ -7,6 +7,7 @@ import { executeTrigger } from './evolution';
 import { dispatchDepositWebhook } from '@/lib/webhooks/dispatcher';
 import { applyDepositBonus } from './bonus-config';
 import { processarComissaoDeposito, getComissaoAutomaticaSetting } from './promotores';
+import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
 // DEPOSITS
@@ -43,6 +44,9 @@ export async function getDeposits(params: DepositsListParams = {}): Promise<Depo
   const { page = 1, pageSize = 20, status, search } = params;
   const offset = (page - 1) * pageSize;
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   let query = supabase
     .from('pagamentos')
     .select(`
@@ -55,7 +59,8 @@ export async function getDeposits(params: DepositsListParams = {}): Promise<Depo
       paid_at,
       profiles!inner(nome, cpf)
     `, { count: 'exact' })
-    .eq('tipo', 'deposito');
+    .eq('tipo', 'deposito')
+    .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (status) {
     query = query.eq('status', status);
@@ -249,6 +254,9 @@ export async function getWithdrawals(params: WithdrawalsListParams = {}): Promis
   const { page = 1, pageSize = 20, status, search } = params;
   const offset = (page - 1) * pageSize;
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   let query = supabase
     .from('saques')
     .select(`
@@ -264,7 +272,8 @@ export async function getWithdrawals(params: WithdrawalsListParams = {}): Promis
       created_at,
       paid_at,
       profiles!inner(nome, cpf)
-    `, { count: 'exact' });
+    `, { count: 'exact' })
+    .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (status) {
     query = query.eq('status', status);

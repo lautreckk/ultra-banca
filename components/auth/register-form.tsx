@@ -9,6 +9,13 @@ import { createClient } from '@/lib/supabase/client';
 import { trackSignup } from '@/lib/actions/auth';
 import { trackCompleteRegistration } from '@/lib/tracking/facebook';
 
+// Helper para obter platform_id do cookie (definido pelo middleware)
+function getPlatformIdFromCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|; )platform_id=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 interface RegisterFormProps {
   initialCodigoConvite?: string;
 }
@@ -83,6 +90,9 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
       const email = cpfToEmail(formData.cpf);
       const cpfNumbers = formData.cpf.replace(/\D/g, '');
 
+      // Obter platform_id do cookie (definido pelo middleware)
+      const platformId = getPlatformIdFromCookie();
+
       // Criar usuario no Supabase Auth com metadata
       // O trigger no banco criara o perfil automaticamente
       const { data, error: authError } = await supabase.auth.signUp({
@@ -94,6 +104,7 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
             nome: formData.nome.trim(),
             telefone: formData.telefone.replace(/\D/g, '') || null,
             codigo_convite: formData.codigoConvite.trim() || null,
+            platform_id: platformId, // Multi-tenant: associar usuário à plataforma
           },
         },
       });

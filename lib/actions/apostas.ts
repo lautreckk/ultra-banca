@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface BetSummary {
   id: string;
@@ -30,10 +31,14 @@ export async function getRecentBets(limit: number = 20): Promise<{ success: bool
       return { success: false, error: 'Usuário não autenticado' };
     }
 
+    // MULTI-TENANT: Obter platform_id da plataforma atual
+    const platformId = await getPlatformId();
+
     const { data, error } = await supabase
       .from('apostas')
       .select('id, tipo, modalidade, colocacao, palpites, horarios, loterias, data_jogo, valor_unitario, valor_total, multiplicador, pule, created_at')
       .eq('user_id', user.id)
+      .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
       .order('created_at', { ascending: false })
       .limit(limit);
 

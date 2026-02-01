@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface UserProfile {
   id: string;
@@ -61,6 +62,9 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
   const offset = (page - 1) * pageSize;
   const now = new Date();
 
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
   // Calcular datas de referência
   const hoje = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const seteDiasAtras = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -72,7 +76,8 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
   // ============================================================================
   let query = supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login', { count: 'exact' });
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login', { count: 'exact' })
+    .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
     query = query.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`);
@@ -94,7 +99,8 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
 
   let allUsersQuery = supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login');
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login')
+    .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
     allUsersQuery = allUsersQuery.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`);
@@ -258,11 +264,15 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
 export async function getUserById(id: string): Promise<UserProfile | null> {
   const supabase = await createClient();
 
-  // Query 1: Buscar usuário
+  // MULTI-TENANT: Obter platform_id da plataforma atual
+  const platformId = await getPlatformId();
+
+  // Query 1: Buscar usuário (garantindo que pertence à plataforma)
   const { data: user, error } = await supabase
     .from('profiles')
     .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at')
     .eq('id', id)
+    .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
     .single();
 
   if (error || !user) {
