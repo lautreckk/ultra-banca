@@ -9,6 +9,7 @@ import {
   searchUsersForAdmin,
   linkAdminToPlatform,
   unlinkAdminFromPlatform,
+  resetAdminPassword,
   type PlatformAdmin,
   type UserSearchResult,
 } from '@/lib/admin/actions/master';
@@ -30,6 +31,10 @@ import {
   X,
   UserCircle,
   AlertCircle,
+  Key,
+  Mail,
+  Copy,
+  Check,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -110,6 +115,13 @@ export default function EditarPlataformaPage() {
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [searching, setSearching] = useState(false);
   const [adminActionLoading, setAdminActionLoading] = useState<string | null>(null);
+
+  // Password reset modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordResetAdmin, setPasswordResetAdmin] = useState<PlatformAdmin | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordCopied, setPasswordCopied] = useState(false);
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
 
   // Form state
   const [form, setForm] = useState({
@@ -353,6 +365,45 @@ export default function EditarPlataformaPage() {
       alert(result.error);
     }
     setAdminActionLoading(null);
+  }
+
+  // Generate random password
+  function generatePassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  // Open password reset modal
+  function openPasswordResetModal(admin: PlatformAdmin) {
+    setPasswordResetAdmin(admin);
+    setNewPassword(generatePassword());
+    setPasswordCopied(false);
+    setShowPasswordModal(true);
+  }
+
+  // Reset password
+  async function handleResetPassword() {
+    if (!passwordResetAdmin || !newPassword) return;
+
+    setPasswordResetLoading(true);
+    const result = await resetAdminPassword(passwordResetAdmin.user_id, newPassword);
+    if (result.success) {
+      alert('Senha alterada com sucesso! Copie a nova senha antes de fechar.');
+    } else {
+      alert(result.error || 'Erro ao redefinir senha');
+    }
+    setPasswordResetLoading(false);
+  }
+
+  // Copy password to clipboard
+  async function copyPassword() {
+    await navigator.clipboard.writeText(newPassword);
+    setPasswordCopied(true);
+    setTimeout(() => setPasswordCopied(false), 2000);
   }
 
   if (loading) {
@@ -1135,32 +1186,53 @@ export default function EditarPlataformaPage() {
                   admins.map((admin) => (
                     <div
                       key={admin.id}
-                      className="flex items-center gap-4 p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg"
+                      className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg"
                     >
-                      <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center shrink-0">
-                        <UserCircle className="h-8 w-8 text-zinc-400" />
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center shrink-0">
+                          <UserCircle className="h-8 w-8 text-zinc-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white text-lg">{admin.user_name}</p>
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-zinc-500 w-16">CPF:</span>
+                              <span className="text-zinc-300 font-mono">{admin.user_cpf || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="h-4 w-4 text-zinc-500" />
+                              <span className="text-zinc-300">{admin.user_email || 'N/A'}</span>
+                            </div>
+                            <p className="text-xs text-zinc-600 mt-2">
+                              Vinculado em {new Date(admin.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openPasswordResetModal(admin)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-amber-400 text-sm transition-colors"
+                            title="Redefinir Senha"
+                          >
+                            <Key className="h-4 w-4" />
+                            Senha
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUnlinkAdmin(admin.id)}
+                            disabled={adminActionLoading === admin.id}
+                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-red-500/20 border border-zinc-700 hover:border-red-500/30 rounded-lg text-zinc-400 hover:text-red-400 text-sm transition-colors disabled:opacity-50"
+                          >
+                            {adminActionLoading === admin.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                            Remover
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white">{admin.user_name}</p>
-                        <p className="text-sm text-zinc-500 truncate">
-                          {admin.user_cpf || 'CPF nao informado'} | {admin.user_email}
-                        </p>
-                        <p className="text-xs text-zinc-600">
-                          Vinculado em {new Date(admin.created_at).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleUnlinkAdmin(admin.id)}
-                        disabled={adminActionLoading === admin.id}
-                        className="p-2 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors disabled:opacity-50"
-                      >
-                        {adminActionLoading === admin.id ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-5 w-5" />
-                        )}
-                      </button>
                     </div>
                   ))
                 )}
@@ -1218,6 +1290,91 @@ export default function EditarPlataformaPage() {
           </div>
         )}
       </form>
+
+      {/* Password Reset Modal */}
+      {showPasswordModal && passwordResetAdmin && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-purple-800/30 rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Key className="h-5 w-5 text-amber-400" />
+                Redefinir Senha
+              </h2>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div className="bg-zinc-800/50 rounded-lg p-3">
+                <p className="text-sm text-zinc-400">Redefinindo senha para:</p>
+                <p className="text-white font-medium">{passwordResetAdmin.user_name}</p>
+                <p className="text-sm text-zinc-500">{passwordResetAdmin.user_email}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Nova Senha
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white font-mono focus:outline-none focus:border-purple-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={copyPassword}
+                    className={`px-3 py-2 rounded-lg transition-colors ${
+                      passwordCopied
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white'
+                    }`}
+                    title="Copiar"
+                  >
+                    {passwordCopied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewPassword(generatePassword())}
+                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                    title="Gerar Nova"
+                  >
+                    <Key className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                <p className="text-amber-200 text-sm">
+                  Copie a senha antes de aplicar! Ela nao sera exibida novamente.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-zinc-800">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={passwordResetLoading || !newPassword}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                {passwordResetLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Aplicar Nova Senha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

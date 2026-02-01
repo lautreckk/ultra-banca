@@ -484,6 +484,26 @@ export async function getPlatformAdminsByPlatform(
   return adminsWithUsers;
 }
 
+export async function resetAdminPassword(
+  userId: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.admin.updateUserById(userId, {
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error('Error resetting password:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
 // =============================================
 // GLOBAL STATS (for super admin dashboard)
 // =============================================
