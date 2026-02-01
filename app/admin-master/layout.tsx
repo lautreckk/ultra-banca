@@ -1,12 +1,9 @@
-import { requireSuperAdmin } from '@/lib/admin/actions/master';
-
-export default async function AdminMasterLayout({
+export default function AdminMasterLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Protege todas as rotas do admin-master
-  await requireSuperAdmin();
-
+  // O middleware já protege as rotas admin-master
+  // Não fazer verificação aqui para evitar redirect loop na página de login
   return <>{children}</>;
 }

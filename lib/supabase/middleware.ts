@@ -41,6 +41,7 @@ const PUBLIC_ROUTES = [
   '/api',
   '/webhook',
   '/promotor/login',
+  '/admin-master/login',
 ];
 
 // Rotas protegidas da BANCA (requerem autenticação de usuário comum)
@@ -71,7 +72,11 @@ function isAdminMasterRoute(pathname: string): boolean {
 }
 
 function isAdminMasterAuthRoute(pathname: string): boolean {
-  return ADMIN_MASTER_AUTH_ROUTES.includes(pathname);
+  // Normalizar pathname removendo trailing slash
+  const normalizedPath = pathname.endsWith('/') && pathname !== '/'
+    ? pathname.slice(0, -1)
+    : pathname;
+  return ADMIN_MASTER_AUTH_ROUTES.includes(normalizedPath);
 }
 
 function isAdminRoute(pathname: string): boolean {
