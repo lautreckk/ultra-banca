@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Home, Share2, Printer, Check, X, Loader2 } from 'lucide-react';
+import { Home, Share2, Printer, Check, X, Loader2, Trash2 } from 'lucide-react';
 import { BetHeader } from '@/components/layout';
 import { useBetStore, BetItem } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById, getSubLoteriaById } from '@/lib/constants';
@@ -13,7 +13,7 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 export default function FinalizarApostaPage() {
   const router = useRouter();
   const config = usePlatformConfig();
-  const { items, clearCart } = useBetStore();
+  const { items, clearCart, removeItem } = useBetStore();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -258,10 +258,19 @@ export default function FinalizarApostaPage() {
             return (
               <div key={item.id || index} className={index > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}>
                 {/* Modalidade & Colocacao */}
-                <div className="mb-3">
+                <div className="mb-3 flex items-center justify-between">
                   <div className="font-bold text-gray-900">
                     {modalidadeInfo?.nome || item.modalidade.toUpperCase()} - {colocacaoInfo?.nome || item.colocacao.toUpperCase()}
                   </div>
+                  {!isConfirmed && items.length > 1 && (
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Remover aposta"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Palpites */}
