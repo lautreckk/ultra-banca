@@ -8,7 +8,8 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 function CadastroContent() {
   const searchParams = useSearchParams();
-  const codigoConvite = searchParams.get('p') || '';
+  // Suporta tanto ?p= (código de usuário) quanto ?ref= (código de promotor)
+  const codigoConvite = searchParams.get('p') || searchParams.get('ref') || '';
 
   return (
     <div className="w-full max-w-sm">

@@ -4,11 +4,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 /**
  * SEGREGAÇÃO ESTRITA DE CONTEXTOS
  *
- * Este middleware trata Admin e Banca como dois aplicativos completamente separados.
+ * Este middleware trata Admin, Promotor e Banca como aplicativos separados.
  * Um admin NUNCA pode ver a área de apostas e um usuário comum NUNCA pode ver o admin.
+ * Promotores têm seu próprio dashboard separado.
  *
  * Contexto ADMIN: /admin/*
- * Contexto BANCA: Tudo que não é /admin/*
+ * Contexto PROMOTOR: /promotor/*
+ * Contexto BANCA: Tudo que não é /admin/* nem /promotor/*
  */
 
 // ============================================================================
@@ -19,6 +21,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 const ADMIN_PREFIX = '/admin';
 const ADMIN_AUTH_ROUTES = ['/admin/login'];
 
+// Rotas do contexto PROMOTOR
+const PROMOTOR_PREFIX = '/promotor';
+const PROMOTOR_AUTH_ROUTES = ['/promotor/login'];
+
 // Rotas públicas (não requerem autenticação)
 const PUBLIC_ROUTES = [
   '/login',
@@ -26,6 +32,7 @@ const PUBLIC_ROUTES = [
   '/recuperar-senha',
   '/api',
   '/webhook',
+  '/promotor/login',
 ];
 
 // Rotas protegidas da BANCA (requerem autenticação de usuário comum)
@@ -57,6 +64,14 @@ function isAdminRoute(pathname: string): boolean {
 
 function isAdminAuthRoute(pathname: string): boolean {
   return ADMIN_AUTH_ROUTES.includes(pathname);
+}
+
+function isPromotorRoute(pathname: string): boolean {
+  return pathname.startsWith(PROMOTOR_PREFIX);
+}
+
+function isPromotorAuthRoute(pathname: string): boolean {
+  return PROMOTOR_AUTH_ROUTES.includes(pathname);
 }
 
 function isPublicRoute(pathname: string): boolean {
@@ -123,12 +138,17 @@ export async function updateSession(request: NextRequest) {
       return redirect(request, '/admin/login');
     }
 
+    // A1.5: Tentando acessar área promotor -> Redirecionar para /promotor/login
+    if (isPromotorRoute(pathname) && !isPromotorAuthRoute(pathname)) {
+      return redirect(request, '/promotor/login');
+    }
+
     // A2: Tentando acessar rotas protegidas da Banca -> Redirecionar para /login
     if (isBancaProtectedRoute(pathname)) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
-      // Preservar código de convite
-      const inviteCode = request.nextUrl.searchParams.get('p');
+      // Preservar código de convite (tanto ?p= quanto ?ref=)
+      const inviteCode = request.nextUrl.searchParams.get('p') || request.nextUrl.searchParams.get('ref');
       if (inviteCode) {
         url.searchParams.set('p', inviteCode);
       }
@@ -141,17 +161,25 @@ export async function updateSession(request: NextRequest) {
 
   // ============================================================================
   // CENÁRIO B: USUÁRIO ESTÁ LOGADO
-  // Verificar se é ADMIN ou USUÁRIO COMUM
+  // Verificar se é ADMIN, PROMOTOR ou USUÁRIO COMUM
   // ============================================================================
 
-  // Query performática: apenas verifica existência (não precisa de todos os dados)
-  const { data: adminRole } = await supabase
-    .from('admin_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  // Queries performáticas: apenas verificam existência
+  const [adminRoleResult, promotorRoleResult] = await Promise.all([
+    supabase
+      .from('admin_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('promotor_roles')
+      .select('promotor_id')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ]);
 
-  const isAdmin = !!adminRole;
+  const isAdmin = !!adminRoleResult.data;
+  const isPromotor = !!promotorRoleResult.data;
 
   // ============================================================================
   // CENÁRIO B1: É ADMIN
@@ -192,20 +220,64 @@ export async function updateSession(request: NextRequest) {
   }
 
   // ============================================================================
-  // CENÁRIO B2: É USUÁRIO COMUM (NÃO é admin)
+  // CENÁRIO B2: É PROMOTOR
+  // ============================================================================
+  if (isPromotor) {
+    // B2.1: Promotor tentando acessar área ADMIN -> PROIBIDO
+    if (isAdminRoute(pathname)) {
+      return redirect(request, '/promotor');
+    }
+
+    // B2.2: Promotor na página de login do promotor -> Redirecionar para dashboard
+    if (isPromotorAuthRoute(pathname)) {
+      return redirect(request, '/promotor');
+    }
+
+    // B2.3: Promotor em área do promotor -> Verificar se promotor está ativo
+    if (isPromotorRoute(pathname)) {
+      // Verificar se o promotor está ativo
+      const { data: promotorData } = await supabase
+        .from('promotores')
+        .select('ativo')
+        .eq('id', promotorRoleResult.data?.promotor_id)
+        .single();
+
+      if (!promotorData?.ativo) {
+        // Promotor inativo -> Deslogar e redirecionar
+        await supabase.auth.signOut();
+        return redirect(request, '/promotor/login');
+      }
+
+      return supabaseResponse;
+    }
+
+    // B2.4: Promotor tentando acessar área da banca -> Redirecionar para dashboard do promotor
+    if (isBancaProtectedRoute(pathname)) {
+      return redirect(request, '/promotor');
+    }
+
+    return supabaseResponse;
+  }
+
+  // ============================================================================
+  // CENÁRIO B3: É USUÁRIO COMUM (NÃO é admin NEM promotor)
   // ============================================================================
 
-  // B2.1: Usuário comum tentando acessar área ADMIN -> PROIBIDO
+  // B3.1: Usuário comum tentando acessar área ADMIN -> PROIBIDO
   if (isAdminRoute(pathname)) {
-    // Redirecionar para home da banca (ou poderia ser 403/404)
     return redirect(request, '/');
   }
 
-  // B2.2: Usuário comum já logado tentando acessar login/cadastro -> Redirecionar para home
+  // B3.2: Usuário comum tentando acessar área PROMOTOR -> PROIBIDO
+  if (isPromotorRoute(pathname)) {
+    return redirect(request, '/');
+  }
+
+  // B3.3: Usuário comum já logado tentando acessar login/cadastro -> Redirecionar para home
   if (isBancaAuthRoute(pathname)) {
     return redirect(request, '/');
   }
 
-  // B2.3: Usuário comum em área da banca -> Permitir
+  // B3.4: Usuário comum em área da banca -> Permitir
   return supabaseResponse;
 }

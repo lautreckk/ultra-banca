@@ -37,6 +37,7 @@ import {
   ExternalLink,
   BarChart3,
   Percent,
+  UserPlus,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 
@@ -60,6 +61,11 @@ const navItems: NavItem[] = [
     label: 'Clientes',
     href: '/admin/clientes',
     icon: <Users className="h-5 w-5" />,
+  },
+  {
+    label: 'Promotores',
+    href: '/admin/promotores',
+    icon: <UserPlus className="h-5 w-5" />,
   },
 
   // ========== CORE DO NEGÓCIO ==========

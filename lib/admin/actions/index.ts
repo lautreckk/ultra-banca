@@ -7,3 +7,4 @@ export * from './settings';
 export * from './bets';
 export * from './audit';
 export * from './ads';
+export * from './promotores';

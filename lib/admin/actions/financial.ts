@@ -6,6 +6,7 @@ import { AuditActions } from '@/lib/security/audit-actions';
 import { executeTrigger } from './evolution';
 import { dispatchDepositWebhook } from '@/lib/webhooks/dispatcher';
 import { applyDepositBonus } from './bonus-config';
+import { processarComissaoDeposito, getComissaoAutomaticaSetting } from './promotores';
 
 // =============================================
 // DEPOSITS
@@ -187,6 +188,24 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
   dispatchDepositWebhook(depositId, deposit.user_id).catch((err) => {
     console.error('Erro ao disparar webhook de depósito:', err);
   });
+
+  // Processar comissão de promotor (se comissão automática estiver ativada)
+  try {
+    const comissaoAutomatica = await getComissaoAutomaticaSetting();
+    if (comissaoAutomatica) {
+      const comissaoResult = await processarComissaoDeposito(
+        deposit.user_id,
+        depositId,
+        Number(deposit.valor)
+      );
+      if (comissaoResult.comissao) {
+        console.log(`Comissão de promotor de R$ ${comissaoResult.comissao} processada para depósito ${depositId}`);
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao processar comissão de promotor:', error);
+    // Não falha a operação se a comissão falhar
+  }
 
   return { success: true };
 }
