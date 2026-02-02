@@ -231,36 +231,51 @@ export async function updateSession(request: NextRequest) {
   // MULTI-TENANT: RESOLVER PLATAFORMA PELO DOMÍNIO
   // ============================================================================
   const host = request.headers.get('host') || 'localhost';
-  const platformResult = await resolvePlatformByDomain(supabase, host);
+  const pathname = request.nextUrl.pathname;
+  const existingPlatformId = request.cookies.get('platform_id')?.value;
 
-  // Log quando fallback é usado
-  if (!platformResult) {
-    console.warn('[MULTI-TENANT] ⚠️ FALLBACK PARA DEFAULT:', { host });
+  // Para rotas de ADMIN: respeitar o cookie existente (admin pode escolher plataforma)
+  // Para outras rotas: sempre resolver pelo domínio
+  const isAdminPath = pathname.startsWith('/admin');
+
+  let platformId: string;
+
+  if (isAdminPath && existingPlatformId) {
+    // Admin já tem uma plataforma escolhida, manter
+    platformId = existingPlatformId;
+    console.log('[MULTI-TENANT] Admin: mantendo plataforma escolhida:', platformId);
+  } else {
+    // Resolver pelo domínio
+    const platformResult = await resolvePlatformByDomain(supabase, host);
+
+    // Log quando fallback é usado
+    if (!platformResult) {
+      console.warn('[MULTI-TENANT] ⚠️ FALLBACK PARA DEFAULT:', { host });
+    }
+
+    // Se não encontrou plataforma e não é localhost, poderia redirecionar para erro
+    // Por enquanto, usamos fallback para default para não quebrar em desenvolvimento
+    platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
+
+    console.log('[MULTI-TENANT] Domínio:', {
+      host,
+      platformId,
+      name: platformResult?.platform?.name || 'DEFAULT'
+    });
+
+    // Armazenar platform_id em cookie para acesso em server actions
+    // Só atualiza se não for admin OU se não tinha cookie
+    supabaseResponse.cookies.set('platform_id', platformId, {
+      httpOnly: false, // Client precisa acessar para passar no signup
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365, // 1 ano
+    });
   }
-
-  // Se não encontrou plataforma e não é localhost, poderia redirecionar para erro
-  // Por enquanto, usamos fallback para default para não quebrar em desenvolvimento
-  const platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
-
-  console.log('[MULTI-TENANT] Final:', {
-    host,
-    platformId,
-    name: platformResult?.platform?.name || 'DEFAULT'
-  });
-
-  // Armazenar platform_id em cookie para acesso em server actions
-  supabaseResponse.cookies.set('platform_id', platformId, {
-    httpOnly: false, // Client precisa acessar para passar no signup
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365, // 1 ano
-  });
 
   // IMPORTANTE: Não adicione código entre createServerClient e getUser()
   const { data: { user } } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   // ============================================================================
   // CENÁRIO A: USUÁRIO NÃO ESTÁ LOGADO
