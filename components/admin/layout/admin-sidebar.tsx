@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -172,7 +172,6 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
@@ -220,13 +219,12 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
     startTransition(async () => {
       const result = await switchPlatform(platformId);
       if (result.success) {
-        setCurrentPlatformId(platformId);
-        router.refresh();
-        setPlatformDropdownOpen(false);
+        // Reload completo para atualizar o contexto de plataforma (ConfigProvider)
+        window.location.reload();
       } else {
         alert(result.error);
+        setSwitchingId(null);
       }
-      setSwitchingId(null);
     });
   }
 
