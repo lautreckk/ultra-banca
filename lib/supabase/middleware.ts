@@ -261,8 +261,8 @@ export async function updateSession(request: NextRequest) {
   // SEGURANÇA: Bloquear acesso a rotas admin em domínios de banca
   if (!adminDomainAccess && (isAdminRoute(pathname) || isAdminMasterRoute(pathname))) {
     console.warn('[SECURITY] Tentativa de acesso admin bloqueada:', { host, pathname });
-    // Redirecionar para a home da banca
-    return redirect(request, '/');
+    // Redirecionar para o login da banca (não para / que pode causar loop com admins)
+    return redirect(request, '/login');
   }
 
   // SEGURANÇA: No domínio admin, bloquear acesso à banca (opcional - redireciona para admin)
@@ -435,6 +435,14 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO B1: É ADMIN
   // ============================================================================
   if (isAdmin) {
+    // Se admin está em domínio de BANCA, fazer logout e redirecionar para login
+    // (Admin só pode acessar via domínio admin - gabrielsena.net)
+    if (!adminDomainAccess) {
+      console.log('[SECURITY] Admin em domínio de banca - fazendo logout:', { host, pathname });
+      await supabase.auth.signOut();
+      return redirect(request, '/login');
+    }
+
     // Verificar MFA se necessário
     const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     const mfaPending = aalData?.nextLevel === 'aal2' && aalData?.currentLevel === 'aal1';
