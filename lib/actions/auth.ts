@@ -38,6 +38,10 @@ export async function trackLogin(): Promise<{ success: boolean }> {
   }
 }
 
+import { executeTrigger } from '@/lib/admin/actions/evolution';
+
+// ... existing imports
+
 /**
  * Rastreia o cadastro de um usuário (chamado após sucesso no cliente)
  */
@@ -68,6 +72,18 @@ export async function trackSignup(): Promise<{ success: boolean }> {
     dispatchLeadWebhook(user.id).catch((err) => {
       console.error('Error dispatching lead webhook:', err);
     });
+
+    // Disparar gatilho de WhatsApp (nao-bloqueante)
+    // Busca profile para ter telefone e nome
+    const { data: profile } = await supabase.from('profiles').select('nome, telefone').eq('id', user.id).single();
+
+    if (profile?.telefone) {
+      executeTrigger('cadastro', {
+        nome: profile.nome || 'Novo Usuário',
+        telefone: profile.telefone,
+        // Outros campos se necessário
+      }).catch(err => console.error('Error executing signup trigger:', err));
+    }
 
     return { success: true };
   } catch (error) {

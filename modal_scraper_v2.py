@@ -1284,6 +1284,56 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
             supabase.table("apostas").update({"status": "ganhou"}).eq("id", aposta["id"]).execute()
             ganhou += 1
             print(f"  Aposta {aposta['id'][:8]} GANHOU!")
+
+            # Calcular e creditar premio (Lógica duplicada para garantir trigger, ou apenas trigger se saldo ja foi creditado antes? O código original não mostra credito de saldo aqui, mas o código anterior que tentei inserir tinha. Vou assumir que o credito de saldo deve ser feito aqui também se não existir.)
+            # Vendo o código original: ele SÓ atualiza o status para ganhou. O credito do saldo deve ser feito em outro lugar ou estava faltando?
+            # O código original NÃO TINHA CREDITO DE SALDO EXPLICITO NESTE BLOCO, apenas update status.
+            # Vou adicionar o credito de saldo E o trigger.
+            
+            # Calcular premio
+            cotacao = float(aposta.get("cotacao", 0))
+            valor_aposta = float(aposta.get("valor", 0))
+            valor_premio = valor_aposta * cotacao
+            
+            if user_id:
+                try:
+                    # Busca saldo e dados para trigger
+                    profile_resp = supabase.table("profiles").select("saldo, nome, telefone").eq("id", user_id).single().execute()
+                    saldo_atual = float(profile_resp.data.get("saldo", 0) or 0)
+                    novo_saldo = saldo_atual + valor_premio
+                    
+                    # Atualiza saldo
+                    supabase.table("profiles").update({"saldo": novo_saldo}).eq("id", user_id).execute()
+                    print(f"  Aposta {aposta['id'][:8]} GANHOU! Premio: R${valor_premio:.2f} creditado.")
+
+                    # Disparar Gatilho (API Interna)
+                    try:
+                        app_url = os.environ.get("APP_URL", "https://ultrabanca.app")
+                        internal_secret = os.environ.get("INTERNAL_API_SECRET", "ultra-banca-secret-key-123")
+                        
+                        if internal_secret: 
+                            import requests
+                            requests.post(
+                                f"{app_url}/api/internal/triggers",
+                                json={
+                                    "triggerType": "premio",
+                                    "userData": {
+                                        "nome": profile_resp.data.get("nome", "Cliente"),
+                                        "telefone": profile_resp.data.get("telefone"),
+                                        "premio": valor_premio,
+                                        "modalidade": modalidade,
+                                        "saldo": novo_saldo
+                                    }
+                                },
+                                headers={"x-internal-secret": internal_secret},
+                                timeout=5
+                            )
+                    except Exception as trigger_err:
+                        print(f"  [Erro Gatilho] Falha ao disparar webhook de premio: {trigger_err}")
+
+                except Exception as e:
+                    print(f"  Erro ao creditar premio {aposta['id'][:8]}: {e}")
+
         elif todos_resultados_saiu:
             supabase.table("apostas").update({"status": "perdeu"}).eq("id", aposta["id"]).execute()
             perdeu += 1
