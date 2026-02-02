@@ -62,12 +62,46 @@ export default function DashboardPage() {
           setCodigoConvite(data.codigo_convite);
         }
       }
+
+      // Buscar último ganhador real do banco
+      const { data: ganhador } = await supabase
+        .from('ultimo_ganhador')
+        .select('unidade, valor, data_hora')
+        .limit(1)
+        .single();
+
+      if (ganhador) {
+        // Tem ganhador real, usa ele
+        setUltimoGanhador(ganhador);
+      } else {
+        // Não tem ganhador ainda, usa fake do dia
+        setUltimoGanhador(gerarGanhadorDoDia());
+      }
     };
 
     fetchData();
 
-    // Gerar ganhador fake do dia (atualiza automaticamente todo dia)
-    setUltimoGanhador(gerarGanhadorDoDia());
+    // Subscribe para atualizações em tempo real
+    const channel = supabase
+      .channel('ultimo-ganhador-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ultimo_ganhador',
+        },
+        (payload) => {
+          if (payload.new) {
+            setUltimoGanhador(payload.new as UltimoGanhador);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Show ad popup after login (with delay)
