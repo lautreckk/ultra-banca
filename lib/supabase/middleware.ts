@@ -18,6 +18,19 @@ import { NextResponse, type NextRequest } from 'next/server';
 const DEFAULT_PLATFORM_ID = 'ff61b7a2-1098-4bc4-99c5-5afb600fbc57';
 
 // ============================================================================
+// DOMÍNIO EXCLUSIVO PARA ADMINISTRAÇÃO
+// ============================================================================
+// Apenas este domínio pode acessar /admin/* e /admin-master/*
+// Outros domínios são exclusivos para a banca (apostadores)
+const ADMIN_DOMAIN = 'gabrielsena.net';
+const ADMIN_ALLOWED_DOMAINS = [
+  'gabrielsena.net',
+  'www.gabrielsena.net',
+  'localhost', // Para desenvolvimento
+  '127.0.0.1',
+];
+
+// ============================================================================
 // DEFINIÇÃO DE ROTAS
 // ============================================================================
 
@@ -113,9 +126,20 @@ function isBancaAuthRoute(pathname: string): boolean {
   return pathname === '/login' || pathname === '/cadastro';
 }
 
+function isAdminDomain(host: string): boolean {
+  const domain = host.split(':')[0].toLowerCase().replace(/^www\./, '');
+  return ADMIN_ALLOWED_DOMAINS.some(d =>
+    domain === d || domain === `www.${d}`
+  );
+}
+
 function redirect(request: NextRequest, pathname: string): NextResponse {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
+  return NextResponse.redirect(url);
+}
+
+function redirectToExternal(url: string): NextResponse {
   return NextResponse.redirect(url);
 }
 
@@ -228,10 +252,37 @@ export async function updateSession(request: NextRequest) {
   );
 
   // ============================================================================
-  // MULTI-TENANT: RESOLVER PLATAFORMA PELO DOMÍNIO
+  // SEGREGAÇÃO DE DOMÍNIOS: ADMIN vs BANCA
   // ============================================================================
   const host = request.headers.get('host') || 'localhost';
   const pathname = request.nextUrl.pathname;
+  const adminDomainAccess = isAdminDomain(host);
+
+  // SEGURANÇA: Bloquear acesso a rotas admin em domínios de banca
+  if (!adminDomainAccess && (isAdminRoute(pathname) || isAdminMasterRoute(pathname))) {
+    console.warn('[SECURITY] Tentativa de acesso admin bloqueada:', { host, pathname });
+    // Redirecionar para a home da banca
+    return redirect(request, '/');
+  }
+
+  // SEGURANÇA: No domínio admin, bloquear acesso à banca (opcional - redireciona para admin)
+  if (adminDomainAccess && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && pathname !== '/') {
+    // Se está no domínio admin mas tentando acessar área da banca
+    // Redirecionar para o login do admin
+    if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
+      console.log('[SECURITY] Domínio admin, redirecionando para área admin:', { host, pathname });
+      return redirect(request, '/admin/login');
+    }
+  }
+
+  // Raiz do domínio admin -> redirecionar para admin login
+  if (adminDomainAccess && pathname === '/') {
+    return redirect(request, '/admin/login');
+  }
+
+  // ============================================================================
+  // MULTI-TENANT: RESOLVER PLATAFORMA PELO DOMÍNIO
+  // ============================================================================
   const existingPlatformId = request.cookies.get('platform_id')?.value;
 
   // Para rotas de ADMIN: respeitar o cookie existente (admin pode escolher plataforma)
