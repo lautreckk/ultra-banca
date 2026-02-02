@@ -149,16 +149,6 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: 'Auditoria',
-    href: '/admin/auditoria',
-    icon: <Shield className="h-5 w-5" />,
-  },
-  {
-    label: 'Gráficos',
-    href: '/admin/graficos',
-    icon: <BarChart3 className="h-5 w-5" />,
-  },
-  {
     label: 'Configurações',
     href: '/admin/configuracoes',
     icon: <Settings className="h-5 w-5" />,
@@ -334,9 +324,8 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
                         key={platform.id}
                         onClick={() => handleSelectPlatform(platform.id)}
                         disabled={isPending}
-                        className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-800/50 transition-colors ${
-                          isSelected ? 'bg-indigo-500/10' : ''
-                        } disabled:opacity-50`}
+                        className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-800/50 transition-colors ${isSelected ? 'bg-indigo-500/10' : ''
+                          } disabled:opacity-50`}
                       >
                         <div
                           className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0"
