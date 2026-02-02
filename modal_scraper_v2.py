@@ -109,6 +109,11 @@ ESTADOS_CONFIG = {
         "banca": "PARANA",
         "portalbrasil_slug": "parana",
     },
+    "FED": {
+        "url_param": "banca-federal",
+        "banca": "FEDERAL",
+        "portalbrasil_slug": None,
+    },
 }
 
 BASE_URL = "https://www.resultadofacil.com.br"
@@ -1038,6 +1043,8 @@ LOTERIA_TO_BANCA = {
     "nac_15": ("NACIONAL", "15:00"),
     "nac_17": ("NACIONAL", "17:00"),
     "nac_21": ("NACIONAL", "21:00"),
+    # FEDERAL
+    "fed_19": ("FEDERAL", "19:00"),
 }
 
 
@@ -1252,11 +1259,13 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
                         aposta_ganhou = True
                         break
                 elif modalidade == "centena":
-                    if len(palpite) == 3 and premio.endswith(palpite):
+                    # Centena: ultimos 3 digitos. Palpite pode ser 3 ou 4 digitos
+                    if len(palpite) >= 3 and premio.endswith(palpite[-3:]):
                         aposta_ganhou = True
                         break
                 elif modalidade == "dezena":
-                    if len(palpite) == 2 and premio.endswith(palpite):
+                    # Dezena: ultimos 2 digitos. Palpite pode ser 2, 3 ou 4 digitos
+                    if len(palpite) >= 2 and premio.endswith(palpite[-2:]):
                         aposta_ganhou = True
                         break
                 elif modalidade == "grupo":
@@ -1280,11 +1289,12 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
             perdeu += 1
             print(f"  Aposta {aposta['id'][:8]} perdeu")
         else:
-            # Verifica se passou 1 hora do horário mais tardio sem resultado
+            # Verifica se passou 12 horas do horário mais tardio sem resultado
             # Se todas as loterias sem resultado já expiraram, reembolsa
             todas_expiraram = True
             for lot_id, banca, horario in loterias_sem_resultado:
-                if not horario_expirou(data_verificar, horario, horas_limite=1):
+                # Aumentado para 12 horas para evitar reembolso injustificado
+                if not horario_expirou(data_verificar, horario, horas_limite=12):
                     todas_expiraram = False
                     break
 

@@ -211,6 +211,14 @@ export const BANCAS: Banca[] = [
       { id: 'pr_18', nome: 'PARANA', horario: '18:00' },
     ],
   },
+  // FEDERAL (Quarta e Sábado)
+  {
+    id: 'federal',
+    nome: 'FEDERAL',
+    subLoterias: [
+      { id: 'fed_19', nome: 'FEDERAL', horario: '19:00' },
+    ],
+  },
 ];
 
 export function getBancaById(id: string): Banca | undefined {
