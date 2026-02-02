@@ -15,6 +15,31 @@ interface UltimoGanhador {
   data_hora: string;
 }
 
+// Gera um ganhador fake baseado na data atual
+// A unidade é consistente durante o dia (baseada em seed do dia)
+function gerarGanhadorDoDia(): UltimoGanhador {
+  const hoje = new Date();
+
+  // Seed baseado na data (ano + mês + dia) para consistência diária
+  const seed = hoje.getFullYear() * 10000 + (hoje.getMonth() + 1) * 100 + hoje.getDate();
+
+  // Gera unidade de 1 a 200 baseada no seed
+  const unidade = (seed % 200) + 1;
+
+  // Horário aleatório mas consistente (baseado no seed)
+  const hora = (seed % 12) + 8; // Entre 8h e 19h
+  const minuto = seed % 60;
+
+  // Data de hoje com horário gerado
+  const dataHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), hora, minuto);
+
+  return {
+    unidade: String(unidade),
+    valor: 1000,
+    data_hora: dataHora.toISOString(),
+  };
+}
+
 export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [codigoConvite, setCodigoConvite] = useState('');
@@ -37,42 +62,12 @@ export default function DashboardPage() {
           setCodigoConvite(data.codigo_convite);
         }
       }
-
-      // Buscar último ganhador
-      const { data: ganhador } = await supabase
-        .from('ultimo_ganhador')
-        .select('unidade, valor, data_hora')
-        .limit(1)
-        .single();
-
-      if (ganhador) {
-        setUltimoGanhador(ganhador);
-      }
     };
 
     fetchData();
 
-    // Subscribe para atualizações em tempo real
-    const channel = supabase
-      .channel('ultimo-ganhador-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'ultimo_ganhador',
-        },
-        (payload) => {
-          if (payload.new) {
-            setUltimoGanhador(payload.new as UltimoGanhador);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Gerar ganhador fake do dia (atualiza automaticamente todo dia)
+    setUltimoGanhador(gerarGanhadorDoDia());
   }, []);
 
   // Show ad popup after login (with delay)
