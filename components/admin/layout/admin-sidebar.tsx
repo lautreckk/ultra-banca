@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -38,8 +38,12 @@ import {
   BarChart3,
   Percent,
   UserPlus,
+  Building2,
+  Check,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
+import { getUserAdminPlatforms, switchPlatform, getPlatformId } from '@/lib/utils/platform';
+import type { Platform } from '@/lib/utils/platform-constants';
 
 interface NavItem {
   label: string;
@@ -168,8 +172,63 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+
+  // Platform switcher state
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [currentPlatformId, setCurrentPlatformId] = useState<string | null>(null);
+  const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
+  const [switchingId, setSwitchingId] = useState<string | null>(null);
+
+  const hasMultiplePlatforms = platforms.length > 1;
+  const currentPlatform = platforms.find(p => p.id === currentPlatformId);
+
+  useEffect(() => {
+    loadPlatforms();
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setPlatformDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  async function loadPlatforms() {
+    const [platformsData, platformId] = await Promise.all([
+      getUserAdminPlatforms(),
+      getPlatformId(),
+    ]);
+    setPlatforms(platformsData as Platform[]);
+    setCurrentPlatformId(platformId);
+  }
+
+  async function handleSelectPlatform(platformId: string) {
+    if (platformId === currentPlatformId) {
+      setPlatformDropdownOpen(false);
+      return;
+    }
+
+    setSwitchingId(platformId);
+    startTransition(async () => {
+      const result = await switchPlatform(platformId);
+      if (result.success) {
+        setCurrentPlatformId(platformId);
+        router.refresh();
+        setPlatformDropdownOpen(false);
+      } else {
+        alert(result.error);
+      }
+      setSwitchingId(null);
+    });
+  }
 
   const handleLogout = () => {
     startTransition(async () => {
@@ -232,6 +291,86 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
             </button>
           )}
         </div>
+
+        {/* Platform Switcher */}
+        {hasMultiplePlatforms && isOpen && (
+          <div ref={dropdownRef} className="px-3 py-3 border-b border-zinc-800/50">
+            <button
+              onClick={() => setPlatformDropdownOpen(!platformDropdownOpen)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700 hover:border-indigo-500/50 transition-colors"
+            >
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
+                style={{ backgroundColor: currentPlatform?.color_primary || '#6366f1' }}
+              >
+                {currentPlatform?.logo_url ? (
+                  <img
+                    src={currentPlatform.logo_url}
+                    alt={currentPlatform.name}
+                    className="w-full h-full object-contain rounded-lg"
+                  />
+                ) : (
+                  currentPlatform?.name?.charAt(0) || 'B'
+                )}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="font-medium text-white text-sm truncate">{currentPlatform?.name || 'Selecionar'}</p>
+                <p className="text-xs text-zinc-500 truncate">{currentPlatform?.domain}</p>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-zinc-400 transition-transform shrink-0 ${platformDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown */}
+            {platformDropdownOpen && (
+              <div className="mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl overflow-hidden">
+                <div className="p-2 border-b border-zinc-800">
+                  <p className="text-xs font-medium text-zinc-500 uppercase px-2">Selecionar Banca</p>
+                </div>
+                <div className="max-h-48 overflow-y-auto py-1">
+                  {platforms.map((platform) => {
+                    const isSelected = platform.id === currentPlatformId;
+                    const isSwitching = switchingId === platform.id;
+
+                    return (
+                      <button
+                        key={platform.id}
+                        onClick={() => handleSelectPlatform(platform.id)}
+                        disabled={isPending}
+                        className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-800/50 transition-colors ${
+                          isSelected ? 'bg-indigo-500/10' : ''
+                        } disabled:opacity-50`}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0"
+                          style={{ backgroundColor: platform.color_primary }}
+                        >
+                          {platform.logo_url ? (
+                            <img
+                              src={platform.logo_url}
+                              alt={platform.name}
+                              className="w-full h-full object-contain rounded-lg"
+                            />
+                          ) : (
+                            platform.name.charAt(0)
+                          )}
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="font-medium text-white text-sm truncate">{platform.name}</p>
+                          <p className="text-xs text-zinc-500 truncate">{platform.domain}</p>
+                        </div>
+                        {isSwitching ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-indigo-400 shrink-0" />
+                        ) : isSelected ? (
+                          <Check className="h-4 w-4 text-indigo-400 shrink-0" />
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className={cn('flex-1 py-4 overflow-y-auto', !isOpen && 'hidden lg:block')}>
