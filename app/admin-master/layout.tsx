@@ -1,3 +1,16 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: {
+    default: 'Admin Master',
+    template: '%s | Admin Master',
+  },
+  description: 'Painel Master - Super Administração',
+  icons: {
+    icon: '/icons/admin-favicon.svg',
+  },
+};
+
 export default function AdminMasterLayout({
   children,
 }: {
