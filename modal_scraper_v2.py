@@ -1140,6 +1140,465 @@ def scrape_scheduled():
 # VERIFICACAO DE PREMIOS E REEMBOLSO
 # =============================================================================
 
+# -----------------------------------------------------------------------------
+# FUNÇÕES AUXILIARES PARA VERIFICAÇÃO DE MODALIDADES
+# -----------------------------------------------------------------------------
+
+def extrair_dezena(premio: str) -> str:
+    """Extrai os últimos 2 dígitos (dezena direita)"""
+    return premio[-2:] if len(premio) >= 2 else premio.zfill(2)
+
+def extrair_dezena_esq(premio: str) -> str:
+    """Extrai os primeiros 2 dígitos (dezena esquerda)"""
+    return premio[:2] if len(premio) >= 2 else premio.zfill(2)
+
+def extrair_dezena_meio(premio: str) -> str:
+    """Extrai os 2 dígitos do meio (posições 1 e 2 em milhar de 4 dígitos)"""
+    if len(premio) >= 4:
+        return premio[1:3]
+    return premio[-2:] if len(premio) >= 2 else premio.zfill(2)
+
+def extrair_centena(premio: str) -> str:
+    """Extrai os últimos 3 dígitos (centena direita)"""
+    return premio[-3:] if len(premio) >= 3 else premio.zfill(3)
+
+def extrair_centena_esq(premio: str) -> str:
+    """Extrai os primeiros 3 dígitos (centena esquerda)"""
+    return premio[:3] if len(premio) >= 3 else premio.zfill(3)
+
+def extrair_unidade(premio: str) -> str:
+    """Extrai o último dígito"""
+    return premio[-1] if premio else "0"
+
+def dezena_to_grupo(dezena: str) -> int:
+    """Converte dezena (00-99) para grupo (1-25)"""
+    try:
+        dez = int(dezena)
+        if dez == 0:
+            return 25  # 00 pertence ao grupo 25 (Vaca)
+        return ((dez - 1) // 4) + 1
+    except:
+        return 0
+
+def is_invertido(palpite: str, premio: str, n_digitos: int) -> bool:
+    """Verifica se palpite é uma permutação dos últimos N dígitos do prêmio"""
+    from itertools import permutations
+
+    palpite_digits = palpite[-n_digitos:].zfill(n_digitos)
+    premio_digits = premio[-n_digitos:].zfill(n_digitos)
+
+    # Gera todas as permutações dos dígitos do prêmio
+    for perm in permutations(premio_digits):
+        if ''.join(perm) == palpite_digits:
+            return True
+    return False
+
+def is_invertido_esq(palpite: str, premio: str, n_digitos: int) -> bool:
+    """Verifica se palpite é uma permutação dos primeiros N dígitos do prêmio"""
+    from itertools import permutations
+
+    palpite_digits = palpite[:n_digitos].zfill(n_digitos)
+    premio_digits = premio[:n_digitos].zfill(n_digitos)
+
+    for perm in permutations(premio_digits):
+        if ''.join(perm) == palpite_digits:
+            return True
+    return False
+
+def verificar_modalidade(modalidade: str, palpites: list, resultado: dict, posicoes_validas: list) -> bool:
+    """
+    Verifica se a aposta ganhou baseado na modalidade.
+
+    Args:
+        modalidade: código da modalidade (ex: "milhar", "centena_inv", "duque_gp")
+        palpites: lista de palpites do apostador
+        resultado: dict com premio_1..premio_7
+        posicoes_validas: lista de posições a verificar (ex: ["premio_1", "premio_2"...])
+
+    Returns:
+        True se ganhou, False caso contrário
+    """
+    modalidade = modalidade.lower().strip()
+
+    # Extrai todos os prêmios das posições válidas
+    premios = []
+    for pos in posicoes_validas:
+        premio = str(resultado.get(pos, "") or "").strip()
+        if premio and len(premio) >= 2:
+            premios.append(premio.zfill(4))
+
+    if not premios:
+        return False
+
+    # Extrai dezenas e grupos dos prêmios
+    dezenas = [extrair_dezena(p) for p in premios]
+    dezenas_esq = [extrair_dezena_esq(p) for p in premios]
+    dezenas_meio = [extrair_dezena_meio(p) for p in premios]
+    grupos = [dezena_to_grupo(d) for d in dezenas]
+    grupos_esq = [dezena_to_grupo(d) for d in dezenas_esq]
+    grupos_meio = [dezena_to_grupo(d) for d in dezenas_meio]
+
+    # Normaliza palpites
+    palpites_norm = [str(p).strip() for p in palpites if p]
+    if not palpites_norm:
+        return False
+
+    # =========================================================================
+    # MILHAR (4 dígitos)
+    # =========================================================================
+    if modalidade == "milhar":
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):
+                    return True
+
+    elif modalidade == "milhar_ct":
+        # Milhar e Centena - ganha se acertar milhar OU centena
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):  # Milhar exata
+                    return True
+                if len(palpite) >= 3 and premio.endswith(palpite[-3:]):  # Centena
+                    return True
+
+    elif modalidade.startswith("milhar_inv"):
+        # Milhar invertida (permutações)
+        for palpite in palpites_norm:
+            for premio in premios:
+                if is_invertido(palpite, premio, 4):
+                    return True
+
+    # =========================================================================
+    # CENTENA (3 dígitos)
+    # =========================================================================
+    elif modalidade == "centena":
+        for palpite in palpites_norm:
+            for premio in premios:
+                if len(palpite) >= 3 and premio.endswith(palpite[-3:]):
+                    return True
+
+    elif modalidade == "centena_esquerda" or modalidade == "centena_esq":
+        for palpite in palpites_norm:
+            for premio in premios:
+                if len(palpite) >= 3 and premio.startswith(palpite[:3]):
+                    return True
+
+    elif modalidade == "centena_3x":
+        # Centena em qualquer posição (esq, meio, dir)
+        for palpite in palpites_norm:
+            palpite_3 = palpite[-3:].zfill(3) if len(palpite) >= 3 else palpite.zfill(3)
+            for premio in premios:
+                # Direita
+                if premio.endswith(palpite_3):
+                    return True
+                # Esquerda (em milhar de 4 dígitos)
+                if len(premio) >= 4 and premio[:3] == palpite_3:
+                    return True
+                # Meio (posições 1-3 em milhar)
+                if len(premio) >= 4 and premio[1:4] == palpite_3:
+                    return True
+
+    elif modalidade.startswith("centena_inv"):
+        # Centena invertida
+        is_esq = "esq" in modalidade
+        for palpite in palpites_norm:
+            for premio in premios:
+                if is_esq:
+                    if is_invertido_esq(palpite, premio, 3):
+                        return True
+                else:
+                    if is_invertido(palpite, premio, 3):
+                        return True
+
+    # =========================================================================
+    # DEZENA (2 dígitos)
+    # =========================================================================
+    elif modalidade == "dezena":
+        for palpite in palpites_norm:
+            palpite_dez = palpite[-2:].zfill(2)
+            if palpite_dez in dezenas:
+                return True
+
+    elif modalidade == "dezena_esq":
+        for palpite in palpites_norm:
+            palpite_dez = palpite[-2:].zfill(2)
+            if palpite_dez in dezenas_esq:
+                return True
+
+    elif modalidade == "dezena_meio":
+        for palpite in palpites_norm:
+            palpite_dez = palpite[-2:].zfill(2)
+            if palpite_dez in dezenas_meio:
+                return True
+
+    # =========================================================================
+    # GRUPO (bicho 1-25)
+    # =========================================================================
+    elif modalidade == "grupo":
+        for palpite in palpites_norm:
+            try:
+                palpite_grupo = int(palpite)
+                if palpite_grupo in grupos:
+                    return True
+            except:
+                pass
+
+    elif modalidade == "grupo_esq":
+        for palpite in palpites_norm:
+            try:
+                palpite_grupo = int(palpite)
+                if palpite_grupo in grupos_esq:
+                    return True
+            except:
+                pass
+
+    elif modalidade == "grupo_meio":
+        for palpite in palpites_norm:
+            try:
+                palpite_grupo = int(palpite)
+                if palpite_grupo in grupos_meio:
+                    return True
+            except:
+                pass
+
+    # =========================================================================
+    # UNIDADE (1 dígito)
+    # =========================================================================
+    elif modalidade == "unidade":
+        for palpite in palpites_norm:
+            palpite_un = palpite[-1] if palpite else ""
+            for premio in premios:
+                if palpite_un == extrair_unidade(premio):
+                    return True
+
+    # =========================================================================
+    # DUQUE DEZENA (2 dezenas devem aparecer nos prêmios)
+    # =========================================================================
+    elif modalidade.startswith("duque_dez"):
+        if len(palpites_norm) < 2:
+            return False
+
+        # Determina qual conjunto de dezenas usar
+        if "esq" in modalidade:
+            dezenas_check = dezenas_esq
+        elif "meio" in modalidade:
+            dezenas_check = dezenas_meio
+        else:
+            dezenas_check = dezenas
+
+        # Os 2 palpites devem estar nas dezenas dos prêmios
+        palpite1 = palpites_norm[0][-2:].zfill(2)
+        palpite2 = palpites_norm[1][-2:].zfill(2)
+
+        if palpite1 in dezenas_check and palpite2 in dezenas_check:
+            return True
+
+    # =========================================================================
+    # DUQUE GRUPO (2 grupos devem aparecer nos prêmios)
+    # =========================================================================
+    elif modalidade.startswith("duque_gp"):
+        if len(palpites_norm) < 2:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = grupos_esq
+        elif "meio" in modalidade:
+            grupos_check = grupos_meio
+        else:
+            grupos_check = grupos
+
+        try:
+            palpite1 = int(palpites_norm[0])
+            palpite2 = int(palpites_norm[1])
+            if palpite1 in grupos_check and palpite2 in grupos_check:
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # TERNO DEZENA (3 dezenas devem aparecer)
+    # =========================================================================
+    elif modalidade.startswith("terno_dez"):
+        if len(palpites_norm) < 3:
+            return False
+
+        is_seco = "seco" in modalidade
+
+        if "esq" in modalidade:
+            dezenas_check = dezenas_esq[:3] if is_seco else dezenas_esq
+        elif "meio" in modalidade:
+            dezenas_check = dezenas_meio[:3] if is_seco else dezenas_meio
+        else:
+            dezenas_check = dezenas[:3] if is_seco else dezenas
+
+        palpites_dez = [p[-2:].zfill(2) for p in palpites_norm[:3]]
+
+        # Todos os 3 palpites devem estar nas dezenas
+        if all(p in dezenas_check for p in palpites_dez):
+            return True
+
+    # =========================================================================
+    # TERNO GRUPO (3 grupos devem aparecer)
+    # =========================================================================
+    elif modalidade.startswith("terno_gp"):
+        if len(palpites_norm) < 3:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = grupos_esq
+        elif "meio" in modalidade:
+            grupos_check = grupos_meio
+        else:
+            grupos_check = grupos
+
+        try:
+            palpites_gp = [int(p) for p in palpites_norm[:3]]
+            if all(p in grupos_check for p in palpites_gp):
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # QUADRA GRUPO (4 grupos devem aparecer)
+    # =========================================================================
+    elif modalidade.startswith("quadra_gp"):
+        if len(palpites_norm) < 4:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = grupos_esq
+        elif "meio" in modalidade:
+            grupos_check = grupos_meio
+        else:
+            grupos_check = grupos
+
+        try:
+            palpites_gp = [int(p) for p in palpites_norm[:4]]
+            if all(p in grupos_check for p in palpites_gp):
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # QUINA GRUPO (5 grupos de 8 escolhidos devem aparecer em 5 prêmios)
+    # =========================================================================
+    elif modalidade.startswith("quina_gp"):
+        if len(palpites_norm) < 8:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = set(grupos_esq[:5])  # Usa 5 primeiros prêmios
+        elif "meio" in modalidade:
+            grupos_check = set(grupos_meio[:5])
+        else:
+            grupos_check = set(grupos[:5])
+
+        try:
+            palpites_gp = set(int(p) for p in palpites_norm[:8])
+            # Pelo menos 5 dos 8 palpites devem estar nos grupos dos prêmios
+            acertos = palpites_gp.intersection(grupos_check)
+            if len(acertos) >= 5:
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # SENA GRUPO (6 grupos de 10 escolhidos devem aparecer em 6 prêmios)
+    # =========================================================================
+    elif modalidade.startswith("sena_gp"):
+        if len(palpites_norm) < 10:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = set(grupos_esq[:6])
+        elif "meio" in modalidade:
+            grupos_check = set(grupos_meio[:6])
+        else:
+            grupos_check = set(grupos[:6])
+
+        try:
+            palpites_gp = set(int(p) for p in palpites_norm[:10])
+            acertos = palpites_gp.intersection(grupos_check)
+            if len(acertos) >= 6:
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # PASSE (combinação de 2 grupos em sequência)
+    # =========================================================================
+    elif modalidade == "passe_vai":
+        # Grupo do 1º prêmio = palpite1, Grupo do 2º prêmio = palpite2
+        if len(palpites_norm) < 2 or len(grupos) < 2:
+            return False
+        try:
+            p1, p2 = int(palpites_norm[0]), int(palpites_norm[1])
+            if grupos[0] == p1 and grupos[1] == p2:
+                return True
+        except:
+            pass
+
+    elif modalidade == "passe_vai_vem":
+        # Qualquer ordem: (p1,p2) ou (p2,p1) nos 2 primeiros grupos
+        if len(palpites_norm) < 2 or len(grupos) < 2:
+            return False
+        try:
+            p1, p2 = int(palpites_norm[0]), int(palpites_norm[1])
+            g1, g2 = grupos[0], grupos[1]
+            if (g1 == p1 and g2 == p2) or (g1 == p2 and g2 == p1):
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # PALPITÃO (jogo especial - verificar regras específicas)
+    # =========================================================================
+    elif modalidade == "palpitao":
+        # Palpitão geralmente é uma combinação especial
+        # Implementação depende das regras específicas da banca
+        # Por ora, assume que é uma milhar especial
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):
+                    return True
+
+    # =========================================================================
+    # LOTINHA / QUININHA / SENINHA (jogos multi-dia)
+    # Estes jogos usam dezenas de múltiplos sorteios para formar um número
+    # A verificação precisa de lógica especial que considera múltiplos dias
+    # Por enquanto, implementamos verificação básica
+    # =========================================================================
+    elif modalidade.startswith("lotinha_") or modalidade.startswith("quininha_") or modalidade.startswith("seninha_"):
+        # Extrai quantidade de dezenas do nome (ex: lotinha_16d = 16 dezenas)
+        match = re.search(r'(\d+)d$', modalidade)
+        if not match:
+            return False
+
+        n_dezenas = int(match.group(1))
+
+        # O palpite deve ter N dezenas separadas
+        # A verificação completa requer os resultados de múltiplos dias
+        # Por ora, verifica se o palpite está no formato correto
+        # e se há correspondência parcial
+
+        # TODO: Implementar verificação completa multi-dia
+        # Por enquanto, marca como pendente para verificação manual
+        return False
+
+    # =========================================================================
+    # FALLBACK - Modalidade não reconhecida
+    # =========================================================================
+    else:
+        print(f"  [AVISO] Modalidade não reconhecida: {modalidade}")
+        # Tenta verificação básica como milhar
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):
+                    return True
+
+    return False
+
+
 def horario_expirou(data_jogo: str, horario: str, horas_limite: int = 1) -> bool:
     """
     Verifica se passou X horas do horário do sorteio
@@ -1339,31 +1798,17 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
                     todos_resultados_saiu = False
                     loterias_sem_resultado.append((loteria_id, banca, horario))
                     continue
-                for pos in posicoes_validas:
-                    premio = str(resultado.get(pos, "") or "")
-                    for palpite in palpites_lista:
-                        palpite = (palpite or "").strip()
-                        if modalidade == "milhar":
-                            if palpite == premio:
-                                aposta_ganhou = True
-                                break
-                        elif modalidade == "centena":
-                            if len(palpite) >= 3 and premio.endswith(palpite[-3:]):
-                                aposta_ganhou = True
-                                break
-                        elif modalidade == "dezena":
-                            if len(palpite) >= 2 and premio.endswith(palpite[-2:]):
-                                aposta_ganhou = True
-                                break
-                        elif modalidade == "grupo":
-                            dezena = int(premio[-2:]) if len(premio) >= 2 else 0
-                            grupo = ((dezena - 1) // 4) + 1 if dezena > 0 else 0
-                            if str(grupo).zfill(2) == palpite.zfill(2):
-                                aposta_ganhou = True
-                                break
-                    if aposta_ganhou:
-                        break
+
+                # Usa a função de verificação completa para todas as modalidades
+                aposta_ganhou = verificar_modalidade(
+                    modalidade=modalidade,
+                    palpites=palpites_lista,
+                    resultado=resultado,
+                    posicoes_validas=posicoes_validas
+                )
+
                 if aposta_ganhou:
+                    print(f"  Aposta {aposta['id'][:8]} - Modalidade {modalidade} - GANHOU na loteria {loteria_id}")
                     break
 
             if aposta_ganhou:
