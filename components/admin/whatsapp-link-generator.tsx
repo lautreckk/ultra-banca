@@ -23,8 +23,14 @@ export function WhatsAppLinkGenerator({
   const [copied, setCopied] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
 
-  // Extrair número e mensagem do link existente
+  // Flag para controlar se o usuário está editando
+  const [isUserEditing, setIsUserEditing] = useState(false);
+
+  // Extrair número e mensagem do link existente (só quando value muda externamente)
   useEffect(() => {
+    // Não sobrescrever se o usuário está editando
+    if (isUserEditing) return;
+
     if (value) {
       try {
         const url = new URL(value);
@@ -37,7 +43,10 @@ export function WhatsAppLinkGenerator({
         const textParam = url.searchParams.get('text');
         if (textParam) {
           setMessage(decodeURIComponent(textParam));
+        } else {
+          setMessage('');
         }
+        setGeneratedLink(value);
       } catch {
         // Se não for URL válida, tenta extrair só o número
         const numbersOnly = value.replace(/\D/g, '');
@@ -45,16 +54,20 @@ export function WhatsAppLinkGenerator({
           setPhone(numbersOnly);
         }
       }
+    } else {
+      setPhone('');
+      setMessage('');
+      setGeneratedLink('');
     }
-  }, []);
+  }, [value, isUserEditing]);
 
-  // Gerar link quando phone ou message mudam
-  useEffect(() => {
-    if (phone) {
-      const cleanPhone = phone.replace(/\D/g, '');
+  // Gerar link quando phone ou message mudam (apenas quando usuário edita)
+  const generateAndNotify = (newPhone: string, newMessage: string) => {
+    if (newPhone) {
+      const cleanPhone = newPhone.replace(/\D/g, '');
       let link = `https://wa.me/${cleanPhone}`;
-      if (message) {
-        link += `?text=${encodeURIComponent(message)}`;
+      if (newMessage) {
+        link += `?text=${encodeURIComponent(newMessage)}`;
       }
       setGeneratedLink(link);
       onChange(link);
@@ -62,7 +75,7 @@ export function WhatsAppLinkGenerator({
       setGeneratedLink('');
       onChange(null);
     }
-  }, [phone, message, onChange]);
+  };
 
   const formatPhone = (value: string) => {
     // Remove tudo que não é número
@@ -72,7 +85,17 @@ export function WhatsAppLinkGenerator({
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhone(formatPhone(e.target.value));
+    setIsUserEditing(true);
+    const newPhone = formatPhone(e.target.value);
+    setPhone(newPhone);
+    generateAndNotify(newPhone, message);
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setIsUserEditing(true);
+    const newMessage = e.target.value;
+    setMessage(newMessage);
+    generateAndNotify(phone, newMessage);
   };
 
   const handleCopy = async () => {
@@ -84,6 +107,7 @@ export function WhatsAppLinkGenerator({
   };
 
   const handleClear = () => {
+    setIsUserEditing(true);
     setPhone('');
     setMessage('');
     setGeneratedLink('');
@@ -130,7 +154,7 @@ export function WhatsAppLinkGenerator({
             <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <textarea
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleMessageChange}
               placeholder="Olá, preciso de ajuda!"
               className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-md text-sm resize-none"
               rows={2}
