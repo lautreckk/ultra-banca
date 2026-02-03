@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache';
 import { PlatformConfig, defaultConfig } from '@/contexts/platform-config-context';
 import { getPlatformId } from '@/lib/utils/platform';
@@ -117,7 +117,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
  * updatePlatformConfig - MULTI-TENANT
  *
  * Atualiza configuracoes da plataforma atual na tabela platforms.
- * Mantém compatibilidade com a tabela legada platform_config.
+ * Usa service role para bypass de RLS após verificar que o usuário é admin.
  */
 export async function updatePlatformConfig(
   updates: Partial<PlatformConfig>
@@ -126,6 +126,23 @@ export async function updatePlatformConfig(
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
+
+  // 1. Verificar se o usuário está autenticado e é admin
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: 'Usuário não autenticado' };
+  }
+
+  // 2. Verificar se é admin (qualquer role em admin_roles)
+  const { data: adminRole } = await supabase
+    .from('admin_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!adminRole) {
+    return { success: false, error: 'Acesso não autorizado' };
+  }
 
   // Remove id from updates if present (we use it for filtering, not updating)
   const { id, site_name, ...updateData } = updates;
@@ -136,8 +153,12 @@ export async function updatePlatformConfig(
     platformUpdates.name = site_name;
   }
 
-  // Primeiro, tentar atualizar na tabela platforms (multi-tenant)
-  const { error: platformError } = await supabase
+  // 3. Usar admin client (service role) para fazer o update
+  // Isso é necessário porque a RLS da tabela platforms só permite super_admin
+  // Mas a verificação de autorização já foi feita acima
+  const adminClient = createAdminClient();
+
+  const { error: platformError } = await adminClient
     .from('platforms')
     .update({
       ...platformUpdates,
@@ -147,20 +168,7 @@ export async function updatePlatformConfig(
 
   if (platformError) {
     console.error('Error updating platform:', platformError);
-
-    // Fallback: tentar atualizar na tabela legada platform_config
-    const { error } = await supabase
-      .from('platform_config')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .not('id', 'is', null);
-
-    if (error) {
-      console.error('Error updating platform config:', error);
-      return { success: false, error: error.message };
-    }
+    return { success: false, error: platformError.message };
   }
 
   // Revalidate ALL pages that use the config
