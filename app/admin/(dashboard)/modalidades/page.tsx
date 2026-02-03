@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { getModalidades, updateModalidade, type ModalidadeConfig } from '@/lib/admin/actions/settings';
 import { Input } from '@/components/ui/input';
 import { ToggleSwitch } from '@/components/admin/shared';
-import { Save, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Dices, Info } from 'lucide-react';
+import { Save, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Dices, Info, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 interface CategoryGroup {
   name: string;
@@ -21,13 +22,44 @@ export default function AdminModalidadesPage() {
   const [modalidades, setModalidades] = useState<ModalidadeConfig[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [editedModalidades, setEditedModalidades] = useState<Record<string, Partial<ModalidadeConfig>>>({});
+  const [platformName, setPlatformName] = useState<string>('');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    const fetchModalidades = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
+        // Buscar modalidades
         const data = await getModalidades();
         setModalidades(data);
+
+        // Buscar nome da plataforma atual e verificar se é super_admin
+        const supabase = createClient();
+        const platformId = document.cookie.split('; ').find(row => row.startsWith('platform_id='))?.split('=')[1];
+
+        if (platformId) {
+          const { data: platform } = await supabase
+            .from('platforms')
+            .select('name')
+            .eq('id', platformId)
+            .single();
+
+          if (platform) {
+            setPlatformName(platform.name);
+          }
+        }
+
+        // Verificar se é super_admin
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: adminRole } = await supabase
+            .from('admin_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+          setIsSuperAdmin(adminRole?.role === 'super_admin');
+        }
       } catch (error) {
         console.error('Error fetching modalidades:', error);
         setError('Erro ao carregar modalidades');
@@ -36,7 +68,7 @@ export default function AdminModalidadesPage() {
       }
     };
 
-    fetchModalidades();
+    fetchData();
   }, []);
 
   const toggleCategory = (category: string) => {
@@ -135,7 +167,18 @@ export default function AdminModalidadesPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Configurações de Modalidades</h1>
-            <p className="text-zinc-500">Gerencie multiplicadores, limites e posições de cada modalidade</p>
+            <div className="flex items-center gap-2 text-zinc-500">
+              <span>Gerencie multiplicadores e limites</span>
+              {platformName && (
+                <>
+                  <span className="text-zinc-600">•</span>
+                  <div className="flex items-center gap-1 text-cyan-400">
+                    <Building2 className="h-4 w-4" />
+                    <span className="font-medium">{platformName}</span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <button
@@ -269,13 +312,14 @@ export default function AdminModalidadesPage() {
                             />
                           </td>
 
-                          {/* Posições - Toggles */}
+                          {/* Posições - Toggles (Global - apenas super_admin pode editar) */}
                           <td className="px-4 py-2 text-center">
                             <div className="flex justify-center">
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_1_5') as boolean}
                                 onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_5', checked)}
                                 size="sm"
+                                disabled={!isSuperAdmin}
                               />
                             </div>
                           </td>
@@ -286,6 +330,7 @@ export default function AdminModalidadesPage() {
                                 checked={getValue(modalidade, 'posicoes_1_6') as boolean}
                                 onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_6', checked)}
                                 size="sm"
+                                disabled={!isSuperAdmin}
                               />
                             </div>
                           </td>
@@ -296,6 +341,7 @@ export default function AdminModalidadesPage() {
                                 checked={getValue(modalidade, 'posicoes_1_7') as boolean}
                                 onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_7', checked)}
                                 size="sm"
+                                disabled={!isSuperAdmin}
                               />
                             </div>
                           </td>
@@ -306,6 +352,7 @@ export default function AdminModalidadesPage() {
                                 checked={getValue(modalidade, 'posicoes_1_10') as boolean}
                                 onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_10', checked)}
                                 size="sm"
+                                disabled={!isSuperAdmin}
                               />
                             </div>
                           </td>
@@ -316,6 +363,7 @@ export default function AdminModalidadesPage() {
                                 checked={getValue(modalidade, 'posicoes_5_6') as boolean}
                                 onChange={(checked) => handleChange(modalidade.id, 'posicoes_5_6', checked)}
                                 size="sm"
+                                disabled={!isSuperAdmin}
                               />
                             </div>
                           </td>
@@ -347,15 +395,22 @@ export default function AdminModalidadesPage() {
           <Info className="h-4 w-4 text-zinc-500" />
           <h3 className="text-sm font-medium text-zinc-400">Legenda</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-zinc-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-zinc-500">
           <div>
-            <span className="text-zinc-400">Multiplicador:</span> Valor que multiplica a aposta para calcular o prêmio
+            <span className="text-cyan-400">Multiplicador:</span> Valor que multiplica a aposta para calcular o prêmio
+            <span className="text-xs text-zinc-600 block">Configurável por banca</span>
           </div>
           <div>
-            <span className="text-zinc-400">Máx. Aposta:</span> Valor máximo permitido por aposta (0 = sem limite)
+            <span className="text-cyan-400">Máx. Aposta:</span> Valor máximo permitido por aposta (0 = sem limite)
+            <span className="text-xs text-zinc-600 block">Configurável por banca</span>
           </div>
           <div>
             <span className="text-zinc-400">Posições:</span> Define em quais prêmios a modalidade pode ser apostada
+            <span className="text-xs text-zinc-600 block">{isSuperAdmin ? 'Configuração global (você é super admin)' : 'Configuração global (somente leitura)'}</span>
+          </div>
+          <div>
+            <span className="text-cyan-400">Ativo:</span> Habilita ou desabilita a modalidade para sua banca
+            <span className="text-xs text-zinc-600 block">Configurável por banca</span>
           </div>
         </div>
       </div>

@@ -170,11 +170,16 @@ export async function updateGatewayConfig(
 }
 
 // =============================================
-// MODALIDADES CONFIG
+// MODALIDADES CONFIG (Multi-tenant)
 // =============================================
+// Estrutura (nome, categoria, posições) = modalidades_config (global)
+// Valores (multiplicador, limites, ativo) = platform_modalidades (por banca)
+
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface ModalidadeConfig {
-  id: string;
+  id: string;                // ID da modalidade na platform_modalidades
+  global_id: string;         // ID da modalidade na modalidades_config
   categoria: string;
   nome: string;
   codigo: string;
@@ -191,38 +196,84 @@ export interface ModalidadeConfig {
   updated_at: string;
 }
 
+/**
+ * Busca modalidades para a plataforma atual.
+ * Combina estrutura global (modalidades_config) com valores por plataforma (platform_modalidades).
+ */
 export async function getModalidades(): Promise<ModalidadeConfig[]> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
-  const { data, error } = await supabase
+  // 1. Buscar estrutura global das modalidades
+  const { data: globalData, error: globalError } = await supabase
     .from('modalidades_config')
     .select('id, categoria, nome, codigo, multiplicador, valor_minimo, valor_maximo, posicoes_1_5, posicoes_1_6, posicoes_1_7, posicoes_1_10, posicoes_5_6, ativo, ordem, updated_at')
     .order('ordem', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching modalidades:', error);
+  if (globalError) {
+    console.error('Error fetching global modalidades:', globalError);
     return [];
   }
 
-  return (data || []).map((m) => ({
-    id: m.id,
-    categoria: m.categoria,
-    nome: m.nome,
-    codigo: m.codigo,
-    multiplicador: Number(m.multiplicador) || 0,
-    valor_minimo: Number(m.valor_minimo) || 1,
-    valor_maximo: Number(m.valor_maximo) || 1000,
-    posicoes_1_5: m.posicoes_1_5,
-    posicoes_1_6: m.posicoes_1_6,
-    posicoes_1_7: m.posicoes_1_7,
-    posicoes_1_10: m.posicoes_1_10,
-    posicoes_5_6: m.posicoes_5_6,
-    ativo: m.ativo,
-    ordem: m.ordem || 0,
-    updated_at: m.updated_at,
-  }));
+  // 2. Buscar configurações da plataforma (sobrescreve valores globais)
+  const { data: platformData, error: platformError } = await supabase
+    .from('platform_modalidades')
+    .select('id, codigo, multiplicador, valor_minimo, valor_maximo, ativo, ordem, updated_at')
+    .eq('platform_id', platformId);
+
+  if (platformError) {
+    console.error('Error fetching platform modalidades:', platformError);
+  }
+
+  // 3. Indexar configs da plataforma por codigo
+  type PlatformModalidade = {
+    id: string;
+    codigo: string;
+    multiplicador: number;
+    valor_minimo: number;
+    valor_maximo: number;
+    ativo: boolean;
+    ordem: number;
+    updated_at: string;
+  };
+  const platformMap = new Map<string, PlatformModalidade>();
+  (platformData || []).forEach(pm => {
+    platformMap.set(pm.codigo, pm as PlatformModalidade);
+  });
+
+  // 4. Combinar: estrutura global + valores da plataforma
+  return (globalData || []).map((global) => {
+    const platform = platformMap.get(global.codigo);
+
+    return {
+      // Se existe config da plataforma, usar o ID dela; senão usar o global
+      id: platform?.id || global.id,
+      global_id: global.id,
+      categoria: global.categoria,
+      nome: global.nome,
+      codigo: global.codigo,
+      // Valores da plataforma sobrescrevem os globais
+      multiplicador: platform ? Number(platform.multiplicador) : Number(global.multiplicador) || 0,
+      valor_minimo: platform ? Number(platform.valor_minimo) : Number(global.valor_minimo) || 1,
+      valor_maximo: platform ? Number(platform.valor_maximo) : Number(global.valor_maximo) || 1000,
+      // Posições são globais (estrutura do jogo)
+      posicoes_1_5: global.posicoes_1_5,
+      posicoes_1_6: global.posicoes_1_6,
+      posicoes_1_7: global.posicoes_1_7,
+      posicoes_1_10: global.posicoes_1_10,
+      posicoes_5_6: global.posicoes_5_6,
+      // Ativo e ordem da plataforma (se existir)
+      ativo: platform ? platform.ativo : global.ativo,
+      ordem: platform ? (platform.ordem || 0) : (global.ordem || 0),
+      updated_at: platform?.updated_at || global.updated_at,
+    };
+  });
 }
 
+/**
+ * Atualiza configuração de modalidade para a plataforma atual.
+ * Usa UPSERT em platform_modalidades (cria se não existir).
+ */
 export async function updateModalidade(
   id: string,
   config: {
@@ -238,32 +289,106 @@ export async function updateModalidade(
   }
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
-  const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  // 1. Buscar o código da modalidade (pode ser ID de platform_modalidades ou de modalidades_config)
+  // Primeiro tenta em platform_modalidades
+  let codigo: string | null = null;
 
-  if (config.multiplicador !== undefined) updateData.multiplicador = config.multiplicador;
-  if (config.valor_minimo !== undefined) updateData.valor_minimo = config.valor_minimo;
-  if (config.valor_maximo !== undefined) updateData.valor_maximo = config.valor_maximo;
-  if (config.posicoes_1_5 !== undefined) updateData.posicoes_1_5 = config.posicoes_1_5;
-  if (config.posicoes_1_6 !== undefined) updateData.posicoes_1_6 = config.posicoes_1_6;
-  if (config.posicoes_1_7 !== undefined) updateData.posicoes_1_7 = config.posicoes_1_7;
-  if (config.posicoes_1_10 !== undefined) updateData.posicoes_1_10 = config.posicoes_1_10;
-  if (config.posicoes_5_6 !== undefined) updateData.posicoes_5_6 = config.posicoes_5_6;
-  if (config.ativo !== undefined) updateData.ativo = config.ativo;
+  const { data: platformMod } = await supabase
+    .from('platform_modalidades')
+    .select('codigo')
+    .eq('id', id)
+    .single();
 
+  if (platformMod) {
+    codigo = platformMod.codigo;
+  } else {
+    // Tenta em modalidades_config (ID global)
+    const { data: globalMod } = await supabase
+      .from('modalidades_config')
+      .select('codigo')
+      .eq('id', id)
+      .single();
+
+    if (globalMod) {
+      codigo = globalMod.codigo;
+    }
+  }
+
+  if (!codigo) {
+    return { success: false, error: 'Modalidade não encontrada' };
+  }
+
+  // 2. Preparar dados para UPSERT
+  const upsertData: Record<string, unknown> = {
+    platform_id: platformId,
+    codigo: codigo,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (config.multiplicador !== undefined) upsertData.multiplicador = config.multiplicador;
+  if (config.valor_minimo !== undefined) upsertData.valor_minimo = config.valor_minimo;
+  if (config.valor_maximo !== undefined) upsertData.valor_maximo = config.valor_maximo;
+  if (config.ativo !== undefined) upsertData.ativo = config.ativo;
+
+  // 3. Upsert em platform_modalidades
   const { error } = await supabase
-    .from('modalidades_config')
-    .update(updateData)
-    .eq('id', id);
+    .from('platform_modalidades')
+    .upsert(upsertData, { onConflict: 'platform_id,codigo' });
 
   if (error) {
     return { success: false, error: error.message };
   }
 
-  // Invalidar cache de todas as páginas que usam modalidades
+  // 4. Atualizar posições na tabela global (se for super_admin)
+  // As posições são configurações globais do jogo, não por plataforma
+  const hasPositionChanges = config.posicoes_1_5 !== undefined ||
+    config.posicoes_1_6 !== undefined ||
+    config.posicoes_1_7 !== undefined ||
+    config.posicoes_1_10 !== undefined ||
+    config.posicoes_5_6 !== undefined;
+
+  if (hasPositionChanges) {
+    // Verificar se é super_admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: adminRole } = await supabase
+        .from('admin_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (adminRole?.role === 'super_admin') {
+        // Buscar ID global
+        const { data: globalMod } = await supabase
+          .from('modalidades_config')
+          .select('id')
+          .eq('codigo', codigo)
+          .single();
+
+        if (globalMod) {
+          const positionUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
+          if (config.posicoes_1_5 !== undefined) positionUpdate.posicoes_1_5 = config.posicoes_1_5;
+          if (config.posicoes_1_6 !== undefined) positionUpdate.posicoes_1_6 = config.posicoes_1_6;
+          if (config.posicoes_1_7 !== undefined) positionUpdate.posicoes_1_7 = config.posicoes_1_7;
+          if (config.posicoes_1_10 !== undefined) positionUpdate.posicoes_1_10 = config.posicoes_1_10;
+          if (config.posicoes_5_6 !== undefined) positionUpdate.posicoes_5_6 = config.posicoes_5_6;
+
+          await supabase
+            .from('modalidades_config')
+            .update(positionUpdate)
+            .eq('id', globalMod.id);
+        }
+      }
+    }
+  }
+
+  // 5. Invalidar cache
   revalidatePath('/loterias', 'layout');
   revalidatePath('/calculadora');
   revalidatePath('/relatorios/cotacoes', 'layout');
+  revalidatePath('/admin/modalidades');
 
   return { success: true };
 }

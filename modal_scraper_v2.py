@@ -934,8 +934,9 @@ LOTERIA_TO_BANCA = {
     "rj_ptn_18": ("RIO/FEDERAL", "18:20"),
     "rj_coruja_21": ("RIO/FEDERAL", "21:20"),
     "coruja_21": ("RIO/FEDERAL", "21:20"),  # alias
-    # BAHIA
+    # BAHIA (LN = Loteria Nordeste / alias comum na interface)
     "ba_10": ("BAHIA", "10:00"),
+    "ln_10": ("BAHIA", "10:00"),
     "ba_12": ("BAHIA", "12:00"),
     "ba_15": ("BAHIA", "15:00"),
     "ba_19": ("BAHIA", "19:00"),
@@ -1160,234 +1161,332 @@ def horario_expirou(data_jogo: str, horario: str, horas_limite: int = 1) -> bool
         return False
 
 
+def _enviar_alerta_scraper(titulo: str, mensagem: str, exc: Optional[Exception] = None) -> None:
+    """Envia sinal de erro para Admin Master (webhook ou log critico)."""
+    import traceback
+    body = f"[SCRAPER ULTRA BANCA] {titulo}\n{mensagem}"
+    if exc:
+        body += f"\n\nExceção: {exc}\n{traceback.format_exc()}"
+    print(f"CRITICAL: {body}")
+    webhook_url = os.environ.get("SCRAPER_ALERT_WEBHOOK_URL") or os.environ.get("ADMIN_ALERT_WEBHOOK_URL")
+    if webhook_url:
+        try:
+            import requests
+            requests.post(
+                webhook_url,
+                json={"title": titulo, "message": mensagem, "source": "ultra-banca-scraper", "exception": str(exc) if exc else None},
+                timeout=10
+            )
+        except Exception as e:
+            print(f"CRITICAL: Falha ao enviar webhook de alerta: {e}")
+
+
 @app.function(image=image, secrets=[supabase_secret], timeout=300)
 def verificar_premios_v2(data: Optional[str] = None) -> dict:
     """
-    Verifica apostas pendentes contra resultados
-    - Se ganhou: marca como 'ganhou'
-    - Se perdeu: marca como 'perdeu'
-    - Se passou 1h sem resultado: reembolsa o valor
+    Verifica apostas pendentes contra resultados (Versão Otimizada)
+    - Busca Odds Dinâmicas no banco
+    - Paginação de apostas
+    - Filtra por data e loterias com resultado
+    - Premiação via RPC fn_process_payout (atômico)
     """
     from supabase import create_client
 
-    supabase_url = os.environ["SUPABASE_URL"]
-    supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    supabase = create_client(supabase_url, supabase_key)
+    try:
+        supabase_url = os.environ["SUPABASE_URL"]
+        supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+        supabase = create_client(supabase_url, supabase_key)
+    except Exception as e:
+        _enviar_alerta_scraper("Erro de conexão com o banco", "Falha ao criar cliente Supabase.", e)
+        return {"verificadas": 0, "ganhou": 0, "perdeu": 0, "reembolsado": 0, "error": str(e)}
 
     data_verificar = data or datetime.now().strftime("%Y-%m-%d")
     print(f"=== Verificando premios para {data_verificar} ===")
 
-    # Busca apostas pendentes
-    apostas_resp = supabase.table("apostas").select("*").eq("data_jogo", data_verificar).eq("status", "pendente").execute()
-    apostas = apostas_resp.data or []
+    try:
+        # 1. Busca resultados do dia (ANTES das apostas para saber o que validar)
+        resultados_resp = supabase.table("resultados").select("*").eq("data", data_verificar).execute()
+        resultados = resultados_resp.data or []
+    except Exception as e:
+        _enviar_alerta_scraper("Erro ao buscar resultados", f"data={data_verificar}", e)
+        return {"verificadas": 0, "ganhou": 0, "perdeu": 0, "reembolsado": 0, "error": str(e)}
 
-    if not apostas:
-        print("Nenhuma aposta pendente")
+    if not resultados:
+        print(f"  Sem resultados para {data_verificar}")
         return {"verificadas": 0, "ganhou": 0, "perdeu": 0, "reembolsado": 0}
 
-    print(f"Apostas pendentes: {len(apostas)}")
-
-    # Busca resultados do dia
-    resultados_resp = supabase.table("resultados").select("*").eq("data", data_verificar).execute()
-    resultados = resultados_resp.data or []
-
-    # Indexa resultados por horario+banca
-    resultados_map = {}
-    for r in resultados:
-        key = f"{r['horario']}_{r['banca']}"
-        resultados_map[key] = r
-
-    print(f"Resultados disponíveis: {len(resultados)}")
-
+    total_verificadas = 0
     ganhou = 0
     perdeu = 0
     reembolsado = 0
     ainda_pendente = 0
+    try:
+        # Indexa resultados por horario+banca
+        resultados_map = {}
+        loterias_com_resultado = set()
+        for r in resultados:
+            key = f"{r['horario']}_{r['banca']}"
+            resultados_map[key] = r
+            loterias_com_resultado.add(r['banca'])
+        print(f"  Resultados disponíveis: {len(resultados)} ({len(loterias_com_resultado)} bancas)")
 
-    for aposta in apostas:
-        loterias = aposta.get("loterias", [])
-        palpite = str(aposta.get("palpite", ""))
-        modalidade = aposta.get("modalidade", "milhar")
-        posicao = aposta.get("posicao", "1_premio")
-        valor_aposta = float(aposta.get("valor", 0) or 0)
-        user_id = aposta.get("user_id")
+        # 2. Odds por plataforma (multi-tenant): platform_modalidades primeiro, fallback para modalidades_config
+        def get_multiplicador_platform(platform_id: Optional[str], modalidade: str, aposta_multiplicador: float, dynamic: dict) -> float:
+            # Se a aposta já tem multiplicador definido, usar esse
+            if aposta_multiplicador and aposta_multiplicador > 0:
+                return float(aposta_multiplicador)
 
-        # Determina posicoes validas
-        posicoes_validas = []
-        if posicao == "1_premio":
-            posicoes_validas = ["premio_1"]
-        elif posicao == "1_ao_5":
-            posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5"]
-        elif posicao == "1_ao_7":
-            posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]
-        else:
-            # Tenta extrair posicao especifica (ex: "4_premio")
-            match = re.match(r"(\d+)_premio", posicao)
-            if match:
-                posicoes_validas = [f"premio_{match.group(1)}"]
-
-        aposta_ganhou = False
-        todos_resultados_saiu = True
-        loterias_sem_resultado = []  # Guarda loterias que não têm resultado
-        horario_mais_tardio = None  # Para verificar expiração
-
-        for loteria_id in loterias:
-            mapping = LOTERIA_TO_BANCA.get(loteria_id)
-            if not mapping:
-                print(f"  Loteria {loteria_id} nao mapeada")
-                continue
-
-            banca, horario = mapping
-            key = f"{horario}_{banca}"
-            resultado = resultados_map.get(key)
-
-            # Guarda o horário mais tardio para verificar expiração
-            if horario_mais_tardio is None or horario > horario_mais_tardio:
-                horario_mais_tardio = horario
-
-            if not resultado:
-                todos_resultados_saiu = False
-                loterias_sem_resultado.append((loteria_id, banca, horario))
-                continue
-
-            # Verifica se ganhou
-            for pos in posicoes_validas:
-                premio = str(resultado.get(pos, "") or "")
-
-                if modalidade == "milhar":
-                    if palpite == premio:
-                        aposta_ganhou = True
-                        break
-                elif modalidade == "centena":
-                    # Centena: ultimos 3 digitos. Palpite pode ser 3 ou 4 digitos
-                    if len(palpite) >= 3 and premio.endswith(palpite[-3:]):
-                        aposta_ganhou = True
-                        break
-                elif modalidade == "dezena":
-                    # Dezena: ultimos 2 digitos. Palpite pode ser 2, 3 ou 4 digitos
-                    if len(palpite) >= 2 and premio.endswith(palpite[-2:]):
-                        aposta_ganhou = True
-                        break
-                elif modalidade == "grupo":
-                    # Grupo: ultimos 2 digitos mapeiam para bicho
-                    dezena = int(premio[-2:]) if len(premio) >= 2 else 0
-                    grupo = ((dezena - 1) // 4) + 1 if dezena > 0 else 0
-                    if str(grupo).zfill(2) == palpite.zfill(2):
-                        aposta_ganhou = True
-                        break
-
-            if aposta_ganhou:
-                break
-
-        # Atualiza status
-        if aposta_ganhou:
-            supabase.table("apostas").update({"status": "ganhou"}).eq("id", aposta["id"]).execute()
-            ganhou += 1
-            print(f"  Aposta {aposta['id'][:8]} GANHOU!")
-
-            # Calcular e creditar premio (Lógica duplicada para garantir trigger, ou apenas trigger se saldo ja foi creditado antes? O código original não mostra credito de saldo aqui, mas o código anterior que tentei inserir tinha. Vou assumir que o credito de saldo deve ser feito aqui também se não existir.)
-            # Vendo o código original: ele SÓ atualiza o status para ganhou. O credito do saldo deve ser feito em outro lugar ou estava faltando?
-            # O código original NÃO TINHA CREDITO DE SALDO EXPLICITO NESTE BLOCO, apenas update status.
-            # Vou adicionar o credito de saldo E o trigger.
-            
-            # Calcular premio
-            cotacao = float(aposta.get("cotacao", 0))
-            valor_aposta = float(aposta.get("valor", 0))
-            valor_premio = valor_aposta * cotacao
-            
-            if user_id:
+            # Primeiro tenta buscar da tabela platform_modalidades (config por banca)
+            if platform_id:
                 try:
-                    # Busca saldo e dados para trigger
-                    profile_resp = supabase.table("profiles").select("saldo, nome, telefone").eq("id", user_id).single().execute()
-                    saldo_atual = float(profile_resp.data.get("saldo", 0) or 0)
-                    novo_saldo = saldo_atual + valor_premio
-                    
-                    # Atualiza saldo
-                    supabase.table("profiles").update({"saldo": novo_saldo}).eq("id", user_id).execute()
-                    print(f"  Aposta {aposta['id'][:8]} GANHOU! Premio: R${valor_premio:.2f} creditado.")
-
-                    # Disparar Gatilho (API Interna)
-                    try:
-                        app_url = os.environ.get("APP_URL", "https://ultrabanca.app")
-                        internal_secret = os.environ.get("INTERNAL_API_SECRET", "ultra-banca-secret-key-123")
-                        
-                        if internal_secret: 
-                            import requests
-                            requests.post(
-                                f"{app_url}/api/internal/triggers",
-                                json={
-                                    "triggerType": "premio",
-                                    "userData": {
-                                        "nome": profile_resp.data.get("nome", "Cliente"),
-                                        "telefone": profile_resp.data.get("telefone"),
-                                        "premio": valor_premio,
-                                        "modalidade": modalidade,
-                                        "saldo": novo_saldo
-                                    }
-                                },
-                                headers={"x-internal-secret": internal_secret},
-                                timeout=5
-                            )
-                    except Exception as trigger_err:
-                        print(f"  [Erro Gatilho] Falha ao disparar webhook de premio: {trigger_err}")
-
+                    r = supabase.table("platform_modalidades").select("multiplicador").eq("platform_id", platform_id).eq("codigo", modalidade).eq("ativo", True).execute()
+                    if r.data and len(r.data) > 0:
+                        mult = float(r.data[0].get("multiplicador", 0) or 0)
+                        if mult > 0:
+                            return mult
                 except Exception as e:
-                    print(f"  Erro ao creditar premio {aposta['id'][:8]}: {e}")
+                    print(f"  [AVISO] Falha ao buscar multiplicador platform_modalidades: {e}")
 
-        elif todos_resultados_saiu:
-            supabase.table("apostas").update({"status": "perdeu"}).eq("id", aposta["id"]).execute()
-            perdeu += 1
-            print(f"  Aposta {aposta['id'][:8]} perdeu")
-        else:
-            # Verifica se passou 12 horas do horário mais tardio sem resultado
-            # Se todas as loterias sem resultado já expiraram, reembolsa
-            todas_expiraram = True
-            for lot_id, banca, horario in loterias_sem_resultado:
-                # Aumentado para 12 horas para evitar reembolso injustificado
-                if not horario_expirou(data_verificar, horario, horas_limite=12):
-                    todas_expiraram = False
+            # Fallback: usa RPC fn_get_multiplicador que faz a lógica de fallback no banco
+            if platform_id:
+                try:
+                    rpc = supabase.rpc("fn_get_multiplicador", {"p_platform_id": platform_id, "p_codigo": modalidade}).execute()
+                    raw = getattr(rpc, "data", None)
+                    if raw and float(raw) > 0:
+                        return float(raw)
+                except Exception:
+                    pass
+
+            # Último fallback: dynamic_odds carregado de modalidades_config global
+            return float(dynamic.get(modalidade, 0))
+
+        dynamic_odds = {}
+        try:
+            odds_resp = supabase.table("modalidades_config").select("codigo, multiplicador").eq("ativo", True).execute()
+            if odds_resp.data:
+                for item in odds_resp.data:
+                    dynamic_odds[item["codigo"]] = float(item["multiplicador"])
+                print(f"  Odds dinâmicas carregadas: {len(dynamic_odds)} modalidades")
+        except Exception as e:
+            print(f"  [AVISO] Falha ao buscar odds dinâmicas: {e}")
+
+        loteria_ids_com_resultado = set()
+        for key in resultados_map.keys():
+            if "_" not in key:
+                continue
+            horario, banca = key.split("_", 1)
+            for lid, (mb, mh) in LOTERIA_TO_BANCA.items():
+                if mb == banca and mh == horario:
+                    loteria_ids_com_resultado.add(lid)
+
+        # Buscar todas as pendentes do dia (limite 50k) e processar em memoria para evitar loop de paginacao
+        MAX_APOSTAS = 50000
+        print(f"  Buscando apostas pendentes para {data_verificar} (limite {MAX_APOSTAS})...")
+        query = supabase.table("apostas").select("*").eq("data_jogo", data_verificar).eq("status", "pendente").order("id").limit(MAX_APOSTAS)
+        apostas_resp = query.execute()
+        apostas_lote = apostas_resp.data or []
+        total_verificadas = len(apostas_lote)
+        print(f"  Total pendentes no dia: {len(apostas_lote)}")
+        ids_perdeu_batch = []
+
+        for aposta in apostas_lote:
+            loterias = aposta.get("loterias", [])
+            palpites_raw = aposta.get("palpites") or aposta.get("palpite")
+            if isinstance(palpites_raw, list):
+                palpites_lista = [str(p).strip() for p in palpites_raw if p is not None and str(p).strip()]
+            else:
+                palpites_lista = [str(palpites_raw).strip()] if palpites_raw else []
+            if not palpites_lista:
+                palpites_lista = [""]
+            modalidade_raw = (aposta.get("modalidade") or "milhar").strip().upper()
+            modalidade = "centena" if "MILHAR_CT" in modalidade_raw or "CENTENA" in modalidade_raw else (modalidade_raw.lower() if isinstance(aposta.get("modalidade"), str) else "milhar")
+            posicao = aposta.get("posicao", "1_premio")
+            valor_aposta = float(aposta.get("valor_total", 0) or aposta.get("valor", 0) or 0)
+            user_id = aposta.get("user_id")
+            platform_id = aposta.get("platform_id")
+
+            posicoes_validas = []
+            if posicao == "1_premio":
+                posicoes_validas = ["premio_1"]
+            elif posicao in ("1_ao_5", "1_5_premio"):
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5"]
+            elif posicao in ("1_ao_7", "1_7_premio"):
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]
+            elif posicao in ("1_10_premio", "1_ao_10"):
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]
+            else:
+                match = re.match(r"(\d+)_premio", posicao)
+                if match:
+                    posicoes_validas = [f"premio_{match.group(1)}"]
+
+            aposta_ganhou = False
+            todos_resultados_saiu = True
+            loterias_sem_resultado = []
+            horario_mais_tardio = None
+
+            for loteria_id in loterias:
+                mapping = LOTERIA_TO_BANCA.get(loteria_id)
+                if not mapping:
+                    print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} | Resultado no scraper: (nao mapeada)")
+                    continue
+                banca, horario = mapping
+                key = f"{horario}_{banca}"
+                resultado = resultados_map.get(key)
+                print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} (banca={banca}, horario={horario}) | Resultado no scraper: key={key!r} | Existe: {'sim' if resultado else 'nao'}")
+                if horario_mais_tardio is None or horario > horario_mais_tardio:
+                    horario_mais_tardio = horario
+                if not resultado:
+                    todos_resultados_saiu = False
+                    loterias_sem_resultado.append((loteria_id, banca, horario))
+                    continue
+                for pos in posicoes_validas:
+                    premio = str(resultado.get(pos, "") or "")
+                    for palpite in palpites_lista:
+                        palpite = (palpite or "").strip()
+                        if modalidade == "milhar":
+                            if palpite == premio:
+                                aposta_ganhou = True
+                                break
+                        elif modalidade == "centena":
+                            if len(palpite) >= 3 and premio.endswith(palpite[-3:]):
+                                aposta_ganhou = True
+                                break
+                        elif modalidade == "dezena":
+                            if len(palpite) >= 2 and premio.endswith(palpite[-2:]):
+                                aposta_ganhou = True
+                                break
+                        elif modalidade == "grupo":
+                            dezena = int(premio[-2:]) if len(premio) >= 2 else 0
+                            grupo = ((dezena - 1) // 4) + 1 if dezena > 0 else 0
+                            if str(grupo).zfill(2) == palpite.zfill(2):
+                                aposta_ganhou = True
+                                break
+                    if aposta_ganhou:
+                        break
+                if aposta_ganhou:
                     break
 
-            if todas_expiraram and loterias_sem_resultado:
-                # REEMBOLSO: devolve o valor da aposta para o saldo do usuário
-                if user_id and valor_aposta > 0:
+            if aposta_ganhou:
+                multiplicador = get_multiplicador_platform(
+                    platform_id, modalidade,
+                    float(aposta.get("multiplicador", 0) or 0),
+                    dynamic_odds
+                )
+                valor_premio = valor_aposta * multiplicador
+                ganhou += 1
+                print(f"  Aposta {aposta['id'][:8]} GANHOU! Premio: R${valor_premio:.2f}")
+                if user_id and valor_premio > 0:
                     try:
-                        # Busca saldo atual
-                        profile_resp = supabase.table("profiles").select("saldo").eq("id", user_id).single().execute()
-                        saldo_atual = float(profile_resp.data.get("saldo", 0) or 0)
-                        novo_saldo = saldo_atual + valor_aposta
+                        rpc_resp = supabase.rpc("fn_process_payout", {
+                            "p_bet_id": aposta["id"],
+                            "p_amount": round(float(valor_premio), 2),
+                            "p_metadata": {"modalidade": modalidade}
+                        }).execute()
+                        raw = getattr(rpc_resp, "data", None) or (rpc_resp.model_dump() if hasattr(rpc_resp, "model_dump") else None)
+                        result = (raw[0] if isinstance(raw, list) and raw else raw) or {}
+                        if isinstance(result, dict) and result.get("success"):
+                            novo_saldo = result.get("new_balance")
+                            try:
+                                app_url = os.environ.get("APP_URL", "https://ultrabanca.app")
+                                internal_secret = os.environ.get("INTERNAL_API_SECRET", "ultra-banca-secret-key-123")
+                                if internal_secret:
+                                    import requests
+                                    profile_resp = supabase.table("profiles").select("nome, telefone").eq("id", user_id).single().execute()
+                                    requests.post(
+                                        f"{app_url}/api/internal/triggers",
+                                        json={
+                                            "triggerType": "premio",
+                                            "userData": {
+                                                "nome": (profile_resp.data or {}).get("nome", "Cliente"),
+                                                "telefone": (profile_resp.data or {}).get("telefone"),
+                                                "premio": valor_premio,
+                                                "modalidade": modalidade,
+                                                "saldo": novo_saldo
+                                            }
+                                        },
+                                        headers={"x-internal-secret": internal_secret},
+                                        timeout=5
+                                    )
+                            except Exception as trigger_err:
+                                print(f"  [Erro Gatilho] {trigger_err}")
+                        else:
+                            err = result.get("error", "unknown") if isinstance(result, dict) else "rpc failed"
+                            print(f"  Erro RPC payout {aposta['id'][:8]}: {err}")
+                    except Exception as e:
+                        print(f"  Erro ao processar payout {aposta['id'][:8]}: {e}")
 
-                        # Atualiza saldo
-                        supabase.table("profiles").update({"saldo": novo_saldo}).eq("id", user_id).execute()
-
-                        # Marca aposta como reembolsada
-                        supabase.table("apostas").update({"status": "reembolsado"}).eq("id", aposta["id"]).execute()
-
-                        reembolsado += 1
-                        print(f"  Aposta {aposta['id'][:8]} REEMBOLSADA (R${valor_aposta:.2f}) - resultado não saiu após 1h")
+            elif todos_resultados_saiu:
+                ids_perdeu_batch.append(aposta["id"])
+                perdeu += 1
+                print(f"  Aposta {aposta['id'][:8]} perdeu")
+            else:
+                todas_expiraram = True
+                for lot_id, banca, horario in loterias_sem_resultado:
+                    if not horario_expirou(data_verificar, horario, horas_limite=12):
+                        todas_expiraram = False
+                        break
+                if todas_expiraram and loterias_sem_resultado:
+                    # Usar RPC fn_process_refund para reembolso atômico (evita race conditions)
+                    try:
+                        loterias_str = ", ".join([f"{lid} ({banca} {h})" for lid, banca, h in loterias_sem_resultado])
+                        rpc_resp = supabase.rpc("fn_process_refund", {
+                            "p_bet_id": aposta["id"],
+                            "p_reason": f"Resultado não disponível após 12h: {loterias_str}"
+                        }).execute()
+                        raw = getattr(rpc_resp, "data", None) or (rpc_resp.model_dump() if hasattr(rpc_resp, "model_dump") else None)
+                        result = (raw[0] if isinstance(raw, list) and raw else raw) or {}
+                        if isinstance(result, dict) and result.get("success"):
+                            reembolsado += 1
+                            refund_val = result.get("refund", 0)
+                            print(f"  Aposta {aposta['id'][:8]} REEMBOLSADA via RPC (R${refund_val:.2f})")
+                        else:
+                            err = result.get("error", "unknown") if isinstance(result, dict) else "rpc failed"
+                            print(f"  Erro RPC refund {aposta['id'][:8]}: {err}")
+                            ainda_pendente += 1
                     except Exception as e:
                         print(f"  Erro ao reembolsar {aposta['id'][:8]}: {e}")
                         ainda_pendente += 1
                 else:
-                    # Sem user_id ou valor, apenas marca como reembolsado
-                    supabase.table("apostas").update({"status": "reembolsado"}).eq("id", aposta["id"]).execute()
-                    reembolsado += 1
-                    print(f"  Aposta {aposta['id'][:8]} marcada como reembolsada (sem valor)")
-            else:
-                ainda_pendente += 1
-                print(f"  Aposta {aposta['id'][:8]} ainda pendente (aguardando resultado)")
+                    ainda_pendente += 1
+                    print(f"  Aposta {aposta['id'][:8]} ainda pendente (aguardando resultado)")
 
-    resultado_final = {
-        "data": data_verificar,
-        "verificadas": len(apostas),
-        "ganhou": ganhou,
-        "perdeu": perdeu,
-        "reembolsado": reembolsado,
-        "pendente": ainda_pendente,
-    }
+        # Marcar como perdeu em lote (evita N updates)
+        if ids_perdeu_batch:
+            try:
+                rpc = supabase.rpc("fn_mark_bets_lost", {"p_bet_ids": ids_perdeu_batch}).execute()
+                raw = getattr(rpc, "data", None)
+                res = (raw[0] if isinstance(raw, list) and raw else raw) or {}
+                n = res.get("updated", 0) if isinstance(res, dict) else 0
+                print(f"  Batch perdeu: {len(ids_perdeu_batch)} IDs enviados, {n} atualizados")
+            except Exception as e:
+                print(f"  [AVISO] Batch perdeu falhou: {e}; marcando uma a uma")
+                for bid in ids_perdeu_batch:
+                    try:
+                        supabase.table("apostas").update({"status": "perdeu"}).eq("id", bid).execute()
+                    except Exception:
+                        pass
 
-    print(f"=== Verificacao concluida: {resultado_final} ===")
-    return resultado_final
+        resultado_final = {
+            "data": data_verificar,
+            "verificadas": total_verificadas,
+            "ganhou": ganhou,
+            "perdeu": perdeu,
+            "reembolsado": reembolsado,
+            "pendente": ainda_pendente,
+        }
+        print(f"=== Verificacao concluida: {resultado_final} ===")
+        return resultado_final
+    except Exception as e:
+        _enviar_alerta_scraper("Erro na verificacao de premios", f"data={data_verificar}. Processo interrompido.", e)
+        return {
+            "data": data_verificar,
+            "verificadas": total_verificadas,
+            "ganhou": ganhou,
+            "perdeu": perdeu,
+            "reembolsado": reembolsado,
+            "pendente": ainda_pendente,
+            "error": str(e),
+        }
 
 
 # =============================================================================
@@ -1590,6 +1689,14 @@ def main(
         resultado = scrape_ultimos_dias.remote(dias)
         print(f"\nResultado final: {resultado}")
 
+    elif comando == "verificar":
+        data_verificar = data or datetime.now().strftime("%Y-%m-%d")
+        print(f"\n{'#'*70}")
+        print(f"# VERIFICAR PRÊMIOS: {data_verificar}")
+        print(f"{'#'*70}\n")
+        resultado = verificar_premios_v2.remote(data_verificar)
+        print(f"\nResultado: {resultado}")
+
     else:
         print(f"Comando: {comando}")
-        print("Comandos válidos: scrape, teste, todos, historico")
+        print("Comandos válidos: scrape, teste, todos, historico, verificar")
