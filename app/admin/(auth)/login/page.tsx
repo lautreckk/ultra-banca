@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, User, Shield, Loader2, ArrowLeft } from 'lucide-react';
+import { trackLogin } from '@/lib/actions/auth';
 
 type LoginStep = 'credentials' | 'mfa';
 
@@ -68,7 +69,7 @@ export default function AdminLoginPage() {
       // Se for um CPF (apenas números), converte para o formato de email
       const cleanInput = login.replace(/\D/g, '');
       const email = cleanInput.length === 11
-        ? `${cleanInput}@ultrabanca.app`
+        ? `${cleanInput}@cupulabarao.app`
         : login;
 
       // Fazer login com email/senha
@@ -103,6 +104,7 @@ export default function AdminLoginPage() {
       if (aalError) {
         console.error('Erro ao verificar AAL:', aalError);
         // Continuar sem MFA se houver erro
+        trackLogin().catch(() => {});
         router.push('/admin/dashboard');
         return;
       }
@@ -114,6 +116,7 @@ export default function AdminLoginPage() {
 
         if (factorsError || !factorsData?.totp || factorsData.totp.length === 0) {
           // Sem fatores, continuar normal
+          trackLogin().catch(() => {});
           router.push('/admin/dashboard');
           return;
         }
@@ -123,6 +126,7 @@ export default function AdminLoginPage() {
 
         if (!verifiedFactor) {
           // Nenhum fator verificado, continuar normal
+          trackLogin().catch(() => {});
           router.push('/admin/dashboard');
           return;
         }
@@ -134,7 +138,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Sem MFA ou já em aal2, redirecionar
+      // Sem MFA ou já em aal2, rastrear login e redirecionar
+      trackLogin().catch(() => {});
       router.push('/admin/dashboard');
     } catch (err) {
       console.error('Erro ao fazer login:', err);
@@ -180,6 +185,8 @@ export default function AdminLoginPage() {
       const { data: newAalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
       if (newAalData?.currentLevel === 'aal2') {
+        // Rastrear login após MFA
+        trackLogin().catch(() => {});
         router.push('/admin/dashboard');
       } else {
         setError('Erro na verificação. Tente fazer login novamente.');

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, User, Shield, Loader2, ArrowLeft, Crown } from 'lucide-react';
+import { trackLogin } from '@/lib/actions/auth';
 
 type LoginStep = 'credentials' | 'mfa';
 
@@ -77,7 +78,7 @@ export default function AdminMasterLoginPage() {
       // Se for um CPF (apenas números), converte para o formato de email
       const cleanInput = login.replace(/\D/g, '');
       const email = cleanInput.length === 11
-        ? `${cleanInput}@ultrabanca.app`
+        ? `${cleanInput}@cupulabarao.app`
         : login;
 
       // Fazer login com email/senha
@@ -112,6 +113,7 @@ export default function AdminMasterLoginPage() {
       if (aalError) {
         console.error('Erro ao verificar AAL:', aalError);
         // Continuar sem MFA se houver erro
+        trackLogin().catch(() => {});
         router.push('/admin-master/dashboard');
         return;
       }
@@ -123,6 +125,7 @@ export default function AdminMasterLoginPage() {
 
         if (factorsError || !factorsData?.totp || factorsData.totp.length === 0) {
           // Sem fatores, continuar normal
+          trackLogin().catch(() => {});
           router.push('/admin-master/dashboard');
           return;
         }
@@ -132,6 +135,7 @@ export default function AdminMasterLoginPage() {
 
         if (!verifiedFactor) {
           // Nenhum fator verificado, continuar normal
+          trackLogin().catch(() => {});
           router.push('/admin-master/dashboard');
           return;
         }
@@ -143,7 +147,8 @@ export default function AdminMasterLoginPage() {
         return;
       }
 
-      // Sem MFA ou já em aal2, redirecionar
+      // Sem MFA ou já em aal2, rastrear login e redirecionar
+      trackLogin().catch(() => {});
       router.push('/admin-master/dashboard');
     } catch (err) {
       console.error('Erro ao fazer login:', err);
@@ -189,6 +194,8 @@ export default function AdminMasterLoginPage() {
       const { data: newAalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
       if (newAalData?.currentLevel === 'aal2') {
+        // Rastrear login após MFA
+        trackLogin().catch(() => {});
         router.push('/admin-master/dashboard');
       } else {
         setError('Erro na verificação. Tente fazer login novamente.');
@@ -237,7 +244,7 @@ export default function AdminMasterLoginPage() {
             )}
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-            {step === 'mfa' ? 'Verificação 2FA' : 'Scarface Master'}
+            {step === 'mfa' ? 'Verificação 2FA' : 'Cúpula Barão'}
           </h1>
           <p className="text-zinc-500 mt-3">
             {step === 'mfa'

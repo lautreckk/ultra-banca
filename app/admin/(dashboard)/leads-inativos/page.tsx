@@ -252,8 +252,8 @@ function LeadCard({ lead, onView, onWhatsApp }: LeadCardProps) {
           <p className="text-zinc-300 font-medium">{formatDate(lead.ultima_aposta)}</p>
         </div>
         <div className="bg-zinc-800/50 rounded-xl p-2">
-          <p className="text-zinc-400 text-xs">Telefone</p>
-          <p className="text-zinc-300 font-medium truncate">{lead.telefone || '-'}</p>
+          <p className="text-zinc-400 text-xs">Último Login</p>
+          <p className="text-zinc-300 font-medium">{formatDate(lead.last_login)}</p>
         </div>
       </div>
     </div>
@@ -275,7 +275,7 @@ export default function LeadsInativosPage() {
   const pageSize = 10;
 
   // Filtros
-  const [diasInatividade, setDiasInatividade] = useState(7);
+  const [diasInatividade, setDiasInatividade] = useState<number | 'all'>(7);
   const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'com_saldo' | 'sem_saldo' | 'nunca_apostou'>('todos');
 
   const fetchData = useCallback(async () => {
@@ -390,7 +390,8 @@ export default function LeadsInativosPage() {
           <select
             value={diasInatividade}
             onChange={(e) => {
-              setDiasInatividade(parseInt(e.target.value));
+              const value = e.target.value;
+              setDiasInatividade(value === 'all' ? 'all' : parseInt(value));
               setPage(1);
             }}
             className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -400,6 +401,7 @@ export default function LeadsInativosPage() {
             <option value={30}>30+ dias</option>
             <option value={60}>60+ dias</option>
             <option value={90}>90+ dias</option>
+            <option value="all">Todo o tempo</option>
           </select>
         </div>
         <div className="flex-1">

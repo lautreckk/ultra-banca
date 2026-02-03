@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, UserPlus, Loader2 } from 'lucide-react';
+import { trackLogin } from '@/lib/actions/auth';
 
 export default function PromotorLoginPage() {
   const router = useRouter();
@@ -81,7 +82,8 @@ export default function PromotorLoginPage() {
         return;
       }
 
-      // Sucesso - redirecionar para dashboard do promotor
+      // Sucesso - rastrear login e redirecionar para dashboard do promotor
+      trackLogin().catch(() => {});
       router.push('/promotor');
     } catch (err) {
       console.error('Erro ao fazer login:', err);

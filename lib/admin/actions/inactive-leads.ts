@@ -31,7 +31,7 @@ export interface InactiveLeadsStats {
 export interface InactiveLeadsParams {
   page?: number;
   pageSize?: number;
-  diasInatividade?: number;
+  diasInatividade?: number | 'all'; // 'all' = todo o tempo
   tipoFiltro?: 'todos' | 'com_saldo' | 'sem_saldo' | 'nunca_apostou';
   orderBy?: string;
   orderDir?: 'asc' | 'desc';
@@ -145,11 +145,14 @@ export async function getInactiveLeads(
     diasInatividade = 7,
     tipoFiltro = 'todos',
     orderBy = 'dias_inativo',
-    orderDir = 'desc',
+    orderDir = 'desc', // Default: descendente (quem está inativo há mais tempo aparece primeiro)
   } = params;
 
   const now = new Date();
-  const dataLimite = new Date(now.getTime() - diasInatividade * 24 * 60 * 60 * 1000).toISOString();
+  // Se diasInatividade = 'all', não aplicamos limite de data
+  const dataLimite = diasInatividade === 'all'
+    ? null
+    : new Date(now.getTime() - diasInatividade * 24 * 60 * 60 * 1000).toISOString();
 
   // Buscar todos os profiles
   const { data: profiles } = await supabase
@@ -244,7 +247,16 @@ export async function getInactiveLeads(
     })
     .filter((lead) => {
       // Filtrar por inatividade
-      const isInativo = !lead.ultima_aposta || lead.ultima_aposta < dataLimite;
+      // Se dataLimite é null (todo o tempo), inclui todos que nunca apostaram OU que têm saldo parado
+      let isInativo: boolean;
+      if (dataLimite === null) {
+        // "Todo o tempo" - inclui apenas quem nunca apostou ou tem saldo > 0
+        const saldoTotal = lead.saldo + lead.saldo_bonus;
+        isInativo = !lead.ultima_aposta || saldoTotal > 0;
+      } else {
+        // Filtro normal por dias
+        isInativo = !lead.ultima_aposta || lead.ultima_aposta < dataLimite;
+      }
       if (!isInativo) return false;
 
       // Filtrar por tipo
