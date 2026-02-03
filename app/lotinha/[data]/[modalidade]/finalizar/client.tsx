@@ -92,39 +92,42 @@ function LotinhaFinalizarContent({ data: dataJogo, modalidade }: LotinhaFinaliza
   };
 
   return (
-    <div className="min-h-screen bg-[#1A202C]">
-      <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
-        <div className="flex h-12 items-center justify-between">
-          <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center">
-            <ChevronLeft className="h-6 w-6 text-white" />
-          </button>
-          <span className="text-sm font-bold text-white">FINALIZAR APOSTA</span>
-          <button className="flex h-10 w-10 items-center justify-center">
-            <Menu className="h-5 w-5 text-white" />
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-300 flex justify-center">
+      <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
+        <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
+          <div className="flex h-12 items-center justify-between">
+            <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center">
+              <ChevronLeft className="h-6 w-6 text-white" />
+            </button>
+            <span className="text-sm font-bold text-white">FINALIZAR APOSTA</span>
+            <button className="flex h-10 w-10 items-center justify-center">
+              <Menu className="h-5 w-5 text-white" />
+            </button>
+          </div>
+        </header>
 
-      <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-        <RefreshCw className="h-5 w-5 text-white" />
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">
-            {novoSaldo !== null ? `R$ ${formatCurrency(novoSaldo)}` : 'R$ *******'}
-          </span>
-          <EyeOff className="h-5 w-5 text-white" />
+        <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
+          <RefreshCw className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2">
+            <span className="text-white font-medium">
+              {novoSaldo !== null ? `R$ ${formatCurrency(novoSaldo)}` : 'R$ *******'}
+            </span>
+            <EyeOff className="h-5 w-5 text-white" />
+          </div>
         </div>
-      </div>
 
-      {error && (
-        <div className="fixed top-16 left-4 right-4 z-50 bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
-          <span className="text-sm">{error}</span>
-          <button onClick={() => setError(null)}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
+        {error && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
+            <div className="bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+              <span className="text-sm">{error}</span>
+              <button onClick={() => setError(null)}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
-      <div className="bg-gray-100 min-h-screen p-4">
+        <div className="bg-gray-100 flex-1 p-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
           <div className="text-xs text-gray-500 mb-2">PULE #{puleNumber || ''}</div>
           <div className="text-center mb-4">
@@ -261,6 +264,7 @@ function LotinhaFinalizarContent({ data: dataJogo, modalidade }: LotinhaFinaliza
             Voltar ao Inicio
           </button>
         )}
+        </div>
       </div>
     </div>
   );

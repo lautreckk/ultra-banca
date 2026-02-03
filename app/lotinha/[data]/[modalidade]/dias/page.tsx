@@ -43,28 +43,29 @@ function LotinhaDiasContent() {
   const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <div className="min-h-screen bg-[#1A202C]">
-      <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
-        <div className="flex h-12 items-center justify-between">
-          <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center">
-            <ChevronLeft className="h-6 w-6 text-white" />
-          </button>
-          <span className="text-sm font-bold text-white">SELECIONAR DIAS</span>
-          <button className="flex h-10 w-10 items-center justify-center">
-            <Menu className="h-5 w-5 text-white" />
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-300 flex justify-center">
+      <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
+        <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
+          <div className="flex h-12 items-center justify-between">
+            <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center">
+              <ChevronLeft className="h-6 w-6 text-white" />
+            </button>
+            <span className="text-sm font-bold text-white">SELECIONAR DIAS</span>
+            <button className="flex h-10 w-10 items-center justify-center">
+              <Menu className="h-5 w-5 text-white" />
+            </button>
+          </div>
+        </header>
 
-      <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-        <RefreshCw className="h-5 w-5 text-white" />
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <EyeOff className="h-5 w-5 text-white" />
+        <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
+          <RefreshCw className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2">
+            <span className="text-white font-medium">R$ ******* | *******</span>
+            <EyeOff className="h-5 w-5 text-white" />
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white min-h-screen">
+        <div className="bg-white flex-1">
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <span className="font-bold text-gray-900">Total</span>
           <span className="font-bold text-gray-900">R$ {formatCurrency(valorTotal)}</span>
@@ -116,6 +117,7 @@ function LotinhaDiasContent() {
               APOSTAR
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
