@@ -1563,27 +1563,55 @@ def verificar_modalidade(modalidade: str, palpites: list, resultado: dict, posic
                     return True
 
     # =========================================================================
-    # LOTINHA / QUININHA / SENINHA (jogos multi-dia)
-    # Estes jogos usam dezenas de múltiplos sorteios para formar um número
-    # A verificação precisa de lógica especial que considera múltiplos dias
-    # Por enquanto, implementamos verificação básica
+    # LOTINHA / QUININHA / SENINHA (jogos de dezenas acumuladas)
+    # O jogador escolhe N dezenas (ex: "03-06-13-18-24-28")
+    # Precisa acertar X dezenas nos resultados do dia:
+    # - Lotinha: 4 acertos
+    # - Quininha: 5 acertos
+    # - Seninha: 6 acertos
+    # NOTA: A verificação completa é feita no loop principal (verificar_premios_v2)
+    # pois precisa de TODOS os resultados do dia, não apenas um.
+    # Esta seção é fallback caso seja chamada com resultado único.
     # =========================================================================
     elif modalidade.startswith("lotinha_") or modalidade.startswith("quininha_") or modalidade.startswith("seninha_"):
-        # Extrai quantidade de dezenas do nome (ex: lotinha_16d = 16 dezenas)
-        match = re.search(r'(\d+)d$', modalidade)
-        if not match:
+        # Determina quantos acertos são necessários
+        if modalidade.startswith("lotinha_"):
+            acertos_necessarios = 4
+        elif modalidade.startswith("quininha_"):
+            acertos_necessarios = 5
+        elif modalidade.startswith("seninha_"):
+            acertos_necessarios = 6
+        else:
             return False
 
-        n_dezenas = int(match.group(1))
+        # Pega o primeiro palpite (formato: "03-06-13-18-24-28-30-...")
+        if not palpites_norm:
+            return False
 
-        # O palpite deve ter N dezenas separadas
-        # A verificação completa requer os resultados de múltiplos dias
-        # Por ora, verifica se o palpite está no formato correto
-        # e se há correspondência parcial
+        palpite_str = palpites_norm[0]
 
-        # TODO: Implementar verificação completa multi-dia
-        # Por enquanto, marca como pendente para verificação manual
-        return False
+        # Separa as dezenas do palpite
+        dezenas_palpite = set()
+        for part in palpite_str.replace(" ", "").split("-"):
+            part = part.strip()
+            if part and part.isdigit():
+                dezenas_palpite.add(part.zfill(2))
+
+        if not dezenas_palpite:
+            return False
+
+        # Extrai dezenas dos prêmios disponíveis (direita - últimos 2 dígitos)
+        dezenas_resultado = set()
+        for premio in premios:
+            if len(premio) >= 2:
+                dez = premio[-2:].zfill(2)
+                dezenas_resultado.add(dez)
+
+        # Conta quantas dezenas do palpite aparecem no resultado
+        acertos = len(dezenas_palpite & dezenas_resultado)
+
+        if acertos >= acertos_necessarios:
+            return True
 
     # =========================================================================
     # FALLBACK - Modalidade não reconhecida
@@ -1783,33 +1811,108 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
             loterias_sem_resultado = []
             horario_mais_tardio = None
 
-            for loteria_id in loterias:
-                mapping = LOTERIA_TO_BANCA.get(loteria_id)
-                if not mapping:
-                    print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} | Resultado no scraper: (nao mapeada)")
-                    continue
-                banca, horario = mapping
-                key = f"{horario}_{banca}"
-                resultado = resultados_map.get(key)
-                print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} (banca={banca}, horario={horario}) | Resultado no scraper: key={key!r} | Existe: {'sim' if resultado else 'nao'}")
-                if horario_mais_tardio is None or horario > horario_mais_tardio:
-                    horario_mais_tardio = horario
-                if not resultado:
+            # =========================================================================
+            # TRATAMENTO ESPECIAL: LOTINHA / QUININHA / SENINHA
+            # Estes jogos usam TODOS os resultados do dia (loterias vazio)
+            # Jogador escolhe N dezenas, precisa acertar X:
+            # - Lotinha: 4 acertos, Quininha: 5 acertos, Seninha: 6 acertos
+            # =========================================================================
+            is_lotinha_quininha_seninha = modalidade.startswith("lotinha_") or modalidade.startswith("quininha_") or modalidade.startswith("seninha_")
+
+            if is_lotinha_quininha_seninha:
+                # Determina quantos acertos são necessários
+                if modalidade.startswith("lotinha_"):
+                    acertos_necessarios = 4
+                elif modalidade.startswith("quininha_"):
+                    acertos_necessarios = 5
+                else:  # seninha
+                    acertos_necessarios = 6
+
+                # Verifica se há resultados suficientes no dia
+                if not resultados_map:
                     todos_resultados_saiu = False
-                    loterias_sem_resultado.append((loteria_id, banca, horario))
+                    ainda_pendente += 1
+                    print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Aguardando resultados do dia")
                     continue
 
-                # Usa a função de verificação completa para todas as modalidades
-                aposta_ganhou = verificar_modalidade(
-                    modalidade=modalidade,
-                    palpites=palpites_lista,
-                    resultado=resultado,
-                    posicoes_validas=posicoes_validas
-                )
+                # Pega o palpite (formato: "03-06-13-18-24-28-30-...")
+                palpite_str = palpites_lista[0] if palpites_lista else ""
 
-                if aposta_ganhou:
-                    print(f"  Aposta {aposta['id'][:8]} - Modalidade {modalidade} - GANHOU na loteria {loteria_id}")
-                    break
+                # Separa as dezenas do palpite
+                dezenas_palpite = set()
+                for part in palpite_str.replace(" ", "").split("-"):
+                    part = part.strip()
+                    if part and part.isdigit():
+                        dezenas_palpite.add(part.zfill(2))
+
+                if not dezenas_palpite:
+                    print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Palpite inválido: {palpite_str}")
+                    ids_perdeu_batch.append(aposta["id"])
+                    perdeu += 1
+                    continue
+
+                # Coleta TODAS as dezenas de TODOS os resultados do dia
+                dezenas_resultado = set()
+                for key, resultado in resultados_map.items():
+                    for pos in ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]:
+                        premio = str(resultado.get(pos, "") or "").strip()
+                        if premio and len(premio) >= 2:
+                            dez = premio[-2:].zfill(2)
+                            dezenas_resultado.add(dez)
+
+                # Conta quantas dezenas do palpite aparecem nos resultados
+                acertos = len(dezenas_palpite & dezenas_resultado)
+                print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Dezenas palpite: {len(dezenas_palpite)}, Dezenas resultado: {len(dezenas_resultado)}, Acertos: {acertos}/{acertos_necessarios}")
+
+                if acertos >= acertos_necessarios:
+                    aposta_ganhou = True
+                    print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - GANHOU! Acertos: {acertos}")
+                else:
+                    # Verificar se todos os sorteios do dia já saíram (mínimo esperado)
+                    # Se temos pelo menos 5 resultados, consideramos completo
+                    if len(resultados_map) >= 5:
+                        ids_perdeu_batch.append(aposta["id"])
+                        perdeu += 1
+                        print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Perdeu (acertos insuficientes)")
+                    else:
+                        ainda_pendente += 1
+                        print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Aguardando mais resultados ({len(resultados_map)} disponíveis)")
+
+                # Continua para próxima aposta se não ganhou
+                if not aposta_ganhou:
+                    continue
+
+            # =========================================================================
+            # VERIFICAÇÃO PADRÃO (para jogos normais com loterias específicas)
+            # =========================================================================
+            if not is_lotinha_quininha_seninha:
+                for loteria_id in loterias:
+                    mapping = LOTERIA_TO_BANCA.get(loteria_id)
+                    if not mapping:
+                        print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} | Resultado no scraper: (nao mapeada)")
+                        continue
+                    banca, horario = mapping
+                    key = f"{horario}_{banca}"
+                    resultado = resultados_map.get(key)
+                    print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} (banca={banca}, horario={horario}) | Resultado no scraper: key={key!r} | Existe: {'sim' if resultado else 'nao'}")
+                    if horario_mais_tardio is None or horario > horario_mais_tardio:
+                        horario_mais_tardio = horario
+                    if not resultado:
+                        todos_resultados_saiu = False
+                        loterias_sem_resultado.append((loteria_id, banca, horario))
+                        continue
+
+                    # Usa a função de verificação completa para todas as modalidades
+                    aposta_ganhou = verificar_modalidade(
+                        modalidade=modalidade,
+                        palpites=palpites_lista,
+                        resultado=resultado,
+                        posicoes_validas=posicoes_validas
+                    )
+
+                    if aposta_ganhou:
+                        print(f"  Aposta {aposta['id'][:8]} - Modalidade {modalidade} - GANHOU na loteria {loteria_id}")
+                        break
 
             if aposta_ganhou:
                 multiplicador = get_multiplicador_platform(
