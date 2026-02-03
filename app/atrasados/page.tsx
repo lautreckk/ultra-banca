@@ -98,34 +98,35 @@ export default function AtrasadosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A202C]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
-        <div className="flex h-12 items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center"
-          >
-            <ChevronLeft className="h-6 w-6 text-white" />
-          </button>
-          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
-          <button className="flex h-10 w-10 items-center justify-center">
-            <Menu className="h-5 w-5 text-white" />
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-300 flex justify-center">
+      <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
+          <div className="flex h-12 items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className="flex h-10 w-10 items-center justify-center"
+            >
+              <ChevronLeft className="h-6 w-6 text-white" />
+            </button>
+            <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
+            <button className="flex h-10 w-10 items-center justify-center">
+              <Menu className="h-5 w-5 text-white" />
+            </button>
+          </div>
+        </header>
 
-      {/* Balance Bar */}
-      <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-        <RefreshCw className="h-5 w-5 text-white" />
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <EyeOff className="h-5 w-5 text-white" />
+        {/* Balance Bar */}
+        <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
+          <RefreshCw className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2">
+            <span className="text-white font-medium">R$ ******* | *******</span>
+            <EyeOff className="h-5 w-5 text-white" />
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="bg-white min-h-screen p-4">
+        {/* Content */}
+        <div className="bg-white flex-1 p-4">
         {/* Title */}
         <h1 className="text-xl font-bold text-gray-900 mb-1">
           Lista de atrasados
@@ -302,6 +303,7 @@ export default function AtrasadosPage() {
             </button>
           </>
         )}
+        </div>
       </div>
     </div>
   );
