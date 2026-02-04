@@ -50,10 +50,10 @@ export function Header({
         )}
         {showHome && !showBack && (
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/home')}
             onTouchEnd={(e) => {
               e.preventDefault();
-              router.push('/');
+              router.push('/home');
             }}
             className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
             style={{ WebkitTapHighlightColor: 'transparent' }}

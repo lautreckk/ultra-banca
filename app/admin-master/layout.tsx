@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Admin Master',
-    template: '%s | Admin Master',
+    default: 'Cúpula Barão - Master',
+    template: '%s | Cúpula Barão - Master',
   },
-  description: 'Painel Master - Super Administração',
+  description: 'Cúpula Barão - Plataforma de Elite para Gestão de Bancas',
   icons: {
     icon: '/icons/admin-favicon.svg',
   },

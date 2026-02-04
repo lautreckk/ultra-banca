@@ -107,7 +107,7 @@ export default function NovoClientePage() {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="Ex: ScarfaceJB"
+                placeholder="Ex: Banca Elite"
                 className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
               />
             </div>
@@ -121,7 +121,7 @@ export default function NovoClientePage() {
                 name="slug"
                 value={form.slug}
                 onChange={handleChange}
-                placeholder="Ex: scarfacejb"
+                placeholder="Ex: banca-elite"
                 className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
               />
               <p className="mt-1 text-xs text-zinc-500">

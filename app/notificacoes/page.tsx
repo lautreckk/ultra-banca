@@ -22,7 +22,7 @@ export default function NotificacoesPage() {
 
       if (permission === 'granted') {
         // Show a test notification
-        new Notification('Ultra Banca', {
+        new Notification('Cúpula Barão', {
           body: 'Notificacoes ativadas com sucesso!',
           icon: '/icon-192.png',
         });

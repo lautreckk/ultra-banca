@@ -81,7 +81,7 @@ export default function ClientesPage() {
           <Briefcase className="h-8 w-8 text-purple-400" />
           <div>
             <h1 className="text-2xl font-bold text-white">Clientes</h1>
-            <p className="text-zinc-400">Gerencie os clientes do Scarface SaaS</p>
+            <p className="text-zinc-400">Gerencie os clientes do Cúpula Barão</p>
           </div>
         </div>
         <Link
