@@ -114,7 +114,7 @@ export function ConfigPageWrapper({
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white"
           >
             {isSaving ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />

@@ -89,7 +89,7 @@ function ApostasContent() {
           </p>
           <Link
             href="/admin/modalidades"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm font-medium transition-colors"
           >
             Configurar Modalidades
             <ExternalLink className="h-4 w-4" />
