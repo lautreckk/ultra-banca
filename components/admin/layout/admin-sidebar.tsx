@@ -9,7 +9,6 @@ import {
   Users,
   UserX,
   Wallet,
-  Gift,
   Settings,
   CreditCard,
   Dices,
@@ -111,11 +110,6 @@ const navItems: NavItem[] = [
   },
 
   // ========== MARKETING ==========
-  {
-    label: 'Promoções',
-    href: '/admin/promocoes',
-    icon: <Gift className="h-5 w-5" />,
-  },
   {
     label: 'Bônus Depósito',
     href: '/admin/bonus-deposito',
