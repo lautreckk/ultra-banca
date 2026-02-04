@@ -141,9 +141,7 @@ export function ConfigPageWrapper({
         )}
 
         {/* Content */}
-        <div className="bg-[#374151] rounded-lg p-4 md:p-6">
-          {children}
-        </div>
+        {children}
       </div>
     </ConfigContext.Provider>
   );
