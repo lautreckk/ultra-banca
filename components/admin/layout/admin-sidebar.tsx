@@ -144,11 +144,11 @@ const navItems: NavItem[] = [
     label: 'Configurações',
     icon: <Settings className="h-5 w-5" />,
     children: [
-      { label: 'Geral', href: '/admin/configuracoes/geral' },
-      { label: 'Financeiro', href: '/admin/configuracoes/financeiro' },
-      { label: 'Apostas', href: '/admin/configuracoes/apostas' },
-      { label: 'Marketing', href: '/admin/configuracoes/marketing' },
-      { label: 'Segurança', href: '/admin/configuracoes/seguranca' },
+      { label: 'Geral', href: '/admin/configuracoes/geral', icon: <Building2 className="h-4 w-4" /> },
+      { label: 'Financeiro', href: '/admin/configuracoes/financeiro', icon: <Wallet className="h-4 w-4" /> },
+      { label: 'Apostas', href: '/admin/configuracoes/apostas', icon: <Dices className="h-4 w-4" /> },
+      { label: 'Marketing', href: '/admin/configuracoes/marketing', icon: <Megaphone className="h-4 w-4" /> },
+      { label: 'Segurança', href: '/admin/configuracoes/seguranca', icon: <Shield className="h-4 w-4" /> },
     ],
   },
 ];
