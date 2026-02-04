@@ -24,6 +24,7 @@ import {
   Trophy,
   CircleDot,
   Shield,
+  ShieldAlert,
   Loader2,
   Megaphone,
   Calendar,
@@ -74,6 +75,11 @@ const navItems: NavItem[] = [
     label: 'Promotores',
     href: '/admin/promotores',
     icon: <UserPlus className="h-5 w-5" />,
+  },
+  {
+    label: 'Suspeitos',
+    href: '/admin/suspeitos',
+    icon: <ShieldAlert className="h-5 w-5" />,
   },
 
   // ========== CORE DO NEGÓCIO ==========

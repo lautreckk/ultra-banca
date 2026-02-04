@@ -39,6 +39,8 @@ const BANCAS = [
   { value: 'RIO-GRANDE-SUL', label: 'RIO GRANDE DO SUL', urlParam: 'RS' },
   { value: 'SERGIPE', label: 'SERGIPE', urlParam: 'SE' },
   { value: 'PARANA', label: 'PARANÁ', urlParam: 'PR' },
+  { value: 'NACIONAL', label: 'NACIONAL', urlParam: 'NAC' },
+  { value: 'FEDERAL', label: 'FEDERAL', urlParam: 'FED' },
 ];
 
 export default function AdminResultadosPage() {

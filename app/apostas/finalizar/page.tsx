@@ -3,17 +3,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Home, Share2, Printer, Check, X, Loader2, Trash2 } from 'lucide-react';
+import { Home, Share2, Printer, Check, X, Loader2, Trash2, AlertTriangle, Wallet, MinusCircle } from 'lucide-react';
 import { BetHeader } from '@/components/layout';
 import { useBetStore, BetItem } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById, getSubLoteriaById } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
 
 export default function FinalizarApostaPage() {
   const router = useRouter();
   const config = usePlatformConfig();
-  const { items, clearCart, removeItem } = useBetStore();
+  const { items, clearCart, removeItem, removeLoteriaFromAll } = useBetStore();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,9 @@ export default function FinalizarApostaPage() {
   const [novoSaldo, setNovoSaldo] = useState<number | null>(null);
 
   const supabase = createClient();
+  const { saldo, saldoBonus, loading: balanceLoading } = useUserBalance();
+
+  const saldoDisponivel = saldo + saldoBonus;
 
   // Redirect if no items
   if (items.length === 0) {
@@ -42,8 +46,19 @@ export default function FinalizarApostaPage() {
 
   const valorTotalGeral = items.reduce((acc, item) => acc + calcularTotalItem(item), 0);
 
+  const saldoInsuficiente = !balanceLoading && valorTotalGeral > saldoDisponivel;
+  const deficit = valorTotalGeral - saldoDisponivel;
+
   // Get all unique lotteries across all items
   const todasLoterias = [...new Set(items.flatMap(item => item.loterias))];
+
+  // Calculate how much each lottery contributes to the total
+  const custosPorLoteria = todasLoterias.map((loteriaId) => {
+    const custo = items
+      .filter((item) => item.loterias.includes(loteriaId))
+      .reduce((sum, item) => sum + item.palpites.length * item.valorUnitario, 0);
+    return { loteriaId, custo };
+  });
 
   const handleVoltar = () => {
     if (isConfirmed) {
@@ -55,6 +70,19 @@ export default function FinalizarApostaPage() {
   const handleFinalizar = async () => {
     setIsLoading(true);
     setError(null);
+
+    // Client-side balance validation
+    if (valorTotalGeral > saldoDisponivel) {
+      setError(
+        `Saldo insuficiente para esta aposta.\n` +
+        `Valor total: R$ ${valorTotalGeral.toFixed(2).replace('.', ',')}\n` +
+        `Seu saldo: R$ ${saldoDisponivel.toFixed(2).replace('.', ',')}\n` +
+        `Faltam: R$ ${deficit.toFixed(2).replace('.', ',')}\n` +
+        `Remova loterias ou reduza o valor da aposta.`
+      );
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const pules: string[] = [];
@@ -166,13 +194,13 @@ export default function FinalizarApostaPage() {
           </div>
         )}
 
-        {/* Error Toast */}
-        {error && (
+        {/* Error Toast (non-balance errors) */}
+        {error && !saldoInsuficiente && (
           <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
             <div className="bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
               <div className="flex items-center gap-2">
-                <X className="h-5 w-5" />
-                <span>{error}</span>
+                <X className="h-5 w-5 flex-shrink-0" />
+                <span className="whitespace-pre-line">{error}</span>
               </div>
               <button onClick={() => setError(null)}>
                 <X className="h-5 w-5" />
@@ -239,20 +267,37 @@ export default function FinalizarApostaPage() {
             <div className="border-t border-gray-300 my-4" />
 
             {/* Selected Lotteries */}
-            <div className="mb-4">
+            <div className="mb-4 space-y-1">
               {todasLoterias.map((loteriaId) => {
                 const loteria = getSubLoteriaById(loteriaId);
+                const custoInfo = custosPorLoteria.find((c) => c.loteriaId === loteriaId);
                 return (
-                  <div key={loteriaId} className="flex items-center justify-between text-sm">
+                  <div key={loteriaId} className="flex items-center justify-between text-sm py-1">
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
+                      <span className="w-1.5 h-1.5 bg-gray-700 rounded-full flex-shrink-0" />
                       <span className={isConfirmed ? 'text-green-600 font-medium' : 'text-gray-700'}>
                         {loteria?.nome || loteriaId} {loteria?.horario}
                       </span>
+                      {!isConfirmed && custoInfo && (
+                        <span className="text-xs text-gray-400">
+                          (R$ {custoInfo.custo.toFixed(2).replace('.', ',')})
+                        </span>
+                      )}
                     </div>
-                    {isConfirmed && (
-                      <span className="text-green-600 font-medium text-xs">REGISTRADA</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isConfirmed && (
+                        <span className="text-green-600 font-medium text-xs">REGISTRADA</span>
+                      )}
+                      {!isConfirmed && todasLoterias.length > 1 && (
+                        <button
+                          onClick={() => removeLoteriaFromAll(loteriaId)}
+                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          title={`Remover ${loteria?.nome || loteriaId}`}
+                        >
+                          <MinusCircle className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -334,7 +379,56 @@ export default function FinalizarApostaPage() {
                   ({items.length} apostas)
                 </p>
               )}
+              {todasLoterias.length > 1 && (
+                <p className="text-xs text-gray-400 mt-1">
+                  {todasLoterias.length} loterias selecionadas
+                </p>
+              )}
             </div>
+
+            {/* Balance Info */}
+            {!isConfirmed && !balanceLoading && (
+              <div className={`mx-2 my-3 p-3 rounded-lg border ${saldoInsuficiente ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Wallet className={`h-4 w-4 ${saldoInsuficiente ? 'text-red-500' : 'text-green-600'}`} />
+                  <span className={`text-sm font-semibold ${saldoInsuficiente ? 'text-red-700' : 'text-green-700'}`}>
+                    Saldo disponivel: R$ {saldoDisponivel.toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+                {saldoInsuficiente && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-red-700">
+                        <p className="font-semibold">Saldo insuficiente!</p>
+                        <p>
+                          Voce precisa de <strong>R$ {valorTotalGeral.toFixed(2).replace('.', ',')}</strong> mas tem apenas{' '}
+                          <strong>R$ {saldoDisponivel.toFixed(2).replace('.', ',')}</strong>.
+                        </p>
+                        <p>
+                          Faltam <strong>R$ {deficit.toFixed(2).replace('.', ',')}</strong>.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-red-100 rounded p-2 mt-2">
+                      <p className="text-xs text-red-600 font-medium">
+                        Para continuar, voce pode:
+                      </p>
+                      <ul className="text-xs text-red-600 mt-1 space-y-0.5">
+                        {todasLoterias.length > 1 && (
+                          <li>• Remover loterias clicando no botao ao lado de cada uma</li>
+                        )}
+                        {items.length > 1 && (
+                          <li>• Remover apostas clicando na lixeira ao lado da modalidade</li>
+                        )}
+                        <li>• Voltar e reduzir o valor unitario da aposta</li>
+                        <li>• Adicionar saldo a sua conta</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Dashed Separator */}
             <div className="border-t-2 border-dashed border-gray-300 my-4" />
@@ -370,13 +464,25 @@ export default function FinalizarApostaPage() {
               </button>
               <button
                 onClick={handleFinalizar}
-                disabled={isLoading}
-                className="h-14 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={isLoading || saldoInsuficiente || balanceLoading}
+                className={`h-14 rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 ${
+                  saldoInsuficiente ? 'bg-red-400 cursor-not-allowed' : 'bg-[#3B82F6]'
+                }`}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Processando...
+                  </>
+                ) : balanceLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Verificando saldo...
+                  </>
+                ) : saldoInsuficiente ? (
+                  <>
+                    <AlertTriangle className="h-5 w-5" />
+                    Saldo insuficiente
                   </>
                 ) : (
                   'Finalizar e salvar'

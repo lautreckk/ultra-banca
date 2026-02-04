@@ -11,6 +11,14 @@ export interface Banca {
 }
 
 export const BANCAS: Banca[] = [
+  // FEDERAL (Quarta e Sábado) - Sempre no topo
+  {
+    id: 'federal',
+    nome: 'FEDERAL',
+    subLoterias: [
+      { id: 'fed_19', nome: 'FEDERAL', horario: '19:00' },
+    ],
+  },
   // RIO DE JANEIRO (horários dos resultados: 09:20, 11:00, 14:20, 16:00, 18:20, 21:20)
   {
     id: 'rio_federal',
@@ -159,11 +167,14 @@ export const BANCAS: Banca[] = [
       { id: 'df_23', nome: 'LBR', horario: '23:00' },
     ],
   },
-  // NACIONAL
+  // NACIONAL (horários: 02:00, 08:00, 10:00, 12:00, 15:00, 17:00, 21:00)
   {
     id: 'nacional',
     nome: 'NACIONAL',
     subLoterias: [
+      { id: 'nac_02', nome: 'NACIONAL', horario: '02:00' },
+      { id: 'nac_08', nome: 'NACIONAL', horario: '08:00' },
+      { id: 'nac_10', nome: 'NACIONAL', horario: '10:00' },
       { id: 'nac_12', nome: 'NACIONAL', horario: '12:00' },
       { id: 'nac_15', nome: 'NACIONAL', horario: '15:00' },
       { id: 'nac_17', nome: 'NACIONAL', horario: '17:00' },
@@ -209,14 +220,6 @@ export const BANCAS: Banca[] = [
     subLoterias: [
       { id: 'pr_14', nome: 'PARANA', horario: '14:00' },
       { id: 'pr_18', nome: 'PARANA', horario: '18:00' },
-    ],
-  },
-  // FEDERAL (Quarta e Sábado)
-  {
-    id: 'federal',
-    nome: 'FEDERAL',
-    subLoterias: [
-      { id: 'fed_19', nome: 'FEDERAL', horario: '19:00' },
     ],
   },
 ];

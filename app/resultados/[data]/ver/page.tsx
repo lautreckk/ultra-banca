@@ -130,6 +130,9 @@ function getLoteriaFilter(loteriaId: string): { banca: string; horario: string; 
     'df_23': { banca: 'BRASILIA', horario: '23:30', loteria: 'LBR' },
 
     // NACIONAL
+    'nac_02': { banca: 'NACIONAL', horario: '02:00' },
+    'nac_08': { banca: 'NACIONAL', horario: '08:00' },
+    'nac_10': { banca: 'NACIONAL', horario: '10:00' },
     'nac_12': { banca: 'NACIONAL', horario: '12:00' },
     'nac_15': { banca: 'NACIONAL', horario: '15:00' },
     'nac_17': { banca: 'NACIONAL', horario: '17:00' },

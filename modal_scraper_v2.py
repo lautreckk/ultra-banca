@@ -114,6 +114,12 @@ ESTADOS_CONFIG = {
         "banca": "FEDERAL",
         "portalbrasil_slug": None,
     },
+    "NAC": {
+        "url_param": None,  # URL especial - não usa padrão
+        "banca": "NACIONAL",
+        "portalbrasil_slug": None,
+        "custom_url": "/resultados-loteria-nacional-do-dia-{data}",
+    },
 }
 
 BASE_URL = "https://www.resultadofacil.com.br"
@@ -337,7 +343,12 @@ def scrape_estado_firecrawl(estado: str, data: Optional[str] = None) -> dict:
         return {"estado": estado, "error": "Estado não configurado", "resultados": []}
 
     data_scrape = data or datetime.now().strftime("%Y-%m-%d")
-    url_resultadofacil = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
+
+    # URL customizada para bancas especiais (ex: NACIONAL)
+    if config.get("custom_url"):
+        url_resultadofacil = f"{BASE_URL}{config['custom_url'].format(data=data_scrape)}"
+    else:
+        url_resultadofacil = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
 
     print(f"\n{'='*60}")
     print(f"[{estado}] 🎯 INICIANDO SCRAPE - {config['banca']} - {data_scrape}")
@@ -862,7 +873,11 @@ def teste_firecrawl(estado: str = "RJ", data: Optional[str] = None) -> dict:
         return {"error": f"Estado {estado} não configurado"}
 
     data_scrape = data or datetime.now().strftime("%Y-%m-%d")
-    url = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
+
+    if config.get("custom_url"):
+        url = f"{BASE_URL}{config['custom_url'].format(data=data_scrape)}"
+    else:
+        url = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
 
     print(f"Testando Firecrawl: {url}")
 
@@ -1040,10 +1055,16 @@ LOTERIA_TO_BANCA = {
     "pr_14": ("PARANA", "14:00"),
     "pr_18": ("PARANA", "18:00"),
     # NACIONAL
+    "nac_02": ("NACIONAL", "02:00"),
+    "nac_08": ("NACIONAL", "08:00"),
+    "nac_10": ("NACIONAL", "10:00"),
     "nac_12": ("NACIONAL", "12:00"),
     "nac_15": ("NACIONAL", "15:00"),
     "nac_17": ("NACIONAL", "17:00"),
     "nac_21": ("NACIONAL", "21:00"),
+    # FAZENDINHA
+    "lt_look_23hs": ("LOOK/GOIAS", "23:19"),
+    "lt_nacional_23hs": ("NACIONAL", "22:59"),
     # FEDERAL
     "fed_19": ("FEDERAL", "19:00"),
 }

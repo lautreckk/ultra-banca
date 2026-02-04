@@ -52,6 +52,27 @@ function ConfirmarContent() {
     setError(null);
 
     try {
+      // Validação client-side do horário da loteria selecionada
+      if (loteria && data) {
+        const hoje = new Date();
+        const dataJogo = new Date(data + 'T00:00:00');
+        const isHoje =
+          hoje.getFullYear() === dataJogo.getFullYear() &&
+          hoje.getMonth() === dataJogo.getMonth() &&
+          hoje.getDate() === dataJogo.getDate();
+
+        if (isHoje && loteria.horario) {
+          const [h, m] = loteria.horario.split(':').map(Number);
+          const horarioLoteria = new Date();
+          horarioLoteria.setHours(h, m, 0, 0);
+          // Bloquear 5 minutos antes do sorteio
+          const limiteMs = horarioLoteria.getTime() - 5 * 60 * 1000;
+          if (Date.now() >= limiteMs) {
+            throw new Error(`Loteria ${loteria.nome} já encerrou as apostas.`);
+          }
+        }
+      }
+
       const { data: rpcData, error: rpcError } = await supabase.rpc('place_bet', {
         p_tipo: 'fazendinha',
         p_modalidade: modalidadeId,

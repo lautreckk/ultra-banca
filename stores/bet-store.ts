@@ -25,6 +25,7 @@ interface BetStore {
   // Cart actions
   addItem: (item: Omit<BetItem, 'id'>) => void;
   removeItem: (id: string) => void;
+  removeLoteriaFromAll: (loteriaId: string) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
@@ -77,6 +78,27 @@ export const useBetStore = create<BetStore>()(
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
         })),
+
+      removeLoteriaFromAll: (loteriaId) =>
+        set((state) => {
+          const updatedItems = state.items.map((item) => {
+            const newLoterias = item.loterias.filter((l) => l !== loteriaId);
+            const subLoteria = getSubLoteriaById(loteriaId);
+            let newHorarios = [...item.horarios];
+            if (subLoteria?.horario) {
+              const otherLoteriasWithSameHorario = newLoterias.some((l) => {
+                const other = getSubLoteriaById(l);
+                return other?.horario === subLoteria.horario;
+              });
+              if (!otherLoteriasWithSameHorario) {
+                newHorarios = newHorarios.filter((h) => h !== subLoteria.horario);
+              }
+            }
+            return { ...item, loterias: newLoterias, horarios: newHorarios };
+          });
+          const filteredItems = updatedItems.filter((item) => item.loterias.length > 0);
+          return { items: filteredItems };
+        }),
 
       clearCart: () => set({ items: [], pendingItems: [] }),
 

@@ -377,6 +377,13 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    // A2.5: Em domínios de banca, a landing page (/) NÃO deve ser acessível
+    // A Cupula só pode ser acessada pelo domínio admin (gabrielsena.net)
+    // Domínios de banca devem ir direto para o login
+    if (!adminDomainAccess && pathname === '/') {
+      return redirect(request, '/login');
+    }
+
     // A3: Rotas públicas ou auth -> Permitir
     return supabaseResponse;
   }
@@ -529,6 +536,11 @@ export async function updateSession(request: NextRequest) {
 
     // B2.4: Promotor tentando acessar área da banca -> Redirecionar para dashboard do promotor
     if (isBancaProtectedRoute(pathname)) {
+      return redirect(request, '/promotor');
+    }
+
+    // B2.5: Promotor na landing (/) ou em páginas de auth da banca -> Redirecionar para dashboard do promotor
+    if (pathname === '/' || isBancaAuthRoute(pathname)) {
       return redirect(request, '/promotor');
     }
 

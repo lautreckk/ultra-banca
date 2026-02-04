@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Check, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Clock, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BANCAS } from '@/lib/constants';
 
@@ -104,6 +104,18 @@ export function LotterySelector({
     }
   };
 
+  // Filtra bancas: Federal só aparece em Quarta (3) e Sábado (6)
+  const bancasVisiveis = useMemo(() => {
+    const dataRef = dataJogo ? new Date(dataJogo + 'T12:00:00') : new Date();
+    const diaSemana = dataRef.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+    const isFederalDay = diaSemana === 3 || diaSemana === 6;
+
+    return BANCAS.filter((banca) => {
+      if (banca.id === 'federal') return isFederalDay;
+      return true;
+    });
+  }, [dataJogo]);
+
   const totalValue = total.toFixed(2).replace('.', ',');
 
   return (
@@ -126,7 +138,7 @@ export function LotterySelector({
 
       {/* Bancas Accordion */}
       <div className="mx-4 border border-gray-200 rounded-lg overflow-hidden">
-        {BANCAS.map((banca, index) => {
+        {bancasVisiveis.map((banca, index) => {
           const isExpanded = expandedBancas.includes(banca.id);
           const allSelected = isAllSelectedInBanca(banca.id);
           const someSelected = isSomeSelectedInBanca(banca.id);
@@ -153,6 +165,12 @@ export function LotterySelector({
                     {allSelected && <Check className="h-3 w-3 text-white" />}
                   </button>
                   <span className="font-bold text-gray-900">{banca.nome}</span>
+                  {banca.id === 'federal' && (
+                    <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                      <BadgeCheck className="h-3.5 w-3.5" />
+                      OFICIAL
+                    </span>
+                  )}
                 </div>
                 {isExpanded ? (
                   <ChevronUp className="h-5 w-5 text-gray-400" />
