@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PendingBet } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById } from '@/lib/constants';
@@ -12,6 +12,8 @@ interface BetSummaryProps {
   valorUnitario: number;
   pendingItems?: PendingBet[];
   onRemoveBet?: () => void;
+  onRemovePendingItem?: (id: string) => void;
+  onEditPendingItem?: (item: PendingBet) => void;
   onMaisApostas: () => void;
   onAvancar: () => void;
   className?: string;
@@ -24,6 +26,8 @@ export function BetSummary({
   valorUnitario,
   pendingItems = [],
   onRemoveBet,
+  onRemovePendingItem,
+  onEditPendingItem,
   onMaisApostas,
   onAvancar,
   className,
@@ -62,6 +66,26 @@ export function BetSummary({
                     {modalidadeInfo?.nome || item.modalidade.toUpperCase()} -{' '}
                     {colocacaoInfo?.nome || item.colocacao.toUpperCase()}
                   </span>
+                  <div className="flex items-center gap-1">
+                    {onEditPendingItem && (
+                      <button
+                        onClick={() => onEditPendingItem(item)}
+                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar aposta"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    )}
+                    {onRemovePendingItem && (
+                      <button
+                        onClick={() => onRemovePendingItem(item.id)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remover aposta"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="px-4 py-2">
                   <div className="flex flex-wrap gap-1 mb-2">

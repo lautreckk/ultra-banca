@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
-import { useBetStore } from '@/stores/bet-store';
+import { useBetStore, PendingBet } from '@/stores/bet-store';
 import { getModalidadeById, getColocacaoById, calcularMultiplicadorEfetivo, BANCAS } from '@/lib/constants';
 import { BetHeader } from '@/components/layout';
 import { ValueSelector, BetSummary, LotterySelector } from '@/components/loterias';
@@ -27,7 +27,7 @@ export function ColocacaoClient({
   multiplicadorDB,
 }: ColocacaoClientProps) {
   const router = useRouter();
-  const { addPendingItem, pendingItems, finalizePendingItems, clearPendingItems } = useBetStore();
+  const { addPendingItem, pendingItems, finalizePendingItems, clearPendingItems, removePendingItem, editingBet, setEditingBet } = useBetStore();
 
   const [step, setStep] = useState<Step>('palpite');
   const [palpites, setPalpites] = useState<string[]>([]);
@@ -53,6 +53,19 @@ export function ColocacaoClient({
   // Format date as DD/MM/YYYY
   const dateObj = new Date(data + 'T00:00:00');
   const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+  // Pre-fill form when editing a pending bet
+  useEffect(() => {
+    if (
+      editingBet &&
+      editingBet.modalidade === modalidade &&
+      editingBet.colocacao === colocacao
+    ) {
+      setPalpites(editingBet.palpites);
+      setValorUnitario(editingBet.valorUnitario);
+      setEditingBet(null);
+    }
+  }, [editingBet, modalidade, colocacao, setEditingBet]);
 
   // Auto-add palpite when max digits reached
   useEffect(() => {
@@ -90,6 +103,27 @@ export function ColocacaoClient({
         ? prev.filter((id) => id !== lotteryId)
         : [...prev, lotteryId]
     );
+  };
+
+  // Remove um palpite pendente
+  const handleRemovePendingItem = (id: string) => {
+    removePendingItem(id);
+  };
+
+  // Edita um palpite pendente: remove dos pendentes, navega para a rota correta e pre-fill
+  const handleEditPendingItem = (item: PendingBet) => {
+    removePendingItem(item.id);
+    setEditingBet(item);
+
+    // Se é a mesma modalidade/colocacao, pre-fill localmente
+    if (item.modalidade === modalidade && item.colocacao === colocacao) {
+      setPalpites(item.palpites);
+      setValorUnitario(item.valorUnitario);
+      setStep('palpite');
+    } else {
+      // Navega para a rota da aposta sendo editada
+      router.push(`/loterias/${item.tipo}/${item.data}/${item.modalidade}/${item.colocacao}`);
+    }
   };
 
   // Extrai os horários das loterias selecionadas
@@ -322,6 +356,8 @@ export function ColocacaoClient({
           palpites={palpites}
           valorUnitario={valorUnitario}
           pendingItems={pendingItems}
+          onRemovePendingItem={handleRemovePendingItem}
+          onEditPendingItem={handleEditPendingItem}
           onMaisApostas={handleMaisApostas}
           onAvancar={handleAvancarParaLoterias}
         />

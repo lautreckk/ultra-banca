@@ -20,6 +20,7 @@ export interface PendingBet {
 interface BetStore {
   items: BetItem[];
   pendingItems: PendingBet[]; // Apostas aguardando seleção de loterias
+  editingBet: PendingBet | null; // Aposta sendo editada (pre-fill no form)
   currentSelection: BetSelection;
 
   // Cart actions
@@ -36,6 +37,9 @@ interface BetStore {
   clearPendingItems: () => void;
   finalizePendingItems: (loterias: string[], horarios: string[]) => void;
   getPendingCount: () => number;
+
+  // Edit actions
+  setEditingBet: (bet: PendingBet | null) => void;
 
   // Selection actions
   setTipo: (tipo: TipoJogo) => void;
@@ -67,6 +71,7 @@ export const useBetStore = create<BetStore>()(
     (set, get) => ({
       items: [],
       pendingItems: [],
+      editingBet: null,
       currentSelection: initialSelection,
 
       addItem: (item) =>
@@ -148,6 +153,8 @@ export const useBetStore = create<BetStore>()(
         }),
 
       getPendingCount: () => get().pendingItems.length,
+
+      setEditingBet: (bet) => set({ editingBet: bet }),
 
       setTipo: (tipo) =>
         set((state) => ({
