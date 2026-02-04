@@ -24,11 +24,11 @@ function SegurancaContent() {
   return (
     <div className="space-y-6">
       {/* Modo Produção */}
-      <div className="bg-gray-800/50 rounded-lg p-4">
+      <div className="bg-zinc-900/50 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-white">Banca em Produção?</h3>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-zinc-400 mt-1">
               {config.production_mode
                 ? 'Proteções de segurança ativadas. Alterações de saldo só são permitidas via funções oficiais (Edge Functions).'
                 : 'Modo desenvolvimento. Permite alterações de saldo via cliente para testes.'}
@@ -51,9 +51,9 @@ function SegurancaContent() {
       <MFASetup />
 
       {/* Informações de Segurança */}
-      <div className="bg-gray-800/50 rounded-lg p-4 mt-6">
+      <div className="bg-zinc-900/50 rounded-lg p-4 mt-6">
         <h3 className="text-sm font-semibold text-white mb-3">Dicas de Segurança</h3>
-        <ul className="space-y-2 text-sm text-gray-400">
+        <ul className="space-y-2 text-sm text-zinc-400">
           <li className="flex items-start gap-2">
             <span className="text-green-400">✓</span>
             <span>Use uma senha forte com pelo menos 12 caracteres</span>

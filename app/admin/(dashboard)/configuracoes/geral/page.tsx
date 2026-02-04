@@ -23,10 +23,10 @@ function ColorPicker({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <label className="text-sm font-medium text-gray-300">{label}</label>
+      <label className="text-sm font-medium text-zinc-300">{label}</label>
       <div className="flex items-center gap-2">
         <div
-          className="w-8 h-8 rounded border border-gray-600"
+          className="w-8 h-8 rounded border border-zinc-700"
           style={{ backgroundColor: value }}
         />
         <Input
@@ -39,7 +39,7 @@ function ColorPicker({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-24 bg-gray-700 border-gray-600 text-white text-sm"
+          className="w-24 bg-zinc-900 border-zinc-700 text-white text-sm"
           maxLength={7}
         />
       </div>
@@ -55,26 +55,26 @@ function GeralContent() {
       {/* Identidade */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-zinc-300 mb-1">
             Nome do Site
           </label>
           <Input
             type="text"
             value={config.site_name}
             onChange={(e) => updateField('site_name', e.target.value)}
-            className="bg-gray-700 border-gray-600 text-white"
+            className="bg-zinc-900 border-zinc-700 text-white"
             placeholder="Banca Forte"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-zinc-300 mb-1">
             Descrição
           </label>
           <textarea
             value={config.site_description}
             onChange={(e) => updateField('site_description', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-md"
+            className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-md"
             rows={2}
             placeholder="Sua banca de apostas online"
           />
@@ -102,7 +102,7 @@ function GeralContent() {
       </div>
 
       {/* Cores */}
-      <div className="border-t border-gray-600 pt-6">
+      <div className="border-t border-zinc-700 pt-6">
         <h3 className="text-sm font-semibold text-white mb-4">Paleta de Cores</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ColorPicker

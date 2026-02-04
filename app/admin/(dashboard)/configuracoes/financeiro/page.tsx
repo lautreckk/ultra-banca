@@ -12,14 +12,14 @@ function FinanceiroContent() {
   return (
     <div className="space-y-6">
       {/* Gateway */}
-      <div className="p-4 bg-gray-800/50 rounded-lg">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+      <div className="p-4 bg-zinc-900/50 rounded-lg">
+        <label className="block text-sm font-medium text-zinc-300 mb-2">
           Gateway de Pagamento Ativo
         </label>
         <select
           value={config.active_gateway}
           onChange={(e) => updateField('active_gateway', e.target.value)}
-          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-md"
+          className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 text-white rounded-md"
         >
           <option value="bspay">BSPay</option>
           <option value="washpay">WashPay</option>
@@ -37,7 +37,7 @@ function FinanceiroContent() {
         <h3 className="text-sm font-semibold text-white mb-3">Depósitos</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Valor Mínimo (R$)
             </label>
             <Input
@@ -45,11 +45,11 @@ function FinanceiroContent() {
               step="0.01"
               value={config.deposit_min}
               onChange={(e) => updateField('deposit_min', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Valor Máximo (R$)
             </label>
             <Input
@@ -57,42 +57,42 @@ function FinanceiroContent() {
               step="0.01"
               value={config.deposit_max}
               onChange={(e) => updateField('deposit_max', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
         </div>
       </div>
 
       {/* Saques */}
-      <div className="border-t border-gray-600 pt-6">
+      <div className="border-t border-zinc-700 pt-6">
         <h3 className="text-sm font-semibold text-white mb-3">Saques</h3>
 
-        <div className="flex items-center justify-between p-3 md:p-4 bg-gray-800/50 rounded-lg mb-4">
+        <div className="flex items-center justify-between p-3 md:p-4 bg-zinc-900/50 rounded-lg mb-4">
           <div>
             <p className="font-medium text-white text-sm md:text-base">
               Modo de Processamento
             </p>
-            <p className="text-xs md:text-sm text-gray-400">
+            <p className="text-xs md:text-sm text-zinc-400">
               {config.withdrawal_mode === 'automatic'
                 ? 'Saques são processados automaticamente via gateway'
                 : 'Saques devem ser processados manualmente pelo admin'}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Manual</span>
+            <span className="text-sm text-zinc-400">Manual</span>
             <ToggleSwitch
               checked={config.withdrawal_mode === 'automatic'}
               onChange={(checked) =>
                 updateField('withdrawal_mode', checked ? 'automatic' : 'manual')
               }
             />
-            <span className="text-sm text-gray-400">Auto</span>
+            <span className="text-sm text-zinc-400">Auto</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Valor Mínimo (R$)
             </label>
             <Input
@@ -100,11 +100,11 @@ function FinanceiroContent() {
               step="0.01"
               value={config.withdrawal_min}
               onChange={(e) => updateField('withdrawal_min', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Valor Máximo (R$)
             </label>
             <Input
@@ -112,11 +112,11 @@ function FinanceiroContent() {
               step="0.01"
               value={config.withdrawal_max}
               onChange={(e) => updateField('withdrawal_max', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Taxa (%)
             </label>
             <Input
@@ -126,7 +126,7 @@ function FinanceiroContent() {
               onChange={(e) =>
                 updateField('withdrawal_fee_percent', Number(e.target.value))
               }
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
         </div>

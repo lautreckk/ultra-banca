@@ -15,7 +15,7 @@ function ApostasContent() {
         <h3 className="text-sm font-semibold text-white mb-3">Valores por Aposta</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Aposta Mínima (R$)
             </label>
             <Input
@@ -23,11 +23,11 @@ function ApostasContent() {
               step="0.01"
               value={config.bet_min}
               onChange={(e) => updateField('bet_min', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Aposta Máxima (R$)
             </label>
             <Input
@@ -35,18 +35,18 @@ function ApostasContent() {
               step="0.01"
               value={config.bet_max}
               onChange={(e) => updateField('bet_max', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
           </div>
         </div>
       </div>
 
       {/* Limites de Risco */}
-      <div className="border-t border-gray-600 pt-6">
+      <div className="border-t border-zinc-700 pt-6">
         <h3 className="text-sm font-semibold text-white mb-3">Limites de Risco</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Prêmio Máximo por Aposta (R$)
             </label>
             <Input
@@ -54,14 +54,14 @@ function ApostasContent() {
               step="100"
               value={config.max_payout_per_bet}
               onChange={(e) => updateField('max_payout_per_bet', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-zinc-500 mt-1">
               Limite máximo que um apostador pode ganhar em uma única aposta
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
               Prêmio Máximo Diário (R$)
             </label>
             <Input
@@ -69,9 +69,9 @@ function ApostasContent() {
               step="100"
               value={config.max_payout_daily}
               onChange={(e) => updateField('max_payout_daily', Number(e.target.value))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-zinc-900 border-zinc-700 text-white"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-zinc-500 mt-1">
               Limite máximo de pagamentos por dia
             </p>
           </div>
@@ -79,12 +79,12 @@ function ApostasContent() {
       </div>
 
       {/* Link para Modalidades */}
-      <div className="border-t border-gray-600 pt-6">
-        <div className="p-4 bg-gray-800/50 rounded-lg">
+      <div className="border-t border-zinc-700 pt-6">
+        <div className="p-4 bg-zinc-900/50 rounded-lg">
           <h3 className="text-sm font-semibold text-white mb-2">
             Configurar Modalidades
           </h3>
-          <p className="text-xs md:text-sm text-gray-400 mb-3">
+          <p className="text-xs md:text-sm text-zinc-400 mb-3">
             Configure os multiplicadores e posições de cada modalidade de aposta
           </p>
           <Link

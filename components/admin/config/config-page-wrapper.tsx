@@ -141,7 +141,9 @@ export function ConfigPageWrapper({
         )}
 
         {/* Content */}
-        {children}
+        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 md:p-6">
+          {children}
+        </div>
       </div>
     </ConfigContext.Provider>
   );
