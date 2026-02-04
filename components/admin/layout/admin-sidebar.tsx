@@ -67,6 +67,11 @@ const navItems: NavItem[] = [
     icon: <Users className="h-5 w-5" />,
   },
   {
+    label: 'Leads Inativos',
+    href: '/admin/leads-inativos',
+    icon: <UserX className="h-5 w-5" />,
+  },
+  {
     label: 'Promotores',
     href: '/admin/promotores',
     icon: <UserPlus className="h-5 w-5" />,
@@ -131,13 +136,6 @@ const navItems: NavItem[] = [
       { label: 'Gatilhos', href: '/admin/whatsapp/gatilhos', icon: <Zap className="h-4 w-4" /> },
       { label: 'Enviar', href: '/admin/whatsapp/enviar', icon: <Send className="h-4 w-4" /> },
     ],
-  },
-
-  // ========== RECUPERAÇÃO ==========
-  {
-    label: 'Leads Inativos',
-    href: '/admin/leads-inativos',
-    icon: <UserX className="h-5 w-5" />,
   },
 
   // ========== TÉCNICO / SISTEMA ==========
