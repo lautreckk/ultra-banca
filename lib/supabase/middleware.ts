@@ -315,8 +315,20 @@ export async function updateSession(request: NextRequest) {
       name: platformResult?.platform?.name || 'DEFAULT'
     });
 
-    // Armazenar platform_id em cookie para acesso em server actions
-    // Só atualiza se não for admin OU se não tinha cookie
+    // Setar cookies no REQUEST para que server components possam lê-los
+    // durante esta mesma requisição (via cookies() do next/headers)
+    request.cookies.set('platform_id', platformId);
+    request.cookies.set('platform_slug', platformResult?.platform?.slug || '');
+  }
+
+  // IMPORTANTE: getUser() pode chamar setAll() que recria supabaseResponse.
+  // Por isso, cookies de plataforma são setados no request (acima) E
+  // no response (abaixo) DEPOIS do getUser().
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Setar cookies no RESPONSE para o browser armazenar.
+  // Feito DEPOIS do getUser() porque ele pode recriar supabaseResponse.
+  if (!isAdminPath || !existingPlatformId) {
     supabaseResponse.cookies.set('platform_id', platformId, {
       httpOnly: false, // Client precisa acessar para passar no signup
       secure: process.env.NODE_ENV === 'production',
@@ -325,8 +337,7 @@ export async function updateSession(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365, // 1 ano
     });
 
-    // Armazenar platform_slug para uso no cpfToEmail (multi-tenant auth)
-    supabaseResponse.cookies.set('platform_slug', platformResult?.platform?.slug || '', {
+    supabaseResponse.cookies.set('platform_slug', request.cookies.get('platform_slug')?.value || '', {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -334,9 +345,6 @@ export async function updateSession(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365, // 1 ano
     });
   }
-
-  // IMPORTANTE: Não adicione código entre createServerClient e getUser()
-  const { data: { user } } = await supabase.auth.getUser();
 
   // ============================================================================
   // CENÁRIO A: USUÁRIO NÃO ESTÁ LOGADO
