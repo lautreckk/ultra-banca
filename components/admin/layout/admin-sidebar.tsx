@@ -142,8 +142,14 @@ const navItems: NavItem[] = [
   },
   {
     label: 'Configurações',
-    href: '/admin/configuracoes',
     icon: <Settings className="h-5 w-5" />,
+    children: [
+      { label: 'Geral', href: '/admin/configuracoes/geral' },
+      { label: 'Financeiro', href: '/admin/configuracoes/financeiro' },
+      { label: 'Apostas', href: '/admin/configuracoes/apostas' },
+      { label: 'Marketing', href: '/admin/configuracoes/marketing' },
+      { label: 'Segurança', href: '/admin/configuracoes/seguranca' },
+    ],
   },
 ];
 
