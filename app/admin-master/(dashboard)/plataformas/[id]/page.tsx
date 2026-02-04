@@ -35,7 +35,9 @@ import {
   Mail,
   Copy,
   Check,
+  LayoutGrid,
 } from 'lucide-react';
+import { LAYOUTS_INFO, type LayoutId } from '@/lib/layouts/types';
 import Link from 'next/link';
 
 // Types for platform data
@@ -79,13 +81,15 @@ interface PlatformData {
   production_mode: boolean | null;
   ativo: boolean;
   created_at: string;
+  layout_id: 1 | 2 | 3 | null;
 }
 
-type TabId = 'basico' | 'visual' | 'social' | 'gateway' | 'apostas' | 'marketing' | 'promotores' | 'admins' | 'avancado';
+type TabId = 'basico' | 'visual' | 'layout' | 'social' | 'gateway' | 'apostas' | 'marketing' | 'promotores' | 'admins' | 'avancado';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'basico', label: 'Basico', icon: <Building2 className="h-4 w-4" /> },
   { id: 'visual', label: 'Visual', icon: <Palette className="h-4 w-4" /> },
+  { id: 'layout', label: 'Layout', icon: <LayoutGrid className="h-4 w-4" /> },
   { id: 'social', label: 'Social', icon: <Share2 className="h-4 w-4" /> },
   { id: 'gateway', label: 'Gateway', icon: <CreditCard className="h-4 w-4" /> },
   { id: 'apostas', label: 'Apostas', icon: <Target className="h-4 w-4" /> },
@@ -167,6 +171,8 @@ export default function EditarPlataformaPage() {
     // Promoters
     promotor_link: '',
     comissao_promotor_automatica: true,
+    // Layout
+    layout_id: 1 as LayoutId,
     // Advanced
     production_mode: false,
   });
@@ -223,6 +229,7 @@ export default function EditarPlataformaPage() {
         custom_head_scripts: (data as PlatformData).custom_head_scripts || '',
         promotor_link: (data as PlatformData).promotor_link || '',
         comissao_promotor_automatica: (data as PlatformData).comissao_promotor_automatica ?? true,
+        layout_id: ((data as PlatformData).layout_id || 1) as LayoutId,
         production_mode: (data as PlatformData).production_mode ?? false,
       });
     }
@@ -306,6 +313,7 @@ export default function EditarPlataformaPage() {
         custom_head_scripts: form.custom_head_scripts || null,
         promotor_link: form.promotor_link || null,
         comissao_promotor_automatica: form.comissao_promotor_automatica,
+        layout_id: form.layout_id,
         production_mode: form.production_mode,
       } as unknown as Parameters<typeof updatePlatform>[1]);
 
@@ -706,6 +714,67 @@ export default function EditarPlataformaPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab: Layout */}
+          {activeTab === 'layout' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 text-purple-400" />
+                Layout da Banca
+              </h3>
+
+              <p className="text-zinc-400 text-sm">
+                Escolha o template visual para esta banca. Cada layout tem seu proprio estilo, mas todas as funcionalidades permanecem as mesmas.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {([1, 2, 3] as LayoutId[]).map((id) => {
+                  const layout = LAYOUTS_INFO[id];
+                  const isSelected = form.layout_id === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, layout_id: id }))}
+                      className={`p-4 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? 'border-purple-500 bg-purple-500/10'
+                          : 'border-zinc-700 hover:border-zinc-600 bg-zinc-800/50'
+                      }`}
+                    >
+                      <div
+                        className={`w-full h-32 rounded-lg mb-3 flex items-center justify-center ${
+                          isSelected ? 'bg-purple-500/20' : 'bg-zinc-700/50'
+                        }`}
+                      >
+                        <LayoutGrid className={`h-12 w-12 ${isSelected ? 'text-purple-400' : 'text-zinc-500'}`} />
+                      </div>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className={`font-semibold ${isSelected ? 'text-white' : 'text-zinc-300'}`}>
+                          {layout.name}
+                        </h4>
+                        {isSelected && (
+                          <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full">
+                            Ativo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-500">{layout.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                <h4 className="text-sm font-medium text-zinc-300 mb-2">Sobre os layouts</h4>
+                <ul className="space-y-1 text-sm text-zinc-500">
+                  <li><strong className="text-zinc-400">Padrao:</strong> Layout mobile-first otimizado para apostas rapidas</li>
+                  <li><strong className="text-zinc-400">Moderno:</strong> Estilo cassino com sidebar fixa e visual chamativo</li>
+                  <li><strong className="text-zinc-400">Elite:</strong> Design premium minimalista com mais espacamento</li>
+                </ul>
               </div>
             </div>
           )}

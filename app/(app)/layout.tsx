@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Header, BalanceDisplay, MobileDrawer } from '@/components/layout';
 import { createClient } from '@/lib/supabase/client';
 import { usePageTracking } from '@/lib/hooks/use-page-tracking';
+import { LayoutWrapper } from '@/components/layouts/LayoutWrapper';
 
 interface UserProfile {
   saldo: number;
@@ -16,7 +16,6 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     saldo: 0,
     saldoBonus: 0,
@@ -103,22 +102,14 @@ export default function AppLayout({
   }, [fetchProfile]);
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
-      <div className="w-full max-w-md bg-gray-100 min-h-screen shadow-xl">
-        <Header
-          showHome
-          showMenu
-          onMenuClick={() => setDrawerOpen(true)}
-        />
-        <BalanceDisplay
-          saldo={profile.saldo}
-          saldoBonus={profile.saldoBonus}
-          unidade={profile.unidade}
-          onRefresh={handleRefresh}
-        />
-        <main className="pb-safe">{children}</main>
-        <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      </div>
-    </div>
+    <LayoutWrapper
+      saldo={profile.saldo}
+      saldoBonus={profile.saldoBonus}
+      unidade={profile.unidade}
+      onRefresh={handleRefresh}
+      loading={loading}
+    >
+      {children}
+    </LayoutWrapper>
   );
 }

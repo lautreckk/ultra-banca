@@ -49,6 +49,9 @@ export interface PlatformConfig {
 
   // Segurança
   production_mode: boolean;
+
+  // Layout
+  layout_id: 1 | 2 | 3;
 }
 
 export const defaultConfig: PlatformConfig = {
@@ -84,6 +87,7 @@ export const defaultConfig: PlatformConfig = {
   google_analytics_id: null,
   custom_head_scripts: null,
   production_mode: false,
+  layout_id: 1,
 };
 
 const ConfigContext = createContext<PlatformConfig>(defaultConfig);

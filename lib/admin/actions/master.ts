@@ -68,6 +68,7 @@ export interface Platform {
   total_users?: number;
   total_deposits?: number;
   total_bets?: number;
+  layout_id?: 1 | 2 | 3;
 }
 
 export async function getPlatforms(): Promise<Platform[]> {
