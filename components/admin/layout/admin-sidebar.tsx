@@ -103,9 +103,9 @@ const navItems: NavItem[] = [
     label: 'Pagamentos',
     icon: <CreditCard className="h-5 w-5" />,
     children: [
-      { label: 'Configuração', href: '/admin/pagamentos' },
-      { label: 'BSPay', href: '/admin/pagamentos/bspay' },
-      { label: 'WashPay', href: '/admin/pagamentos/washpay' },
+      { label: 'Configuração', href: '/admin/pagamentos', icon: <Settings className="h-4 w-4" /> },
+      { label: 'BSPay', href: '/admin/pagamentos/bspay', icon: <CreditCard className="h-4 w-4" /> },
+      { label: 'WashPay', href: '/admin/pagamentos/washpay', icon: <CreditCard className="h-4 w-4" /> },
     ],
   },
 
