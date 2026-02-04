@@ -69,7 +69,7 @@ export default function AdminLoginPage() {
       // Se for um CPF (apenas números), converte para o formato de email
       const cleanInput = login.replace(/\D/g, '');
       const email = cleanInput.length === 11
-        ? `${cleanInput}@cupulabarao.app`
+        ? `${cleanInput}@ultrabanca.app`
         : login;
 
       // Fazer login com email/senha

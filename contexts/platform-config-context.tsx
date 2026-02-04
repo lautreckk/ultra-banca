@@ -4,6 +4,7 @@ import { createContext, useContext, ReactNode } from 'react';
 
 export interface PlatformConfig {
   id: string;
+  slug: string;
 
   // Identidade Visual
   site_name: string;
@@ -56,6 +57,7 @@ export interface PlatformConfig {
 
 export const defaultConfig: PlatformConfig = {
   id: '',
+  slug: '',
   site_name: 'Carregando...',
   site_description: 'Sua banca de apostas online',
   logo_url: '',

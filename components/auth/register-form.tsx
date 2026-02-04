@@ -8,6 +8,7 @@ import { cpfToEmail, isValidCpf } from '@/lib/utils/cpf-to-email';
 import { createClient } from '@/lib/supabase/client';
 import { trackSignup } from '@/lib/actions/auth';
 import { trackCompleteRegistration } from '@/lib/tracking/facebook';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 // Helper para obter platform_id do cookie (definido pelo middleware)
 function getPlatformIdFromCookie(): string | null {
@@ -23,6 +24,7 @@ interface RegisterFormProps {
 export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
   const router = useRouter();
   const supabase = createClient();
+  const config = usePlatformConfig();
   const [formData, setFormData] = useState({
     nome: '',
     cpf: '',
@@ -87,7 +89,7 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
     }
 
     try {
-      const email = cpfToEmail(formData.cpf);
+      const email = cpfToEmail(formData.cpf, config.slug);
       const cpfNumbers = formData.cpf.replace(/\D/g, '');
 
       // Obter platform_id do cookie (definido pelo middleware)

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock } from 'lucide-react';
 import { maskCPF } from '@/lib/utils/mask-cpf';
-import { cpfToEmail, isValidCpf } from '@/lib/utils/cpf-to-email';
+import { cpfToEmail, cpfToEmailLegacy, isValidCpf } from '@/lib/utils/cpf-to-email';
 import { createClient } from '@/lib/supabase/client';
 import { trackLogin } from '@/lib/actions/auth';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
@@ -37,11 +37,20 @@ export function LoginForm() {
     }
 
     try {
-      const email = cpfToEmail(cpf);
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      const email = cpfToEmail(cpf, config.slug);
+      let { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
+
+      // Fallback para usuarios ainda nao migrados (formato legado)
+      if (authError) {
+        const legacyEmail = cpfToEmailLegacy(cpf);
+        ({ data, error: authError } = await supabase.auth.signInWithPassword({
+          email: legacyEmail,
+          password: senha,
+        }));
+      }
 
       if (authError) {
         setError('CPF ou senha incorretos');
@@ -59,7 +68,7 @@ export function LoginForm() {
       trackLogin().catch(() => {});
 
       // Força reload completo para o middleware verificar a sessão
-      window.location.replace('/');
+      window.location.replace('/home');
     } catch {
       setError('Erro ao entrar. Tente novamente.');
       setLoading(false);

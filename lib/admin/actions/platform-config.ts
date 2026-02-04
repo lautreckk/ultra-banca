@@ -31,6 +31,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
     // Usar dados da tabela platforms (multi-tenant)
     return {
       id: platform.id,
+      slug: platform.slug || '',
       site_name: platform.name || defaultConfig.site_name,
       site_description: platform.site_description || defaultConfig.site_description,
       logo_url: platform.logo_url || defaultConfig.logo_url,
@@ -80,6 +81,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
 
   return {
     id: data.id,
+    slug: '',
     site_name: data.site_name || defaultConfig.site_name,
     site_description: data.site_description || defaultConfig.site_description,
     logo_url: data.logo_url || defaultConfig.logo_url,

@@ -48,6 +48,7 @@ const PROMOTOR_AUTH_ROUTES = ['/promotor/login'];
 
 // Rotas públicas (não requerem autenticação)
 const PUBLIC_ROUTES = [
+  '/',
   '/login',
   '/cadastro',
   '/recuperar-senha',
@@ -59,7 +60,7 @@ const PUBLIC_ROUTES = [
 
 // Rotas protegidas da BANCA (requerem autenticação de usuário comum)
 const BANCA_PROTECTED_ROUTES = [
-  '/',
+  '/home',
   '/loterias',
   '/fazendinha',
   '/lotinha',
@@ -323,6 +324,15 @@ export async function updateSession(request: NextRequest) {
       path: '/',
       maxAge: 60 * 60 * 24 * 365, // 1 ano
     });
+
+    // Armazenar platform_slug para uso no cpfToEmail (multi-tenant auth)
+    supabaseResponse.cookies.set('platform_slug', platformResult?.platform?.slug || '', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365, // 1 ano
+    });
   }
 
   // IMPORTANTE: Não adicione código entre createServerClient e getUser()
@@ -419,7 +429,7 @@ export async function updateSession(request: NextRequest) {
         return redirect(request, '/admin/dashboard');
       }
       // Se não é admin, redirecionar para home
-      return redirect(request, '/');
+      return redirect(request, '/home');
     }
 
     // Super admin na página de login do admin-master
@@ -523,17 +533,22 @@ export async function updateSession(request: NextRequest) {
 
   // B3.1: Usuário comum tentando acessar área ADMIN -> PROIBIDO
   if (isAdminRoute(pathname)) {
-    return redirect(request, '/');
+    return redirect(request, '/home');
   }
 
   // B3.2: Usuário comum tentando acessar área PROMOTOR -> PROIBIDO
   if (isPromotorRoute(pathname)) {
-    return redirect(request, '/');
+    return redirect(request, '/home');
   }
 
   // B3.3: Usuário comum já logado tentando acessar login/cadastro -> Redirecionar para home
   if (isBancaAuthRoute(pathname)) {
-    return redirect(request, '/');
+    return redirect(request, '/home');
+  }
+
+  // B3.4: Usuário comum logado acessando landing (/) -> Redirecionar para home
+  if (pathname === '/') {
+    return redirect(request, '/home');
   }
 
   // B3.4: Usuário comum em área da banca -> Permitir

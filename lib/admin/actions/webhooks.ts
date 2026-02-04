@@ -385,7 +385,7 @@ export async function testWebhook(id: string): Promise<{
     data: leadData, // Formato ScaleCore/CRMs modernos
     lead: leadData, // Compatibilidade legada
     platform: {
-      name: 'Ultra Banca',
+      name: 'Cúpula Barão',
       environment: process.env.NODE_ENV || 'development',
     },
   };

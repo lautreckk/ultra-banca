@@ -88,7 +88,7 @@ export async function dispatchWebhooks(
       event_id: eventId,
       timestamp,
       platform: {
-        name: 'Ultra Banca',
+        name: 'Cúpula Barão',
         environment: process.env.NODE_ENV || 'production',
       },
       ...payload,
