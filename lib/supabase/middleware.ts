@@ -73,7 +73,6 @@ const BANCA_PROTECTED_ROUTES = [
   '/saques',
   '/apostas',
   '/amigos',
-  '/promotor',
   '/perfil',
 ];
 
