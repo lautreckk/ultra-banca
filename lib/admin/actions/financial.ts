@@ -8,6 +8,7 @@ import { dispatchDepositWebhook } from '@/lib/webhooks/dispatcher';
 import { applyDepositBonus } from './bonus-config';
 import { processarComissaoDeposito, getComissaoAutomaticaSetting } from './promotores';
 import { getPlatformId } from '@/lib/utils/platform';
+import { getWashPayClient, type WashPayPixKeyType } from '@/lib/washpay/client';
 
 // =============================================
 // DEPOSITS
@@ -311,6 +312,18 @@ export async function getWithdrawals(params: WithdrawalsListParams = {}): Promis
   return { withdrawals, total: count || 0, page, pageSize };
 }
 
+// Mapeia tipo_chave do banco para o formato da WashPay API
+function mapTipoChaveToWashPay(tipoChave: string): WashPayPixKeyType {
+  const mapping: Record<string, WashPayPixKeyType> = {
+    cpf: 'CPF',
+    cnpj: 'CNPJ',
+    telefone: 'PHONE',
+    email: 'EMAIL',
+    aleatoria: 'RANDOM_KEY',
+  };
+  return mapping[tipoChave.toLowerCase()] || 'CPF';
+}
+
 export async function approveWithdrawal(withdrawalId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
@@ -339,17 +352,58 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     .eq('id', withdrawal.user_id)
     .single();
 
-  // Update withdrawal status
-  const { error: updateError } = await supabase
+  // Marcar como PROCESSING enquanto chama a WashPay
+  const { error: processingError } = await supabase
     .from('saques')
-    .update({
-      status: 'PAID',
-      paid_at: new Date().toISOString(),
-    })
+    .update({ status: 'PROCESSING' })
     .eq('id', withdrawalId);
 
-  if (updateError) {
-    return { success: false, error: updateError.message };
+  if (processingError) {
+    return { success: false, error: processingError.message };
+  }
+
+  // Chamar WashPay API para fazer o PIX automaticamente
+  try {
+    const washpay = getWashPayClient();
+    const washpayResponse = await washpay.requestWithdrawal({
+      pixKeyType: mapTipoChaveToWashPay(withdrawal.tipo_chave),
+      pixKey: withdrawal.chave_pix,
+      amount: Number(withdrawal.valor_liquido),
+    });
+
+    if (!washpayResponse.success) {
+      // WashPay rejeitou — voltar para PENDING
+      await supabase
+        .from('saques')
+        .update({ status: 'PENDING' })
+        .eq('id', withdrawalId);
+      return { success: false, error: 'WashPay recusou o saque. Tente novamente.' };
+    }
+
+    // Salvar o ID da transação WashPay e marcar como PAID
+    const { error: updateError } = await supabase
+      .from('saques')
+      .update({
+        status: 'PAID',
+        paid_at: new Date().toISOString(),
+        bspay_transaction_id: washpayResponse.data.id, // reusa coluna existente para ID da transação
+      })
+      .eq('id', withdrawalId);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+  } catch (error) {
+    // Erro na chamada — voltar para PENDING
+    console.error('Erro ao chamar WashPay withdrawal:', error);
+    await supabase
+      .from('saques')
+      .update({ status: 'PENDING' })
+      .eq('id', withdrawalId);
+    return {
+      success: false,
+      error: `Erro ao processar PIX via WashPay: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+    };
   }
 
   // Registrar no log de auditoria
@@ -365,6 +419,7 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
       valor_liquido: withdrawal.valor_liquido,
       chave_pix: withdrawal.chave_pix.slice(0, 4) + '****',
       tipo_chave: withdrawal.tipo_chave,
+      gateway: 'washpay',
       timestamp: new Date().toISOString(),
     },
   });

@@ -88,6 +88,25 @@ export interface WashPayWebhookPayload {
   updatedAt: string;
 }
 
+export type WashPayPixKeyType = 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'RANDOM_KEY';
+
+export interface WashPayWithdrawalRequest {
+  pixKeyType: WashPayPixKeyType;
+  pixKey: string;
+  amount: number;
+}
+
+export interface WashPayWithdrawalResponse {
+  success: boolean;
+  data: {
+    id: string;
+    status: string;
+    amount: number;
+    pixKey: string;
+    createdAt: string;
+  };
+}
+
 class WashPayClient {
   private apiKey: string;
   private baseUrl: string;
@@ -184,6 +203,14 @@ class WashPayClient {
   // Direct Checkout - creates product + payment link + order in one call
   async directCheckout(data: WashPayDirectCheckoutRequest): Promise<WashPayDirectCheckoutResponse> {
     return this.request('/api/user/direct-checkout', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Withdrawal - request PIX withdrawal
+  async requestWithdrawal(data: WashPayWithdrawalRequest): Promise<WashPayWithdrawalResponse> {
+    return this.request('/api/user/withdrawal', {
       method: 'POST',
       body: JSON.stringify(data),
     });

@@ -199,7 +199,7 @@ export default function AdminSaquesPage() {
           <span className="text-sm text-gray-400">Status:</span>
         </div>
         <div className="grid grid-cols-2 sm:flex gap-2">
-          {['', 'PENDING', 'PAID', 'REJECTED'].map((status) => (
+          {['', 'PENDING', 'PROCESSING', 'PAID', 'REJECTED'].map((status) => (
             <button
               key={status}
               onClick={() => {
@@ -212,7 +212,7 @@ export default function AdminSaquesPage() {
                   : 'bg-gray-700 text-gray-400 hover:text-white'
               }`}
             >
-              {status === '' ? 'Todos' : status === 'PENDING' ? 'Pendentes' : status === 'PAID' ? 'Pagos' : 'Rejeitados'}
+              {status === '' ? 'Todos' : status === 'PENDING' ? 'Pendentes' : status === 'PROCESSING' ? 'Processando' : status === 'PAID' ? 'Pagos' : 'Rejeitados'}
             </button>
           ))}
         </div>
@@ -240,13 +240,13 @@ export default function AdminSaquesPage() {
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, withdrawalId: null, action: 'approve' })}
         onConfirm={handleAction}
-        title={confirmModal.action === 'approve' ? 'Finalizar Saque' : 'Recusar Saque'}
+        title={confirmModal.action === 'approve' ? 'Pagar Saque via PIX' : 'Recusar Saque'}
         message={
           confirmModal.action === 'approve'
-            ? 'Confirma que o pagamento via PIX foi realizado? O saque será marcado como pago.'
+            ? 'O PIX será enviado automaticamente para a chave do usuário via WashPay. Deseja continuar?'
             : 'Tem certeza que deseja recusar este saque? O valor será devolvido ao saldo do usuário.'
         }
-        confirmText={confirmModal.action === 'approve' ? 'Finalizar' : 'Recusar'}
+        confirmText={confirmModal.action === 'approve' ? 'Enviar PIX' : 'Recusar'}
         variant={confirmModal.action === 'approve' ? 'success' : 'danger'}
         isLoading={isProcessing}
       />
