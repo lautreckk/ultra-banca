@@ -267,7 +267,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // SEGURANÇA: No domínio admin, bloquear acesso à banca (opcional - redireciona para admin)
-  if (adminDomainAccess && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && pathname !== '/') {
+  // Permitir rotas de promotor no domínio admin (promotores acessam pelo mesmo domínio)
+  if (adminDomainAccess && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && !isPromotorRoute(pathname) && pathname !== '/') {
     // Se está no domínio admin mas tentando acessar área da banca
     // Redirecionar para o login do admin
     if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
