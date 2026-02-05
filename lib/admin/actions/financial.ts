@@ -8,7 +8,7 @@ import { dispatchDepositWebhook } from '@/lib/webhooks/dispatcher';
 import { applyDepositBonus } from './bonus-config';
 import { processarComissaoDeposito, getComissaoAutomaticaSetting } from './promotores';
 import { getPlatformId } from '@/lib/utils/platform';
-import { getWashPayClient, type WashPayPixKeyType } from '@/lib/washpay/client';
+import { WashPayClient, type WashPayPixKeyType } from '@/lib/washpay/client';
 
 // =============================================
 // DEPOSITS
@@ -362,9 +362,26 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     return { success: false, error: processingError.message };
   }
 
+  // Buscar API key do WashPay na gateway_config
+  const platformId = await getPlatformId();
+  const { data: gatewayConfig } = await supabase
+    .from('gateway_config')
+    .select('client_id')
+    .eq('gateway_name', 'washpay')
+    .eq('platform_id', platformId)
+    .single();
+
+  if (!gatewayConfig?.client_id) {
+    await supabase
+      .from('saques')
+      .update({ status: 'PENDING' })
+      .eq('id', withdrawalId);
+    return { success: false, error: 'API Key do WashPay não configurada. Vá em Pagamentos > WashPay para configurar.' };
+  }
+
   // Chamar WashPay API para fazer o PIX automaticamente
   try {
-    const washpay = getWashPayClient();
+    const washpay = new WashPayClient(gatewayConfig.client_id);
     const washpayResponse = await washpay.requestWithdrawal({
       pixKeyType: mapTipoChaveToWashPay(withdrawal.tipo_chave),
       pixKey: withdrawal.chave_pix,
