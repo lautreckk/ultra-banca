@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, X, Maximize2, Minimize2 } from 'lucide-react';
 import { GameCard } from './game-card';
 import { getGames, getProviders, launchGame } from '@/lib/actions/casino';
 import type { CasinoGame } from '@/lib/actions/casino';
@@ -13,10 +13,22 @@ export function CasinoLobby() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [launchingGame, setLaunchingGame] = useState<string | null>(null);
+  const [activeGame, setActiveGame] = useState<{ url: string; name: string } | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Lock body scroll when game is open
+  useEffect(() => {
+    if (activeGame) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [activeGame]);
 
   async function loadData() {
     setLoading(true);
@@ -38,11 +50,17 @@ export function CasinoLobby() {
     setLaunchingGame(gameCode);
     const result = await launchGame(gameCode, provider, original);
     if (result.success && result.launch_url) {
-      window.open(result.launch_url, '_blank');
+      const game = games.find(g => g.game_code === gameCode);
+      setActiveGame({ url: result.launch_url, name: game?.game_name || 'Jogo' });
     } else {
       alert(result.error || 'Erro ao abrir jogo');
     }
     setLaunchingGame(null);
+  }
+
+  function handleCloseGame() {
+    setActiveGame(null);
+    setIsFullscreen(false);
   }
 
   const featuredGames = useMemo(() => {
@@ -76,114 +94,155 @@ export function CasinoLobby() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'var(--color-text-muted)' }} />
-        <input
-          type="text"
-          placeholder="Buscar jogos..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:ring-2"
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-            color: 'var(--color-text)',
-          }}
-        />
-      </div>
+    <>
+      {/* Game iframe overlay */}
+      {activeGame && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-3 py-2 bg-zinc-900 shrink-0">
+            <span className="text-white text-sm font-medium truncate mr-4">
+              {activeGame.name}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="p-2 rounded-lg hover:bg-zinc-700 transition-colors hidden sm:block"
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4 text-white" />
+                ) : (
+                  <Maximize2 className="h-4 w-4 text-white" />
+                )}
+              </button>
+              <button
+                onClick={handleCloseGame}
+                className="p-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors"
+              >
+                <X className="h-4 w-4 text-white" />
+              </button>
+            </div>
+          </div>
+          {/* iframe */}
+          <div className={`flex-1 ${isFullscreen ? '' : 'sm:p-4'}`}>
+            <iframe
+              src={activeGame.url}
+              className={`w-full h-full border-0 ${isFullscreen ? '' : 'sm:rounded-lg'}`}
+              allow="autoplay; fullscreen; clipboard-write"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
 
-      {/* Provider Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        <button
-          onClick={() => setSelectedProvider('')}
-          className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors shrink-0"
-          style={{
-            backgroundColor: !selectedProvider ? 'var(--color-primary)' : 'var(--color-surface)',
-            color: !selectedProvider ? 'white' : 'var(--color-text-muted)',
-            borderWidth: '1px',
-            borderColor: !selectedProvider ? 'transparent' : 'var(--color-border)',
-          }}
-        >
-          Todos
-        </button>
-        {providers.map((prov) => (
+      <div className="space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'var(--color-text-muted)' }} />
+          <input
+            type="text"
+            placeholder="Buscar jogos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border py-3 pl-10 pr-4 text-sm outline-none transition-colors focus:ring-2"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              borderColor: 'var(--color-border)',
+              color: 'var(--color-text)',
+            }}
+          />
+        </div>
+
+        {/* Provider Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
-            key={prov}
-            onClick={() => setSelectedProvider(prov)}
+            onClick={() => setSelectedProvider('')}
             className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors shrink-0"
             style={{
-              backgroundColor: selectedProvider === prov ? 'var(--color-primary)' : 'var(--color-surface)',
-              color: selectedProvider === prov ? 'white' : 'var(--color-text-muted)',
+              backgroundColor: !selectedProvider ? 'var(--color-primary)' : 'var(--color-surface)',
+              color: !selectedProvider ? 'white' : 'var(--color-text-muted)',
               borderWidth: '1px',
-              borderColor: selectedProvider === prov ? 'transparent' : 'var(--color-border)',
+              borderColor: !selectedProvider ? 'transparent' : 'var(--color-border)',
             }}
           >
-            {prov}
+            Todos
           </button>
-        ))}
-      </div>
+          {providers.map((prov) => (
+            <button
+              key={prov}
+              onClick={() => setSelectedProvider(prov)}
+              className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors shrink-0"
+              style={{
+                backgroundColor: selectedProvider === prov ? 'var(--color-primary)' : 'var(--color-surface)',
+                color: selectedProvider === prov ? 'white' : 'var(--color-text-muted)',
+                borderWidth: '1px',
+                borderColor: selectedProvider === prov ? 'transparent' : 'var(--color-border)',
+              }}
+            >
+              {prov}
+            </button>
+          ))}
+        </div>
 
-      {/* Featured Games */}
-      {featuredGames.length > 0 && !selectedProvider && !search && (
-        <div className="space-y-2">
-          <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
-            Populares
-          </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {featuredGames.map((game) => (
+        {/* Featured Games */}
+        {featuredGames.length > 0 && !selectedProvider && !search && (
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+              Populares
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {featuredGames.map((game) => (
+                <GameCard
+                  key={`featured-${game.game_code}-${game.provider}`}
+                  game={game}
+                  onLaunch={handleLaunch}
+                  isLaunching={launchingGame === game.game_code}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All Games Grid */}
+        {filteredGames.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-lg font-medium" style={{ color: 'var(--color-text-muted)' }}>
+              Nenhum jogo encontrado
+            </p>
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="mt-2 text-sm underline"
+                style={{ color: 'var(--color-primary)' }}
+              >
+                Limpar busca
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {featuredGames.length > 0 && !selectedProvider && !search && (
+              <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+                Todos os Jogos
+              </h2>
+            )}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
+            {filteredGames.map((game) => (
               <GameCard
-                key={`featured-${game.game_code}-${game.provider}`}
+                key={`${game.game_code}-${game.provider}`}
                 game={game}
                 onLaunch={handleLaunch}
                 isLaunching={launchingGame === game.game_code}
               />
             ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* All Games Grid */}
-      {filteredGames.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <p className="text-lg font-medium" style={{ color: 'var(--color-text-muted)' }}>
-            Nenhum jogo encontrado
-          </p>
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="mt-2 text-sm underline"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              Limpar busca
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {featuredGames.length > 0 && !selectedProvider && !search && (
-            <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
-              Todos os Jogos
-            </h2>
-          )}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
-          {filteredGames.map((game) => (
-            <GameCard
-              key={`${game.game_code}-${game.provider}`}
-              game={game}
-              onLaunch={handleLaunch}
-              isLaunching={launchingGame === game.game_code}
-            />
-          ))}
-          </div>
-        </div>
-      )}
-
-      {/* Results count */}
-      <p className="text-center text-xs py-2" style={{ color: 'var(--color-text-muted)' }}>
-        {filteredGames.length} jogos
-      </p>
-    </div>
+        {/* Results count */}
+        <p className="text-center text-xs py-2" style={{ color: 'var(--color-text-muted)' }}>
+          {filteredGames.length} jogos
+        </p>
+      </div>
+    </>
   );
 }
