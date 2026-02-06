@@ -11,6 +11,7 @@ export interface PlatformConfig {
   site_description: string;
   logo_url: string;
   favicon_url: string;
+  login_bg_url: string | null;
 
   // Cores
   color_primary: string;
@@ -62,6 +63,7 @@ export const defaultConfig: PlatformConfig = {
   site_description: 'Sua banca de apostas online',
   logo_url: '',
   favicon_url: '/favicon.ico',
+  login_bg_url: null,
   color_primary: '#D4A84B',
   color_primary_dark: '#B8923F',
   color_background: '#000000',

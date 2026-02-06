@@ -99,6 +99,21 @@ function GeralContent() {
             folder="branding"
           />
         </div>
+
+        <div>
+          <ImageUpload
+            label="Fundo da Tela de Login"
+            value={config.login_bg_url || ''}
+            onChange={(url) => updateField('login_bg_url', url)}
+            recommendedSize="1080x1920px (formato celular, WebP ou JPEG)"
+            accept="image/webp,image/jpeg"
+            folder="branding"
+          />
+          <p className="mt-2 text-xs text-zinc-500">
+            Tamanho recomendado: 1080x1920px (9:16, otimizado para celular). Use formato WebP ou JPEG para
+            manter o carregamento rápido. Máximo 2MB. A imagem será exibida como fundo nas telas de login e cadastro.
+          </p>
+        </div>
       </div>
 
       {/* Cores */}
