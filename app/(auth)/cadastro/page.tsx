@@ -8,7 +8,6 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 function CadastroContent() {
   const searchParams = useSearchParams();
-  // Suporta tanto ?p= (código de usuário) quanto ?ref= (código de promotor)
   const codigoConvite = searchParams.get('p') || searchParams.get('ref') || '';
 
   return (
@@ -23,9 +22,10 @@ export default function CadastroPage() {
 
   return (
     <main
-      className="relative flex min-h-screen flex-col items-center justify-center px-6 py-8"
+      className="relative flex min-h-screen flex-col items-center px-5 py-10"
       style={{ backgroundColor: config.color_background }}
     >
+      {/* Background Image */}
       {config.login_bg_url && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -33,31 +33,34 @@ export default function CadastroPage() {
         />
       )}
 
-      <div className="relative z-10 flex flex-col items-center">
-        {/* Logo - Dinâmica do banco de dados */}
-        <div className="mb-8 flex flex-col items-center">
+      {/* Dark overlay for legibility */}
+      <div className="absolute inset-0 bg-black/65" />
+
+      <div className="relative z-10 flex w-full max-w-sm flex-col items-center pt-6">
+        {/* Logo */}
+        <div className="mb-6 flex flex-col items-center">
           {config.logo_url ? (
             <Image
               src={config.logo_url}
               alt={config.site_name}
-              width={250}
-              height={100}
-              className="mb-2 object-contain"
+              width={180}
+              height={72}
+              className="object-contain drop-shadow-2xl"
               priority
               unoptimized={config.logo_url.includes('supabase.co')}
             />
           ) : (
-            <div className="mb-2 flex h-[100px] w-[250px] items-center justify-center rounded-lg bg-surface">
-              <span className="text-2xl font-bold text-primary">{config.site_name}</span>
+            <div className="flex h-[72px] w-[180px] items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm">
+              <span className="text-xl font-bold text-white drop-shadow-lg">{config.site_name}</span>
             </div>
           )}
         </div>
 
         <Suspense fallback={
           <div className="w-full max-w-sm">
-            <div className="animate-pulse space-y-4">
+            <div className="animate-pulse space-y-5">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-12 bg-zinc-800 rounded-lg" />
+                <div key={i} className="h-14 bg-white/10 rounded-xl" />
               ))}
             </div>
           </div>
