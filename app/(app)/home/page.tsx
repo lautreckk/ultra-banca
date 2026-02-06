@@ -279,7 +279,7 @@ export default function DashboardPage() {
 
         {config.social_whatsapp ? (
           <a
-            href={`https://wa.me/${config.social_whatsapp.replace(/\D/g, '')}`}
+            href={config.social_whatsapp.startsWith('http') ? config.social_whatsapp : `https://wa.me/${config.social_whatsapp.replace(/\D/g, '')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
