@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Poppins } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { ConfigProvider } from '@/contexts/platform-config-context';
 import { ThemeInjector } from '@/components/theme-injector';
@@ -215,6 +216,13 @@ export default async function RootLayout({
         {safeCustomScripts && (
           <div dangerouslySetInnerHTML={{ __html: safeCustomScripts }} />
         )}
+        {/* UTMify - Tracking de UTMs para todas as bancas */}
+        <Script
+          src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+          data-utmify-prevent-xcod-sck=""
+          data-utmify-prevent-subids=""
+          strategy="afterInteractive"
+        />
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         <ConfigProvider config={config}>
