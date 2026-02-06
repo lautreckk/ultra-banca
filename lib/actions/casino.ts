@@ -54,42 +54,26 @@ export async function launchGame(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Usuário não autenticado' };
 
-    const { config, adminClient } = await getConfigAdmin();
-    if (!config || !config.ativo) return { success: false, error: 'Cassino não disponível' };
-
-    // Fetch user balance (required by PlayFivers API)
-    const { data: profile } = await adminClient
-      .from('profiles')
-      .select('saldo')
-      .eq('id', user.id)
-      .single();
-
-    const userBalance = Number(profile?.saldo) || 0;
-
-    const response = await fetch(`${PLAYFIVER_API_BASE}/game_launch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        agentToken: config.agent_token,
-        secretKey: config.secret_key,
-        user_code: user.id,
-        provider: provider,
-        game_code: gameCode,
-        game_original: gameOriginal,
-        user_balance: userBalance,
-        user_rtp: config.default_rtp || 90,
-        lang: 'pt',
-      }),
+    // Call RPC that makes HTTP request from the DB (fixed IP)
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient.rpc('fn_playfiver_game_launch', {
+      p_user_id: user.id,
+      p_game_code: gameCode,
+      p_provider: provider,
+      p_game_original: gameOriginal,
     });
 
-    const data = await response.json();
-
-    if (!response.ok || data.status === 0) {
-      console.error('[CASINO] Launch error:', data);
-      return { success: false, error: data.msg || 'Erro ao abrir jogo' };
+    if (error) {
+      console.error('[CASINO] Launch RPC error:', error);
+      return { success: false, error: 'Erro ao abrir jogo' };
     }
 
-    return { success: true, launch_url: data.launch_url };
+    const result = data as { success: boolean; launch_url?: string; error?: string };
+    return {
+      success: result.success,
+      launch_url: result.launch_url,
+      error: result.error,
+    };
   } catch (error) {
     console.error('[CASINO] Launch error:', error);
     return { success: false, error: 'Erro ao abrir jogo' };

@@ -419,33 +419,24 @@ export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; coun
 }
 
 /**
- * Test connection to PlayFivers API
+ * Test connection to PlayFivers API (via DB RPC for fixed IP)
  */
 export async function testPlayfiverConnection(): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient();
     const platformId = await getPlatformId();
 
-    const { data: config } = await supabase
-      .from('playfiver_config')
-      .select('agent_token, secret_key')
-      .eq('platform_id', platformId)
-      .single();
+    const { data, error } = await supabase.rpc('fn_playfiver_test_connection', {
+      p_platform_id: platformId,
+    });
 
-    if (!config) {
-      return { success: false, error: 'Configuração não encontrada' };
+    if (error) {
+      console.error('[CASINO ADMIN] Test RPC error:', error);
+      return { success: false, error: 'Erro ao testar conexão' };
     }
 
-    const url = `${PLAYFIVER_API_BASE}/agent?agentToken=${config.agent_token}&secretKey=${config.secret_key}`;
-    const response = await fetch(url);
-
-    const data = await response.json();
-
-    if (!response.ok || data.status === 0) {
-      return { success: false, error: data.msg || 'Falha na conexão' };
-    }
-
-    return { success: true };
+    const result = data as { success: boolean; error?: string };
+    return { success: result.success, error: result.error };
   } catch (error) {
     console.error('[CASINO ADMIN] Test connection error:', error);
     return { success: false, error: 'Erro de conexão' };
