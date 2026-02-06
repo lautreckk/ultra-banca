@@ -38,48 +38,50 @@ export function BalanceDisplay({
   const maskedValue = '*******';
 
   return (
-    <div className={cn('bg-white', className)}>
+    <div className={cn('border-b border-zinc-700/30', className)} style={{ backgroundColor: '#1A1F2B' }}>
       {/* Unidade Badge */}
-      <div className="flex justify-center py-1">
-        <span className="rounded-full bg-emerald-500 px-3 py-0.5 text-xs font-semibold text-white">
+      <div className="flex justify-center py-1.5">
+        <span className="rounded-full bg-emerald-500 px-4 py-0.5 text-xs font-bold text-white tracking-wide">
           UNIDADE #{unidade}
         </span>
       </div>
 
       {/* Balance Row */}
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="flex items-center justify-between px-4 py-2.5">
         {/* Left: Refresh + Saldo */}
         <div className="flex items-center gap-2">
           <button
             onClick={onRefresh}
-            className="flex h-6 w-6 items-center justify-center rounded active:opacity-70"
+            className="flex h-8 w-8 items-center justify-center rounded-lg active:bg-white/10"
+            aria-label="Atualizar saldo"
           >
-            <RefreshCw className="h-4 w-4 text-gray-600" />
+            <RefreshCw className="h-4 w-4 text-zinc-400" />
           </button>
           <div>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-semibold text-gray-800">Saldo</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-white">Saldo</span>
               <button
                 onClick={toggleBalance}
-                className="flex h-5 w-5 items-center justify-center"
+                className="flex h-6 w-6 items-center justify-center rounded active:bg-white/10"
+                aria-label={showBalance ? 'Ocultar saldo' : 'Mostrar saldo'}
               >
                 {showBalance ? (
-                  <Eye className="h-4 w-4 text-gray-500" />
+                  <Eye className="h-4 w-4 text-zinc-400" />
                 ) : (
-                  <EyeOff className="h-4 w-4 text-gray-500" />
+                  <EyeOff className="h-4 w-4 text-zinc-400" />
                 )}
               </button>
             </div>
-            <span className="text-xs text-gray-500">Bonus</span>
+            <span className="text-xs text-zinc-500">Bonus</span>
           </div>
         </div>
 
         {/* Right: Values */}
         <div className="text-right">
-          <p className="text-sm font-semibold text-gray-800">
+          <p className="text-base font-bold text-white">
             R$ {showBalance ? formatCurrencyCompact(saldo) : maskedValue}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-zinc-500">
             R$ {showBalance ? formatCurrencyCompact(saldoBonus) : maskedValue}
           </p>
         </div>
