@@ -88,13 +88,13 @@ export function CasinoLobby() {
             {config.logo_url ? (
               <Image
                 src={config.logo_url}
-                alt={config.platform_name || 'Logo'}
+                alt={config.site_name || 'Logo'}
                 width={120}
                 height={32}
                 className="h-8 w-auto object-contain"
               />
             ) : (
-              <span className="text-white text-sm font-bold">{config.platform_name}</span>
+              <span className="text-white text-sm font-bold">{config.site_name}</span>
             )}
             <div className="w-[88px]" />
           </div>

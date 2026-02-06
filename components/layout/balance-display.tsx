@@ -20,7 +20,20 @@ export function BalanceDisplay({
   onRefresh,
   className,
 }: BalanceDisplayProps) {
-  const [showBalance, setShowBalance] = useState(false);
+  const [showBalance, setShowBalance] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('show-balance') === '1';
+    }
+    return false;
+  });
+
+  const toggleBalance = () => {
+    setShowBalance((prev) => {
+      const next = !prev;
+      localStorage.setItem('show-balance', next ? '1' : '0');
+      return next;
+    });
+  };
 
   const maskedValue = '*******';
 
@@ -47,7 +60,7 @@ export function BalanceDisplay({
             <div className="flex items-center gap-1">
               <span className="text-sm font-semibold text-gray-800">Saldo</span>
               <button
-                onClick={() => setShowBalance(!showBalance)}
+                onClick={toggleBalance}
                 className="flex h-5 w-5 items-center justify-center"
               >
                 {showBalance ? (
