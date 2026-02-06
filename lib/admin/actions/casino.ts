@@ -368,14 +368,8 @@ export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; coun
       return { success: false, error: 'Configuração do cassino não encontrada' };
     }
 
-    const response = await fetch(`${PLAYFIVER_API_BASE}/games`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        agent_code: config.agent_token,
-        agent_secret: config.secret_key,
-      }),
-    });
+    const url = `${PLAYFIVER_API_BASE}/games?agent_code=${config.agent_token}&agent_secret=${config.secret_key}`;
+    const response = await fetch(url);
 
     const data = await response.json();
 
@@ -383,7 +377,7 @@ export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; coun
       return { success: false, error: data.msg || 'Erro ao buscar jogos' };
     }
 
-    const games = data.games || data.data || [];
+    const games = data.data || data.games || [];
     if (!Array.isArray(games) || games.length === 0) {
       return { success: false, error: 'Nenhum jogo retornado pela API' };
     }
@@ -392,14 +386,18 @@ export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; coun
     let totalUpserted = 0;
 
     for (let i = 0; i < games.length; i += batchSize) {
-      const batch = games.slice(i, i + batchSize).map((g: Record<string, unknown>) => ({
-        game_code: g.game_code || g.code,
-        game_name: g.game_name || g.name,
-        provider: g.provider_code || g.provider,
-        image_url: g.image || g.banner || null,
-        original: g.game_original || g.original || false,
-        cached_at: new Date().toISOString(),
-      }));
+      const batch = games.slice(i, i + batchSize).map((g: Record<string, unknown>) => {
+        const prov = g.provider;
+        const providerName = (typeof prov === 'object' && prov !== null) ? (prov as Record<string, string>).name : (prov as string);
+        return {
+          game_code: g.game_code || g.code,
+          game_name: g.name || g.game_name,
+          provider: providerName || 'Unknown',
+          image_url: g.image_url || g.image || g.banner || null,
+          original: g.original || g.game_original || false,
+          cached_at: new Date().toISOString(),
+        };
+      });
 
       const { error: upsertError } = await supabase
         .from('playfiver_games_cache')
@@ -437,14 +435,8 @@ export async function testPlayfiverConnection(): Promise<{ success: boolean; err
       return { success: false, error: 'Configuração não encontrada' };
     }
 
-    const response = await fetch(`${PLAYFIVER_API_BASE}/agent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        agent_code: config.agent_token,
-        agent_secret: config.secret_key,
-      }),
-    });
+    const url = `${PLAYFIVER_API_BASE}/agent?agentToken=${config.agent_token}&secretKey=${config.secret_key}`;
+    const response = await fetch(url);
 
     const data = await response.json();
 
