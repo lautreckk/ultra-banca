@@ -368,7 +368,8 @@ export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; coun
       return { success: false, error: 'Configuração do cassino não encontrada' };
     }
 
-    const url = `${PLAYFIVER_API_BASE}/games?agent_code=${config.agent_token}&agent_secret=${config.secret_key}`;
+    // Games API is public - no auth needed
+    const url = `${PLAYFIVER_API_BASE}/games`;
     const response = await fetch(url);
 
     const data = await response.json();

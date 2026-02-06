@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getPlatformId } from '@/lib/utils/platform';
 
 const PLAYFIVER_API_BASE = 'https://api.playfivers.com/api/v2';
@@ -28,17 +28,17 @@ export interface CasinoTransaction {
   created_at: string;
 }
 
-async function getConfig() {
-  const supabase = await createClient();
+async function getConfigAdmin() {
+  const adminClient = createAdminClient();
   const platformId = await getPlatformId();
 
-  const { data: config } = await supabase
+  const { data: config } = await adminClient
     .from('playfiver_config')
     .select('agent_token, secret_key, callback_url, ativo')
     .eq('platform_id', platformId)
     .single();
 
-  return { config, platformId, supabase };
+  return { config, platformId, adminClient };
 }
 
 /**
@@ -54,7 +54,7 @@ export async function launchGame(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Usuário não autenticado' };
 
-    const { config } = await getConfig();
+    const { config } = await getConfigAdmin();
     if (!config || !config.ativo) return { success: false, error: 'Cassino não disponível' };
 
     const response = await fetch(`${PLAYFIVER_API_BASE}/game_launch`, {
@@ -160,10 +160,8 @@ export async function getProviders(): Promise<{ success: boolean; providers?: st
  */
 export async function refreshGamesCache(): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
-    const { config, supabase } = await getConfig();
-    if (!config) return { success: false, error: 'Configuração do cassino não encontrada' };
-
-    const url = `${PLAYFIVER_API_BASE}/games?agent_code=${config.agent_token}&agent_secret=${config.secret_key}`;
+    // Games API is public - no auth needed
+    const url = `${PLAYFIVER_API_BASE}/games`;
     const response = await fetch(url);
 
     const data = await response.json();
@@ -178,7 +176,8 @@ export async function refreshGamesCache(): Promise<{ success: boolean; count?: n
       return { success: false, error: 'Nenhum jogo retornado pela API' };
     }
 
-    // Upsert games into cache in batches
+    // Use admin client for DB writes (bypasses RLS)
+    const adminClient = createAdminClient();
     const batchSize = 100;
     let totalUpserted = 0;
 
@@ -196,7 +195,7 @@ export async function refreshGamesCache(): Promise<{ success: boolean; count?: n
         };
       });
 
-      const { error: upsertError } = await supabase
+      const { error: upsertError } = await adminClient
         .from('playfiver_games_cache')
         .upsert(batch, { onConflict: 'game_code,provider' });
 
