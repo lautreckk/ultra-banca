@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import type { CasinoGame } from '@/lib/actions/casino';
 
 interface GameCardProps {
@@ -17,21 +18,20 @@ export function GameCard({ game, onLaunch, isLaunching }: GameCardProps) {
       onClick={() => onLaunch(game.game_code, game.provider, game.original)}
       disabled={isLaunching}
       className="group relative overflow-hidden rounded-xl transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] disabled:opacity-60"
-      style={{ backgroundColor: 'var(--color-surface)' }}
     >
-      <div className="aspect-[4/3] w-full overflow-hidden">
+      <div className="w-full overflow-hidden rounded-xl">
         {game.image_url && !imgError ? (
           <img
             src={game.image_url}
             alt={game.game_name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-auto transition-transform duration-300 group-hover:scale-110"
             onError={() => setImgError(true)}
             loading="lazy"
           />
         ) : (
           <div
-            className="flex h-full w-full items-center justify-center"
-            style={{ background: 'var(--modern-gradient-primary, linear-gradient(135deg, #6366f1, #8b5cf6))' }}
+            className="flex aspect-square w-full items-center justify-center rounded-xl"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
             <span className="text-3xl font-bold text-white/80">
               {game.game_name.charAt(0).toUpperCase()}
@@ -40,20 +40,12 @@ export function GameCard({ game, onLaunch, isLaunching }: GameCardProps) {
         )}
       </div>
 
-      <div className="p-2">
-        <p
-          className="truncate text-sm font-medium"
-          style={{ color: 'var(--color-text)' }}
-        >
-          {game.game_name}
-        </p>
-        <p
-          className="truncate text-xs"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          {game.provider}
-        </p>
-      </div>
+      {/* Loading overlay */}
+      {isLaunching && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+      )}
     </button>
   );
 }
