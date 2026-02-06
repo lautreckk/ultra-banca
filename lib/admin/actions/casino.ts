@@ -451,3 +451,17 @@ export async function testPlayfiverConnection(): Promise<{ success: boolean; err
     return { success: false, error: 'Erro de conexão' };
   }
 }
+
+/**
+ * Get the server's outgoing IP address (for PlayFivers IP whitelist)
+ */
+export async function getServerIP(): Promise<{ success: boolean; ip?: string; error?: string }> {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return { success: true, ip: data.ip };
+  } catch (error) {
+    console.error('[CASINO ADMIN] Get server IP error:', error);
+    return { success: false, error: 'Erro ao obter IP do servidor' };
+  }
+}

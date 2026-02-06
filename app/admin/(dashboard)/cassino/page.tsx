@@ -6,12 +6,13 @@ import {
   savePlayfiverConfig,
   testPlayfiverConnection,
   refreshGamesCacheAdmin,
+  getServerIP,
   type PlayfiverConfig,
 } from '@/lib/admin/actions/casino';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleSwitch } from '@/components/admin/shared';
-import { Loader2, CheckCircle, XCircle, RefreshCw, Wifi } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, RefreshCw, Wifi, Globe } from 'lucide-react';
 
 const CALLBACK_URL = 'https://mumlcoyjevyvsipicjjk.supabase.co/functions/v1/playfiver-callback';
 
@@ -22,6 +23,8 @@ export default function AdminCassinoConfigPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [refreshResult, setRefreshResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [serverIP, setServerIP] = useState<string | null>(null);
+  const [loadingIP, setLoadingIP] = useState(false);
 
   const [formData, setFormData] = useState({
     agent_token: '',
@@ -90,6 +93,17 @@ export default function AdminCassinoConfigPage() {
       message: result.success ? `${result.count} jogos atualizados` : (result.error || 'Falha'),
     });
     setRefreshing(false);
+  }
+
+  async function handleGetServerIP() {
+    setLoadingIP(true);
+    const result = await getServerIP();
+    if (result.success && result.ip) {
+      setServerIP(result.ip);
+    } else {
+      setServerIP('Erro ao obter IP');
+    }
+    setLoadingIP(false);
   }
 
   if (loading) {
@@ -259,7 +273,27 @@ export default function AdminCassinoConfigPage() {
             {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             Atualizar Jogos
           </Button>
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleGetServerIP}
+            disabled={loadingIP}
+            className="flex items-center gap-2"
+          >
+            {loadingIP ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+            IP do Servidor
+          </Button>
         </div>
+
+        {serverIP && (
+          <div className="flex items-center gap-2 text-sm">
+            <Globe className="h-4 w-4 text-cyan-400" />
+            <span className="text-gray-300">IP de saída:</span>
+            <code className="bg-zinc-900 px-2 py-1 rounded text-cyan-400 font-mono">{serverIP}</code>
+            <span className="text-gray-500 text-xs">- Adicione na IP Whitelist do PlayFivers</span>
+          </div>
+        )}
 
         {testResult && (
           <div className={`flex items-center gap-2 text-sm ${testResult.success ? 'text-green-400' : 'text-red-400'}`}>

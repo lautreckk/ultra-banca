@@ -34,7 +34,7 @@ async function getConfigAdmin() {
 
   const { data: config } = await adminClient
     .from('playfiver_config')
-    .select('agent_token, secret_key, callback_url, ativo')
+    .select('agent_token, secret_key, callback_url, ativo, default_rtp')
     .eq('platform_id', platformId)
     .single();
 
@@ -54,8 +54,17 @@ export async function launchGame(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Usuário não autenticado' };
 
-    const { config } = await getConfigAdmin();
+    const { config, adminClient } = await getConfigAdmin();
     if (!config || !config.ativo) return { success: false, error: 'Cassino não disponível' };
+
+    // Fetch user balance (required by PlayFivers API)
+    const { data: profile } = await adminClient
+      .from('profiles')
+      .select('saldo')
+      .eq('id', user.id)
+      .single();
+
+    const userBalance = Number(profile?.saldo) || 0;
 
     const response = await fetch(`${PLAYFIVER_API_BASE}/game_launch`, {
       method: 'POST',
@@ -64,9 +73,11 @@ export async function launchGame(
         agentToken: config.agent_token,
         secretKey: config.secret_key,
         user_code: user.id,
-        provider_code: provider,
+        provider: provider,
         game_code: gameCode,
         game_original: gameOriginal,
+        user_balance: userBalance,
+        user_rtp: config.default_rtp || 90,
         lang: 'pt',
       }),
     });
