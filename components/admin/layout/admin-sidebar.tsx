@@ -40,6 +40,7 @@ import {
   UserPlus,
   Building2,
   Check,
+  Gamepad2,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 import { getUserAdminPlatforms, switchPlatform, getPlatformId } from '@/lib/utils/platform';
@@ -93,6 +94,17 @@ const navItems: NavItem[] = [
       { label: 'Modalidades', href: '/admin/modalidades', icon: <Dices className="h-4 w-4" /> },
       { label: 'Resultados', href: '/admin/resultados', icon: <Calendar className="h-4 w-4" /> },
       { label: 'Verificação', href: '/admin/verificacao', icon: <CheckCircle className="h-4 w-4" /> },
+    ],
+  },
+
+  // ========== CASSINO ==========
+  {
+    label: 'Cassino',
+    icon: <Gamepad2 className="h-5 w-5" />,
+    children: [
+      { label: 'Configuração', href: '/admin/cassino', icon: <Settings className="h-4 w-4" /> },
+      { label: 'Relatório GGR', href: '/admin/cassino/ggr', icon: <BarChart3 className="h-4 w-4" /> },
+      { label: 'Transações', href: '/admin/cassino/transacoes', icon: <Receipt className="h-4 w-4" /> },
     ],
   },
 

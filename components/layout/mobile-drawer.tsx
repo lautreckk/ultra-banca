@@ -74,6 +74,11 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
         {/* Normal items */}
         <div>
           <DrawerItem
+            icon={<Gamepad2 className="h-5 w-5" />}
+            label="Cassino"
+            onClick={() => handleNavigate('/cassino')}
+          />
+          <DrawerItem
             icon={<Dices className="h-5 w-5" />}
             label="Loterias"
             onClick={() => handleNavigate('/loterias')}

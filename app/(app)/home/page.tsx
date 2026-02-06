@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Link2, Trophy, FileText, Droplets } from 'lucide-react';
+import { Link2, Trophy, FileText, Droplets, Gamepad2 } from 'lucide-react';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { createClient } from '@/lib/supabase/client';
 import { useAdPopup } from '@/hooks/use-ad-popup';
@@ -206,6 +206,14 @@ export default function DashboardPage() {
           </div>
         </Link>
       </div>
+
+      {/* Cassino - Full Width */}
+      <Link href="/cassino" className="block">
+        <div className="flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-6 shadow-lg active:scale-[0.98]">
+          <Gamepad2 className="h-8 w-8 text-white" />
+          <span className="text-xl font-bold text-white">Cassino</span>
+        </div>
+      </Link>
 
       {/* PROMOTOR & Amigos */}
       <div className="grid grid-cols-2 gap-3">

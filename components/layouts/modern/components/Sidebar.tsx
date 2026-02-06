@@ -15,6 +15,7 @@ import {
   Calculator,
   Moon,
   Beef,
+  Gamepad2,
 } from 'lucide-react';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { formatCurrency } from '@/lib/utils/format-currency';
@@ -34,6 +35,7 @@ const NAVIGATION_ITEMS = [
   { icon: Calculator, label: 'Quininha', href: '/quininha' },
   { icon: Moon, label: 'Seninha', href: '/seninha' },
   { icon: Ticket, label: 'Lotinha', href: '/lotinha' },
+  { icon: Gamepad2, label: 'Cassino', href: '/cassino' },
   { icon: Trophy, label: 'Resultados', href: '/resultados' },
   { icon: Wallet, label: 'Depositar', href: '/recarga-pix' },
   { icon: FileText, label: 'Relatorios', href: '/relatorios' },
