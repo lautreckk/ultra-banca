@@ -118,7 +118,7 @@ export default function AdminCassinoConfigPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold text-white">Cassino - Configuração</h1>
-        <p className="text-gray-400">Gerenciar integração PlayFivers</p>
+        <p className="text-zinc-400">Gerenciar integração PlayFivers</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
@@ -137,36 +137,36 @@ export default function AdminCassinoConfigPage() {
           <h2 className="text-lg font-semibold text-white">Credenciais</h2>
 
           <div>
-            <label className="text-sm font-medium text-gray-300">Agent Token</label>
+            <label className="text-sm font-medium text-zinc-300">Agent Token</label>
             <Input
               value={formData.agent_token}
               onChange={(e) => setFormData({ ...formData, agent_token: e.target.value })}
-              className="mt-1 bg-gray-700 border-gray-600 text-white font-mono text-sm"
+              className="mt-1 bg-zinc-800 border-zinc-700/40 text-white font-mono text-sm"
               placeholder="UUID do agente"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-300">Secret Key</label>
+            <label className="text-sm font-medium text-zinc-300">Secret Key</label>
             <Input
               value={formData.secret_key}
               onChange={(e) => setFormData({ ...formData, secret_key: e.target.value })}
-              className="mt-1 bg-gray-700 border-gray-600 text-white font-mono text-sm"
+              className="mt-1 bg-zinc-800 border-zinc-700/40 text-white font-mono text-sm"
               placeholder="Chave secreta"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-300">Callback URL</label>
+            <label className="text-sm font-medium text-zinc-300">Callback URL</label>
             <Input
               value={formData.callback_url}
               onChange={(e) => setFormData({ ...formData, callback_url: e.target.value })}
-              className="mt-1 bg-gray-700 border-gray-600 text-gray-400 font-mono text-sm"
+              className="mt-1 bg-zinc-800 border-zinc-700/40 text-zinc-500 font-mono text-sm"
               readOnly
             />
-            <p className="text-xs text-gray-500 mt-1">URL configurada automaticamente</p>
+            <p className="text-xs text-zinc-500 mt-1">URL configurada automaticamente</p>
           </div>
         </div>
 
@@ -175,7 +175,7 @@ export default function AdminCassinoConfigPage() {
           <h2 className="text-lg font-semibold text-white">RTP (Return to Player)</h2>
 
           <div>
-            <label className="text-sm font-medium text-gray-300">
+            <label className="text-sm font-medium text-zinc-300">
               RTP Padrão: {formData.default_rtp}%
             </label>
             <input
@@ -186,7 +186,7 @@ export default function AdminCassinoConfigPage() {
               onChange={(e) => setFormData({ ...formData, default_rtp: parseInt(e.target.value) })}
               className="mt-2 w-full accent-cyan-500"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs text-zinc-500 mt-1">
               <span>80%</span>
               <span>100%</span>
             </div>
@@ -207,23 +207,23 @@ export default function AdminCassinoConfigPage() {
           {formData.limit_enable && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-300">Valor Máximo (R$)</label>
+                <label className="text-sm font-medium text-zinc-300">Valor Máximo (R$)</label>
                 <Input
                   type="number"
                   value={formData.limit_amount}
                   onChange={(e) => setFormData({ ...formData, limit_amount: parseFloat(e.target.value) || 0 })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   min={0}
                   step={0.01}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-300">Período (horas)</label>
+                <label className="text-sm font-medium text-zinc-300">Período (horas)</label>
                 <Input
                   type="number"
                   value={formData.limit_hours}
                   onChange={(e) => setFormData({ ...formData, limit_hours: parseInt(e.target.value) || 24 })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   min={1}
                 />
               </div>
@@ -289,9 +289,9 @@ export default function AdminCassinoConfigPage() {
         {serverIP && (
           <div className="flex items-center gap-2 text-sm">
             <Globe className="h-4 w-4 text-cyan-400" />
-            <span className="text-gray-300">IP de saída:</span>
+            <span className="text-zinc-300">IP de saída:</span>
             <code className="bg-zinc-900 px-2 py-1 rounded text-cyan-400 font-mono">{serverIP}</code>
-            <span className="text-gray-500 text-xs">- Adicione na IP Whitelist do PlayFivers</span>
+            <span className="text-zinc-500 text-xs">- Adicione na IP Whitelist do PlayFivers</span>
           </div>
         )}
 

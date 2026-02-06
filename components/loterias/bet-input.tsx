@@ -49,7 +49,7 @@ export function BetInput({
   };
 
   return (
-    <div className={cn('px-4 bg-white', className)}>
+    <div className={cn('px-4 bg-[#1A1F2B]', className)}>
       {/* Input */}
       <div className="flex gap-2">
         <Input

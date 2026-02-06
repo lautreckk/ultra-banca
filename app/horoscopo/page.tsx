@@ -58,30 +58,30 @@ export default function HoroscopoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
       <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
           <div className="flex h-12 items-center justify-between">
             <button
               onClick={handleBack}
-              className="flex h-10 w-10 items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all"
             >
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
-            <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
-            <button className="flex h-10 w-10 items-center justify-center">
+            <span className="text-base font-bold text-white">{config.site_name.toUpperCase()}</span>
+            <button className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all">
               <Menu className="h-5 w-5 text-white" />
             </button>
           </div>
         </header>
 
         {/* Content */}
-        <div className="bg-gray-100 flex-1 p-4">
+        <div className="bg-[#111318] flex-1 p-4">
         {!selectedSigno ? (
           <>
             {/* Sign Selection */}
-            <h1 className="text-xl font-medium text-gray-900 mb-6">
+            <h1 className="text-xl font-medium text-white mb-6">
               Qual é o seu signo?
             </h1>
 
@@ -91,10 +91,10 @@ export default function HoroscopoPage() {
                 <button
                   key={signo.id}
                   onClick={() => handleSelectSigno(signo)}
-                  className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center hover:border-gray-300 active:bg-gray-50 transition-colors"
+                  className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4 flex flex-col items-center justify-center hover:border-zinc-600 active:scale-[0.98] active:bg-zinc-700/30 transition-all"
                 >
                   <span className="text-4xl mb-2 text-orange-500">{SIGNO_IMAGES[signo.id]}</span>
-                  <span className="text-sm font-medium text-gray-900">{signo.nome}</span>
+                  <span className="text-sm font-medium text-white">{signo.nome}</span>
                 </button>
               ))}
             </div>
@@ -102,10 +102,10 @@ export default function HoroscopoPage() {
         ) : (
           <>
             {/* Horoscope Result */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-[#1A1F2B] rounded-xl border border-zinc-700/40 overflow-hidden">
               {/* Banca Logo */}
               <div className="text-center pt-4 pb-2">
-                <span className="text-sm font-bold text-gray-700">{config.site_name.toUpperCase()}</span>
+                <span className="text-sm font-bold text-zinc-300">{config.site_name.toUpperCase()}</span>
                 <div className="flex justify-center mt-2">
                   {config.logo_url ? (
                     <Image
@@ -117,7 +117,7 @@ export default function HoroscopoPage() {
                       unoptimized={config.logo_url.includes('supabase.co')}
                     />
                   ) : (
-                    <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                    <div className="w-24 h-16 bg-[#1A202C] rounded-xl flex items-center justify-center">
                       <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
                     </div>
                   )}
@@ -129,7 +129,7 @@ export default function HoroscopoPage() {
                 <span className="bg-[#1A202C] text-white px-3 py-1 rounded-full text-sm font-medium">
                   {selectedSigno.nome.toUpperCase()}
                 </span>
-                <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
+                <span className="bg-zinc-700 text-zinc-300 px-3 py-1 rounded-full text-sm">
                   {today}
                 </span>
               </div>
@@ -137,45 +137,45 @@ export default function HoroscopoPage() {
               {/* Content */}
               <div className="px-4 pb-4">
                 {/* Title */}
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                <h2 className="text-2xl font-bold text-white mb-3">
                   Horóscopo do dia
                 </h2>
 
                 {/* Prediction */}
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                <p className="text-zinc-400 text-sm leading-relaxed mb-6">
                   {previsao}
                 </p>
 
                 {/* Animal */}
                 <div className="text-center mb-4">
                   <div className="text-6xl mb-2">{selectedSigno.bichoEmoji}</div>
-                  <span className="font-medium text-gray-900">{selectedSigno.bicho}</span>
+                  <span className="font-medium text-white">{selectedSigno.bicho}</span>
                 </div>
 
                 {/* Numbers Grid */}
                 {numeros && (
                   <div className="grid grid-cols-4 gap-2 mb-4">
-                    <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
-                      <div className="text-xs text-gray-500 font-medium">GRUPO</div>
-                      <div className="text-lg font-bold text-gray-900">
+                    <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/40">
+                      <div className="text-xs text-zinc-500 font-medium">GRUPO</div>
+                      <div className="text-lg font-bold text-white">
                         {numeros.grupo.toString().padStart(2, '0')}
                       </div>
                     </div>
-                    <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
-                      <div className="text-xs text-gray-500 font-medium">DEZ.</div>
-                      <div className="text-lg font-bold text-gray-900">
+                    <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/40">
+                      <div className="text-xs text-zinc-500 font-medium">DEZ.</div>
+                      <div className="text-lg font-bold text-white">
                         {numeros.dezena.toString().padStart(2, '0')}
                       </div>
                     </div>
-                    <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
-                      <div className="text-xs text-gray-500 font-medium">CENT.</div>
-                      <div className="text-lg font-bold text-gray-900">
+                    <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/40">
+                      <div className="text-xs text-zinc-500 font-medium">CENT.</div>
+                      <div className="text-lg font-bold text-white">
                         {numeros.centena.toString().padStart(3, '0')}
                       </div>
                     </div>
-                    <div className="bg-gray-100 rounded-lg p-3 border border-gray-200">
-                      <div className="text-xs text-gray-500 font-medium">MILHAR</div>
-                      <div className="text-lg font-bold text-gray-900">
+                    <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/40">
+                      <div className="text-xs text-zinc-500 font-medium">MILHAR</div>
+                      <div className="text-lg font-bold text-white">
                         {numeros.milhar.toString().padStart(4, '0')}
                       </div>
                     </div>
@@ -185,7 +185,7 @@ export default function HoroscopoPage() {
                 {/* Share Button */}
                 <button
                   onClick={handleShare}
-                  className="w-full h-12 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2"
+                  className="w-full h-14 min-h-[56px] bg-[#3B82F6] rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                 >
                   <Share2 className="h-5 w-5" />
                   Compartilhar

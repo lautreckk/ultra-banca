@@ -96,7 +96,7 @@ export default function AdminPagamentosPage() {
     <div className="space-y-4 md:space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">Configuração de Pagamentos</h1>
-        <p className="text-sm md:text-base text-gray-400">Gerencie os gateways de pagamento da plataforma</p>
+        <p className="text-sm md:text-base text-zinc-500">Gerencie os gateways de pagamento da plataforma</p>
       </div>
 
       {/* Alerts */}
@@ -122,13 +122,13 @@ export default function AdminPagamentosPage() {
           </div>
           <div>
             <h2 className="text-base md:text-lg font-semibold text-white">Gateway Principal</h2>
-            <p className="text-xs md:text-sm text-gray-400">
+            <p className="text-xs md:text-sm text-zinc-500">
               Será usado para processar depósitos automaticamente
             </p>
           </div>
         </div>
 
-        <div className="bg-gray-800/50 rounded-lg p-3 md:p-4">
+        <div className="bg-zinc-800/50 rounded-lg p-3 md:p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CreditCard className="h-5 w-5 text-cyan-400" />
@@ -162,7 +162,7 @@ export default function AdminPagamentosPage() {
         </h2>
 
         {activeGateways.length === 0 ? (
-          <p className="text-gray-400 text-sm">Nenhum gateway ativo. Configure um gateway abaixo.</p>
+          <p className="text-zinc-500 text-sm">Nenhum gateway ativo. Configure um gateway abaixo.</p>
         ) : (
           <div className="space-y-3">
             {activeGateways.map((gateway) => (
@@ -200,7 +200,7 @@ export default function AdminPagamentosPage() {
       {/* Info Card */}
       <div className="bg-[#374151] rounded-lg p-4 md:p-6">
         <h2 className="text-base md:text-lg font-semibold text-white mb-3">Informações</h2>
-        <ul className="space-y-2 text-sm text-gray-400">
+        <ul className="space-y-2 text-sm text-zinc-500">
           <li className="flex items-start gap-2">
             <span className="text-cyan-400">•</span>
             <span>Apenas gateways ativos podem ser definidos como principal.</span>
@@ -232,11 +232,11 @@ function GatewayCard({ gateway, isPrimary, onSetPrimary, isSaving }: GatewayCard
   const description = GATEWAY_DESCRIPTIONS[gateway.gateway_name] || '';
 
   return (
-    <div className={`bg-gray-800/50 rounded-lg p-3 md:p-4 ${isPrimary ? 'ring-2 ring-cyan-500' : ''}`}>
+    <div className={`bg-zinc-800/50 rounded-lg p-3 md:p-4 ${isPrimary ? 'ring-2 ring-cyan-500' : ''}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${gateway.ativo ? 'bg-green-500/20' : 'bg-gray-600'}`}>
-            <CreditCard className={`h-4 w-4 md:h-5 md:w-5 ${gateway.ativo ? 'text-green-400' : 'text-gray-400'}`} />
+          <div className={`p-2 rounded-lg ${gateway.ativo ? 'bg-green-500/20' : 'bg-zinc-700'}`}>
+            <CreditCard className={`h-4 w-4 md:h-5 md:w-5 ${gateway.ativo ? 'text-green-400' : 'text-zinc-500'}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -248,11 +248,11 @@ function GatewayCard({ gateway, isPrimary, onSetPrimary, isSaving }: GatewayCard
                 </span>
               )}
             </div>
-            <p className={`text-xs ${gateway.ativo ? 'text-green-400' : 'text-gray-500'}`}>
+            <p className={`text-xs ${gateway.ativo ? 'text-green-400' : 'text-zinc-500'}`}>
               {gateway.ativo ? 'Configurado e ativo' : 'Não configurado'}
             </p>
             {description && (
-              <p className="text-xs text-gray-400 mt-1">{description}</p>
+              <p className="text-xs text-zinc-500 mt-1">{description}</p>
             )}
           </div>
         </div>

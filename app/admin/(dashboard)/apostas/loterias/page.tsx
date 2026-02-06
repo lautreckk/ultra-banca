@@ -7,7 +7,7 @@ export default function AdminLoteriasPage() {
     <div className="space-y-4 md:space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">Loterias</h1>
-        <p className="text-sm md:text-base text-gray-400">Gerenciamento de loterias disponíveis</p>
+        <p className="text-sm md:text-base text-zinc-500">Gerenciamento de loterias disponíveis</p>
       </div>
 
       {/* Placeholder Content */}
@@ -16,7 +16,7 @@ export default function AdminLoteriasPage() {
           <Trophy className="h-8 w-8 text-cyan-400" />
         </div>
         <h2 className="text-lg font-semibold text-white mb-2">Em Desenvolvimento</h2>
-        <p className="text-gray-400 max-w-md mx-auto">
+        <p className="text-zinc-500 max-w-md mx-auto">
           Esta página permitirá gerenciar as loterias disponíveis na plataforma, incluindo horários de sorteio e configurações.
         </p>
       </div>
@@ -29,7 +29,7 @@ export default function AdminLoteriasPage() {
               <span className="font-medium text-white">{loteria}</span>
               <span className="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded-full">Ativo</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-zinc-500">
               <Clock className="h-4 w-4" />
               <span>Horário: 11:00 / 14:00 / 18:00 / 21:00</span>
             </div>

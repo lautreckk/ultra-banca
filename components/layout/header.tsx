@@ -67,9 +67,9 @@ export function Header({
       {/* Center: Title or Logo */}
       <div className="flex-1 text-center">
         {title ? (
-          <h1 className="text-sm font-bold text-white">{title}</h1>
+          <h1 className="text-base font-bold text-white">{title}</h1>
         ) : (
-          <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
+          <span className="text-base font-bold text-white">{config.site_name.toUpperCase()}</span>
         )}
       </div>
 

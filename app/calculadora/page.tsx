@@ -159,19 +159,19 @@ export default function CalculadoraPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
-      <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
+      <div className="w-full max-w-md bg-[#111318] min-h-screen shadow-xl flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
           <div className="flex h-12 items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex h-10 w-10 items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all"
             >
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
-            <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
-            <button className="flex h-10 w-10 items-center justify-center">
+            <span className="text-base font-bold text-white">{config.site_name.toUpperCase()}</span>
+            <button className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all">
               <Menu className="h-5 w-5 text-white" />
             </button>
           </div>
@@ -187,27 +187,27 @@ export default function CalculadoraPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-white flex-1 p-4">
+        <div className="flex-1 p-4">
         {/* Title */}
-        <h1 className="text-xl font-bold text-gray-900 mb-1">
+        <h1 className="text-xl font-bold text-white mb-1">
           Calculadora de Prêmios
         </h1>
-        <p className="text-gray-600 text-sm mb-4">
+        <p className="text-zinc-400 text-sm mb-4">
           Informe o valor da aposta e iremos calcular seu possível prêmio.
         </p>
 
         {/* Divider */}
-        <div className="border-t border-gray-200 mb-4" />
+        <div className="border-t border-zinc-700/40 mb-4" />
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
           </div>
         ) : (
           <>
             {/* Modalidade Select */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Modalidade:
               </label>
               <div className="relative">
@@ -216,16 +216,16 @@ export default function CalculadoraPage() {
                     setShowModalidadeDropdown(!showModalidadeDropdown);
                     setShowColocacaoDropdown(false);
                   }}
-                  className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
+                  className="w-full h-14 min-h-[48px] px-4 border border-zinc-700/40 rounded-xl flex items-center justify-between bg-zinc-900/80 text-left focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 active:scale-[0.98] transition-all"
                 >
-                  <span className={selectedModalidade ? 'text-gray-900' : 'text-gray-400'}>
+                  <span className={selectedModalidade ? 'text-white text-base' : 'text-zinc-500 text-base'}>
                     {selectedModalidade?.nome || 'Selecione...'}
                   </span>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <ChevronDown className="h-5 w-5 text-zinc-500" />
                 </button>
 
                 {showModalidadeDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl shadow-lg z-20 max-h-80 overflow-y-auto">
                     {/* Empty option */}
                     <button
                       onClick={() => {
@@ -261,7 +261,7 @@ export default function CalculadoraPage() {
 
             {/* Colocação Select */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Colocação:
               </label>
               <div className="relative">
@@ -270,16 +270,16 @@ export default function CalculadoraPage() {
                     setShowColocacaoDropdown(!showColocacaoDropdown);
                     setShowModalidadeDropdown(false);
                   }}
-                  className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
+                  className="w-full h-14 min-h-[48px] px-4 border border-zinc-700/40 rounded-xl flex items-center justify-between bg-zinc-900/80 text-left focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 active:scale-[0.98] transition-all"
                 >
-                  <span className={selectedColocacao ? 'text-gray-900' : 'text-gray-400'}>
+                  <span className={selectedColocacao ? 'text-white text-base' : 'text-zinc-500 text-base'}>
                     {selectedColocacao?.nome || 'Selecione...'}
                   </span>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <ChevronDown className="h-5 w-5 text-zinc-500" />
                 </button>
 
                 {showColocacaoDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl shadow-lg z-20 max-h-80 overflow-y-auto">
                     {/* Empty option */}
                     <button
                       onClick={() => {
@@ -315,34 +315,34 @@ export default function CalculadoraPage() {
 
             {/* Valor da Aposta */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-900 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Valor da aposta:
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-4 text-gray-500">R$</span>
+                <span className="absolute left-4 text-zinc-500">R$</span>
                 <input
                   type="text"
                   value={valorAposta}
                   onChange={handleValorChange}
                   placeholder="Aposta..."
-                  className="w-full h-12 pl-12 pr-4 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500"
+                  className="w-full h-14 min-h-[48px] pl-12 pr-4 border border-zinc-700/40 rounded-xl bg-zinc-900/80 text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
             </div>
 
             {/* Resultado */}
             {resultado && (
-              <div className="mb-6 border border-dashed border-gray-300 rounded-lg p-4">
+              <div className="mb-6 border border-dashed border-zinc-700/40 rounded-xl p-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-xs text-gray-500 font-medium">PRÊMIO</div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-xs text-zinc-500 font-medium">PRÊMIO</div>
+                    <div className="text-2xl font-bold text-white">
                       R$ {formatCurrency(resultado.premio)}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-gray-500 font-medium">COTAÇÃO</div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-xs text-zinc-500 font-medium">COTAÇÃO</div>
+                    <div className="text-2xl font-bold text-white">
                       R$ {formatCurrency(resultado.cotacao)}
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export default function CalculadoraPage() {
             <button
               onClick={handleCalcular}
               disabled={!selectedModalidade || !selectedColocacao || !valorAposta}
-              className="w-full h-12 bg-[#1A202C] rounded-lg font-semibold text-white disabled:opacity-50"
+              className="w-full h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 disabled:opacity-50 active:scale-[0.98] transition-all"
             >
               Calcular :)
             </button>

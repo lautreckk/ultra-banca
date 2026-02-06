@@ -707,7 +707,7 @@ export default function AdminSuspeitosPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-32">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-600">
+                <tbody className="divide-y divide-zinc-700/40">
                   {suspeitos.map((suspeito) => {
                     const cfg = NIVEL_CONFIG[suspeito.nivel];
                     return (

@@ -44,11 +44,11 @@ export function BetSummary({
   const totalFormatted = totalGeral.toFixed(2).replace('.', ',');
 
   return (
-    <div className={cn('bg-white min-h-screen', className)}>
+    <div className={cn('bg-[#1A1F2B] min-h-screen', className)}>
       {/* Apostas pendentes (já adicionadas) */}
       {pendingItems.length > 0 && (
         <div className="p-4 space-y-3">
-          <p className="text-sm text-gray-500 font-medium">
+          <p className="text-sm text-zinc-500 font-medium">
             Apostas acumuladas ({pendingItems.length}):
           </p>
           {pendingItems.map((item) => {
@@ -59,10 +59,10 @@ export function BetSummary({
             return (
               <div
                 key={item.id}
-                className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50"
+                className="border border-zinc-700/40 rounded-lg overflow-hidden bg-zinc-800/30"
               >
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-                  <span className="font-bold text-gray-700 text-sm">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-700/40">
+                  <span className="font-bold text-zinc-300 text-sm">
                     {modalidadeInfo?.nome || item.modalidade.toUpperCase()} -{' '}
                     {colocacaoInfo?.nome || item.colocacao.toUpperCase()}
                   </span>
@@ -92,17 +92,17 @@ export function BetSummary({
                     {item.palpites.map((palpite) => (
                       <span
                         key={palpite}
-                        className="inline-flex items-center px-2 py-0.5 border border-gray-300 rounded text-xs font-medium text-gray-700"
+                        className="inline-flex items-center px-2 py-0.5 border border-zinc-700/40 rounded text-xs font-medium text-zinc-300"
                       >
                         {palpite}
                       </span>
                     ))}
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-700">
+                    <span className="text-zinc-300">
                       R$ {itemTotal.toFixed(2).replace('.', ',')}
                     </span>
-                    <span className="text-gray-500 text-xs">
+                    <span className="text-zinc-500 text-xs">
                       {item.valorUnitario.toFixed(2).replace('.', ',')} / CADA
                     </span>
                   </div>
@@ -112,19 +112,19 @@ export function BetSummary({
           })}
 
           {/* Divider */}
-          <div className="border-t border-dashed border-gray-300 my-2" />
+          <div className="border-t border-dashed border-zinc-700/40 my-2" />
         </div>
       )}
 
       {/* Aposta atual */}
       <div className="p-4">
         {pendingItems.length > 0 && (
-          <p className="text-sm text-gray-500 font-medium mb-2">Aposta atual:</p>
+          <p className="text-sm text-zinc-500 font-medium mb-2">Aposta atual:</p>
         )}
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="border border-zinc-700/40 rounded-lg overflow-hidden">
           {/* Card Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <span className="font-bold text-gray-900">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700/40">
+            <span className="font-bold text-white">
               {modalidade.toUpperCase()} - {colocacao.toUpperCase()}
             </span>
             {onRemoveBet && (
@@ -141,7 +141,7 @@ export function BetSummary({
               {palpites.map((palpite) => (
                 <span
                   key={palpite}
-                  className="inline-flex items-center px-2 py-1 border border-gray-300 rounded text-sm font-medium text-gray-900"
+                  className="inline-flex items-center px-2 py-1 border border-zinc-700/40 rounded text-sm font-medium text-white"
                 >
                   {palpite}
                 </span>
@@ -150,10 +150,10 @@ export function BetSummary({
 
             {/* Value Row */}
             <div className="flex justify-between items-center">
-              <span className="font-bold text-gray-900">
+              <span className="font-bold text-white">
                 R$ {totalAtual.toFixed(2).replace('.', ',')}
               </span>
-              <span className="text-gray-500 text-sm">{valorFormatted} / CADA</span>
+              <span className="text-zinc-500 text-sm">{valorFormatted} / CADA</span>
             </div>
           </div>
         </div>
@@ -161,7 +161,7 @@ export function BetSummary({
 
       {/* Dashed Separator */}
       <div className="px-4">
-        <div className="border-t border-dashed border-gray-300" />
+        <div className="border-t border-dashed border-zinc-700/40" />
       </div>
 
       {/* Total */}
@@ -169,7 +169,7 @@ export function BetSummary({
         <span className="text-lg">Total: </span>
         <span className="text-lg font-bold">R$ {totalFormatted}</span>
         {pendingItems.length > 0 && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-zinc-500 mt-1">
             ({pendingItems.length + 1} apostas)
           </p>
         )}
@@ -177,21 +177,21 @@ export function BetSummary({
 
       {/* Dashed Separator */}
       <div className="px-4">
-        <div className="border-t border-dashed border-gray-300" />
+        <div className="border-t border-dashed border-zinc-700/40" />
       </div>
 
       {/* Action Buttons */}
       <div className="p-4 space-y-3">
         <button
           onClick={onAvancar}
-          className="w-full h-12 bg-[#E5A220] rounded-lg font-semibold text-white"
+          className="w-full h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 active:scale-[0.98] transition-all"
         >
           Selecionar Loterias
         </button>
 
         <button
           onClick={onMaisApostas}
-          className="w-full h-12 bg-zinc-900 rounded-lg font-semibold text-white"
+          className="w-full h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white active:scale-[0.98] transition-all"
         >
           + Mais Apostas
         </button>

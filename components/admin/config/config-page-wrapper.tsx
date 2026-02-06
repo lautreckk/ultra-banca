@@ -108,7 +108,7 @@ export function ConfigPageWrapper({
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-white">{title}</h1>
-              <p className="text-sm md:text-base text-gray-400">{description}</p>
+              <p className="text-sm md:text-base text-zinc-500">{description}</p>
             </div>
           </div>
           <Button

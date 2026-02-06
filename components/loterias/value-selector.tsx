@@ -68,20 +68,20 @@ export function ValueSelector({
   };
 
   return (
-    <div className={cn('bg-white min-h-screen', className)}>
+    <div className={cn('bg-[#1A1F2B] min-h-screen', className)}>
       {/* Info Header */}
       <div className="px-4 pt-4">
         {/* LOTERIAS | CENTENA row */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">LOTERIAS</h1>
-            <p className="text-sm text-gray-500">{data}</p>
+            <h1 className="text-xl font-bold text-white">LOTERIAS</h1>
+            <p className="text-sm text-zinc-500">{data}</p>
           </div>
           <span className="text-lg font-bold text-[#D97706]">{modalidade}</span>
         </div>
 
         {/* Divider */}
-        <div className="border-b border-gray-200 my-3" />
+        <div className="border-b border-zinc-700/40 my-3" />
       </div>
 
       {/* Rounding rules link */}
@@ -94,20 +94,20 @@ export function ValueSelector({
 
       {/* Value Input */}
       <div className="px-4">
-        <div className="flex items-center justify-between h-14 px-4 border border-gray-200 rounded-lg bg-white">
-          <span className="text-gray-500 font-medium">R$</span>
+        <div className="flex items-center justify-between h-14 px-4 border border-zinc-700/40 rounded-xl bg-zinc-900/80">
+          <span className="text-zinc-500 font-medium">R$</span>
           <input
             ref={inputRef}
             type="text"
             inputMode="decimal"
             value={inputValue}
             onChange={handleInputChange}
-            className="flex-1 text-xl font-bold text-gray-900 text-center bg-transparent outline-none"
+            className="flex-1 text-xl font-bold text-white text-center bg-transparent outline-none"
             placeholder="0,00"
           />
           <button
             onClick={handleClear}
-            className="text-gray-400 text-sm hover:text-gray-600"
+            className="text-zinc-500 text-sm hover:text-zinc-400"
           >
             Limpar
           </button>
@@ -116,13 +116,13 @@ export function ValueSelector({
 
       {/* Quick Values */}
       <div className="px-4 pt-4">
-        <p className="text-sm text-gray-600 mb-2">Valores rápidos:</p>
+        <p className="text-sm text-zinc-400 mb-2">Valores rápidos:</p>
         <div className="grid grid-cols-4 gap-2">
           {QUICK_VALUES.map((amount) => (
             <button
               key={amount}
               onClick={() => handleQuickAdd(amount)}
-              className="h-12 border border-gray-300 rounded-lg font-semibold text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              className="h-14 min-h-[48px] border border-zinc-700/40 rounded-xl font-semibold text-white hover:bg-zinc-700/30 active:bg-zinc-700/30 active:scale-[0.98] transition-all"
             >
               +{amount}
             </button>
@@ -135,13 +135,13 @@ export function ValueSelector({
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => onModeSelect('todos')}
-            className="h-12 bg-zinc-900 rounded-lg font-semibold text-white"
+            className="h-14 min-h-[56px] bg-zinc-900 rounded-xl font-semibold text-white active:scale-[0.98] transition-all"
           >
             Todos
           </button>
           <button
             onClick={() => onModeSelect('cada')}
-            className="h-12 bg-zinc-900 rounded-lg font-semibold text-white"
+            className="h-14 min-h-[56px] bg-zinc-900 rounded-xl font-semibold text-white active:scale-[0.98] transition-all"
           >
             Cada
           </button>

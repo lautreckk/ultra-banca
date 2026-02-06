@@ -67,31 +67,31 @@ export default function FazendinhaSelectPage({ params }: FazendinhaSelectPagePro
 
   return (
     <PageLayout title="FAZENDINHA">
-      <div className="bg-[#FFFBEB] min-h-screen pb-8">
+      <div className="bg-[#111318] min-h-screen pb-8">
         <div className="p-4">
           {/* Dropdown Loterias */}
           <div className="relative mb-4">
             <button
               onClick={() => setShowLoteriasDropdown(!showLoteriasDropdown)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-sm"
+              className="w-full flex items-center justify-between px-4 h-14 min-h-[56px] bg-[#1A1F2B] border border-zinc-700/40 rounded-xl shadow-sm active:scale-[0.98] transition-all"
             >
-              <span className="font-bold text-gray-900">{getLoteriasLabel()}</span>
+              <span className="font-bold text-white">{getLoteriasLabel()}</span>
               <ChevronDown
                 className={cn(
-                  'h-5 w-5 text-gray-400 transition-transform',
+                  'h-5 w-5 text-zinc-500 transition-transform',
                   showLoteriasDropdown && 'rotate-180'
                 )}
               />
             </button>
 
             {showLoteriasDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-800 rounded-lg shadow-lg z-50 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl shadow-lg z-50 overflow-hidden">
                 <button
                   onClick={() => {
                     setSelectedLoterias([]);
                     setShowLoteriasDropdown(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-zinc-700"
+                  className="w-full flex items-center gap-3 px-4 py-3 min-h-[56px] text-white active:bg-zinc-700/50 active:scale-[0.98] transition-all"
                 >
                   {selectedLoterias.length === 0 && <Check className="h-4 w-4" />}
                   <span className={selectedLoterias.length === 0 ? '' : 'ml-7'}>
@@ -105,7 +105,7 @@ export default function FazendinhaSelectPage({ params }: FazendinhaSelectPagePro
                       setSelectedLoterias([loteria.id]);
                       setShowLoteriasDropdown(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-zinc-700"
+                    className="w-full flex items-center gap-3 px-4 py-3 min-h-[56px] text-white active:bg-zinc-700/50 active:scale-[0.98] transition-all"
                   >
                     {selectedLoterias.includes(loteria.id) && selectedLoterias.length === 1 && (
                       <Check className="h-4 w-4" />
@@ -139,10 +139,10 @@ export default function FazendinhaSelectPage({ params }: FazendinhaSelectPagePro
                   }
                 }}
                 className={cn(
-                  'px-6 py-2 rounded-lg font-bold text-sm transition-all',
+                  'px-6 py-2 rounded-xl font-bold text-sm active:scale-[0.98] transition-all',
                   selectedModalidade === mod.id
-                    ? 'bg-white border-2 border-gray-300 text-gray-900 shadow-sm'
-                    : 'bg-transparent text-gray-600 hover:bg-white/50'
+                    ? 'bg-[#1A1F2B] border-2 border-zinc-700/40 text-white shadow-sm'
+                    : 'bg-transparent text-zinc-400 hover:bg-[#1A1F2B]/50'
                 )}
               >
                 {mod.nome}
@@ -157,10 +157,10 @@ export default function FazendinhaSelectPage({ params }: FazendinhaSelectPagePro
                 key={valor}
                 onClick={() => setSelectedValor(valor)}
                 className={cn(
-                  'px-4 py-2 rounded-lg font-medium text-sm transition-all',
+                  'px-4 py-2 rounded-xl font-medium text-sm active:scale-[0.98] transition-all',
                   selectedValor === valor
-                    ? 'bg-white border-2 border-gray-400 text-gray-900 shadow-sm'
-                    : 'bg-white/70 border border-gray-200 text-gray-600 hover:bg-white'
+                    ? 'bg-[#1A1F2B] border-2 border-zinc-700/40 text-white shadow-sm'
+                    : 'bg-[#1A1F2B]/70 border border-zinc-700/40 text-zinc-400 hover:bg-[#1A1F2B]'
                 )}
               >
                 R$ {valor.toFixed(2).replace('.', ',')}
@@ -174,26 +174,26 @@ export default function FazendinhaSelectPage({ params }: FazendinhaSelectPagePro
               <button
                 key={loteria.id}
                 onClick={() => handleLoteriaCardClick(loteria.id)}
-                className="w-full bg-white rounded-lg border-l-4 border-l-[#C7E5C4] border border-gray-200 p-4 text-left shadow-sm hover:shadow-md transition-shadow"
+                className="w-full bg-[#1A1F2B] rounded-xl border-l-4 border-l-[#C7E5C4] border border-zinc-700/40 p-4 text-left shadow-sm active:scale-[0.98] transition-all"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className={cn(
-                      'text-xs font-bold px-2 py-0.5 rounded',
-                      selectedModalidade === 'dezena' && 'bg-blue-100 text-blue-700',
-                      selectedModalidade === 'grupo' && 'bg-green-100 text-green-700',
-                      selectedModalidade === 'centena' && 'bg-yellow-100 text-yellow-700'
+                      'text-xs font-bold px-2 py-0.5 rounded-lg',
+                      selectedModalidade === 'dezena' && 'bg-blue-900/30 text-blue-300',
+                      selectedModalidade === 'grupo' && 'bg-green-900/30 text-green-300',
+                      selectedModalidade === 'centena' && 'bg-yellow-900/30 text-yellow-300'
                     )}
                   >
                     {modalidade?.nome}
                   </span>
                 </div>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-bold text-white">
                   R$ {selectedValor.toFixed(2).replace('.', ',')} pra R${' '}
                   {formatPremio(selectedValor, modalidade?.multiplicador || 1)}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  <span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-medium">
+                <p className="text-sm text-zinc-400 mt-1">
+                  <span className="bg-zinc-800/50 px-2 py-0.5 rounded-lg text-xs font-medium">
                     {loteria.nome} - {loteria.horario}
                   </span>
                 </p>

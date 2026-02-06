@@ -132,8 +132,8 @@ function ConfirmarContent() {
   if (!numeros.length || !modalidade) {
     return (
       <PageLayout title="SELECIONAR NÚMEROS">
-        <div className="flex items-center justify-center min-h-screen">
-          <p className="text-gray-600">Carregando...</p>
+        <div className="flex items-center justify-center min-h-screen bg-[#111318]">
+          <p className="text-zinc-400">Carregando...</p>
         </div>
       </PageLayout>
     );
@@ -144,7 +144,7 @@ function ConfirmarContent() {
       {/* Success Toast */}
       {showToast && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
-          <div className="bg-green-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+          <div className="bg-green-600 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-2">
             <Check className="h-5 w-5" />
             <span>Pule registrada com sucesso. Boa sorte!</span>
@@ -159,7 +159,7 @@ function ConfirmarContent() {
       {/* Error Toast */}
       {error && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
-          <div className="bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+          <div className="bg-red-600 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-2">
               <X className="h-5 w-5" />
               <span>{error}</span>
@@ -171,16 +171,16 @@ function ConfirmarContent() {
         </div>
       )}
 
-      <div className="bg-gray-100 min-h-screen">
+      <div className="bg-[#111318] min-h-screen">
         {/* Header Info */}
-        <div className="bg-white px-4 pt-4 pb-3 border-b border-gray-200">
+        <div className="bg-[#1A1F2B] px-4 pt-4 pb-3 border-b border-zinc-700/40">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">FAZENDINHA</h2>
+              <h2 className="text-xl font-bold text-white">FAZENDINHA</h2>
             </div>
             <div className="text-right">
               <span className="text-lg font-bold text-red-500">{modalidade?.nome}</span>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-zinc-400">
                 R$ {valor.toFixed(2).replace('.', ',')} pra R${' '}
                 {possivelPremio.toFixed(2).replace('.', ',')}
               </p>
@@ -190,15 +190,15 @@ function ConfirmarContent() {
 
         {/* Receipt Card */}
         <div className="p-4">
-          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4">
+          <div className="bg-[#1A1F2B] rounded-xl border-2 border-dashed border-zinc-700/40 p-4">
             {/* Pule # */}
-            <div className="text-sm font-medium text-gray-700 mb-2">
+            <div className="text-sm font-medium text-zinc-300 mb-2">
               PULE #{puleNumber || '...'}
             </div>
 
             {/* Banca Name & Logo */}
             <div className="text-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-2">{config.site_name.toUpperCase()}</h2>
+              <h2 className="text-lg font-bold text-white mb-2">{config.site_name.toUpperCase()}</h2>
               <div className="flex justify-center">
                 {config.logo_url ? (
                   <Image
@@ -210,7 +210,7 @@ function ConfirmarContent() {
                     unoptimized={config.logo_url.includes('supabase.co')}
                   />
                 ) : (
-                  <div className="w-24 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                  <div className="w-24 h-16 bg-zinc-800 rounded-xl flex items-center justify-center">
                     <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
                   </div>
                 )}
@@ -219,21 +219,21 @@ function ConfirmarContent() {
 
             {/* Vale Date */}
             <div className="flex items-center my-3">
-              <div className="flex-1 border-t border-gray-300" />
-              <span className="px-3 text-sm font-medium text-gray-700">VALE: {formattedDate}</span>
-              <div className="flex-1 border-t border-gray-300" />
+              <div className="flex-1 border-t border-zinc-700/40" />
+              <span className="px-3 text-sm font-medium text-zinc-300">VALE: {formattedDate}</span>
+              <div className="flex-1 border-t border-zinc-700/40" />
             </div>
 
             {/* Vendedor & Status */}
             <div className="flex justify-between mb-4">
               <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase">Vendedor</div>
-                <div className="text-lg font-bold text-gray-900">979536</div>
+                <div className="text-xs text-zinc-500 uppercase">Vendedor</div>
+                <div className="text-lg font-bold text-white">979536</div>
               </div>
               <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase">Status</div>
+                <div className="text-xs text-zinc-500 uppercase">Status</div>
                 <div
-                  className={`text-lg font-bold ${isConfirmed ? 'text-green-600' : 'text-yellow-600'}`}
+                  className={`text-lg font-bold ${isConfirmed ? 'text-green-400' : 'text-yellow-400'}`}
                 >
                   {isConfirmed ? 'Registrada' : 'Pendente'}
                 </div>
@@ -241,10 +241,10 @@ function ConfirmarContent() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-300 my-3" />
+            <div className="border-t border-zinc-700/40 my-3" />
 
             {/* Game Type */}
-            <div className="text-center font-bold text-gray-900 mb-2">
+            <div className="text-center font-bold text-white mb-2">
               FAZENDINHA
               <br />({modalidade?.nome})
             </div>
@@ -252,25 +252,25 @@ function ConfirmarContent() {
             {/* Prize Info */}
             <ul className="mb-3 text-sm">
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
                 R$ {valor.toFixed(2).replace('.', ',')} pra R${' '}
                 {possivelPremio.toFixed(2).replace('.', ',')}
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
                 {loteria?.nome}
               </li>
             </ul>
 
             {/* Palpites Header */}
             <div className="flex items-center my-3">
-              <div className="flex-1 border-t border-gray-300" />
-              <span className="px-3 text-xs font-medium text-gray-700">
+              <div className="flex-1 border-t border-zinc-700/40" />
+              <span className="px-3 text-xs font-medium text-zinc-300">
                 PALPITES
                 <br />
                 (1o PREMIO)
               </span>
-              <div className="flex-1 border-t border-gray-300" />
+              <div className="flex-1 border-t border-zinc-700/40" />
             </div>
 
             {/* Selected Numbers */}
@@ -278,7 +278,7 @@ function ConfirmarContent() {
               {numeros.map((num) => (
                 <span
                   key={num}
-                  className="inline-flex items-center px-3 py-1 border border-gray-400 rounded text-sm font-medium text-gray-900"
+                  className="inline-flex items-center px-3 py-1 border border-zinc-700/40 rounded text-sm font-medium text-white"
                 >
                   {num}
                 </span>
@@ -286,29 +286,29 @@ function ConfirmarContent() {
             </div>
 
             {/* Dashed Separator */}
-            <div className="border-t-2 border-dashed border-gray-300 my-4" />
+            <div className="border-t-2 border-dashed border-zinc-700/40 my-4" />
 
             {/* Total */}
             <div className="text-center py-2">
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-white">
                 TOTAL: R$ {valorTotal.toFixed(2).replace('.', ',')}
               </span>
             </div>
 
             {/* Dashed Separator */}
-            <div className="border-t-2 border-dashed border-gray-300 my-4" />
+            <div className="border-t-2 border-dashed border-zinc-700/40 my-4" />
 
             {/* Note */}
-            <p className="text-sm text-gray-600 text-center">
+            <p className="text-sm text-zinc-400 text-center">
               Pules de fazendinha nao podem ser canceladas.
             </p>
 
             {/* Confirmation Time */}
             {isConfirmed && (
               <div className="text-center mt-4">
-                <p className="text-sm font-bold text-gray-900">{confirmationTime}</p>
+                <p className="text-sm font-bold text-white">{confirmationTime}</p>
                 {novoSaldo !== null && (
-                  <p className="text-sm text-green-600 mt-1">
+                  <p className="text-sm text-green-400 mt-1">
                     Novo saldo: R$ {novoSaldo.toFixed(2).replace('.', ',')}
                   </p>
                 )}
@@ -317,7 +317,7 @@ function ConfirmarContent() {
           </div>
 
           {/* Dashed separator outside card */}
-          <div className="border-t-2 border-dashed border-gray-300 my-6" />
+          <div className="border-t-2 border-dashed border-zinc-700/40 my-6" />
 
           {/* Action Buttons */}
           {!isConfirmed ? (
@@ -325,7 +325,7 @@ function ConfirmarContent() {
               <button
                 onClick={handleVoltar}
                 disabled={isLoading}
-                className="h-14 bg-[#1A202C] rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                className="h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 <Home className="h-5 w-5" />
                 Voltar
@@ -333,7 +333,7 @@ function ConfirmarContent() {
               <button
                 onClick={handleFinalizar}
                 disabled={isLoading}
-                className="h-14 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                className="h-14 min-h-[56px] bg-[#E5A220] text-zinc-900 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -348,7 +348,7 @@ function ConfirmarContent() {
           ) : (
             <button
               onClick={handleCompartilhar}
-              className="w-full h-14 bg-white border border-gray-300 rounded-lg font-semibold text-gray-900 flex items-center justify-center gap-2"
+              className="w-full h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
             >
               <FileText className="h-5 w-5" />
               Compartilhar
@@ -365,8 +365,8 @@ export default function FazendinhaConfirmarPage() {
     <Suspense
       fallback={
         <PageLayout title="SELECIONAR NÚMEROS">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="flex items-center justify-center min-h-screen bg-[#111318]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-500"></div>
           </div>
         </PageLayout>
       }

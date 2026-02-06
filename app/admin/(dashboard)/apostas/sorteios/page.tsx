@@ -7,7 +7,7 @@ export default function AdminSorteiosPage() {
     <div className="space-y-4 md:space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">Sorteios</h1>
-        <p className="text-sm md:text-base text-gray-400">Gerenciamento de sorteios e resultados</p>
+        <p className="text-sm md:text-base text-zinc-500">Gerenciamento de sorteios e resultados</p>
       </div>
 
       {/* Placeholder Content */}
@@ -16,7 +16,7 @@ export default function AdminSorteiosPage() {
           <CircleDot className="h-8 w-8 text-cyan-400" />
         </div>
         <h2 className="text-lg font-semibold text-white mb-2">Em Desenvolvimento</h2>
-        <p className="text-gray-400 max-w-md mx-auto">
+        <p className="text-zinc-500 max-w-md mx-auto">
           Esta página permitirá gerenciar os sorteios, cadastrar resultados manualmente e visualizar o histórico de resultados.
         </p>
       </div>
@@ -37,10 +37,10 @@ export default function AdminSorteiosPage() {
           ].map((sorteio) => (
             <div
               key={sorteio.time}
-              className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+              className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg"
             >
               <div className="flex items-center gap-3">
-                <Clock className="h-4 w-4 text-gray-400" />
+                <Clock className="h-4 w-4 text-zinc-500" />
                 <span className="text-white font-medium">{sorteio.time}</span>
               </div>
               {sorteio.status === 'completed' ? (

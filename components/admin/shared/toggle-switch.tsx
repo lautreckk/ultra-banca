@@ -41,9 +41,9 @@ export function ToggleSwitch({
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={cn(
-          'relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+          'relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-zinc-900',
           styles.track,
-          checked ? 'bg-cyan-600' : 'bg-gray-600'
+          checked ? 'bg-cyan-600' : 'bg-zinc-600'
         )}
       >
         <span
@@ -60,7 +60,7 @@ export function ToggleSwitch({
             <span className="text-sm font-medium text-white">{label}</span>
           )}
           {description && (
-            <span className="text-xs text-gray-400">{description}</span>
+            <span className="text-xs text-zinc-400">{description}</span>
           )}
         </div>
       )}

@@ -14,22 +14,22 @@ interface AccordionItemProps {
 
 function AccordionItem({ id, title, expanded, onToggle, children }: AccordionItemProps) {
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
+    <div className="border-b border-zinc-700/40 last:border-b-0">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-3 px-4 text-left hover:bg-gray-50"
+        className="w-full flex items-center justify-between py-3 px-4 text-left hover:bg-zinc-700/30 active:scale-[0.98] transition-all"
         aria-expanded={expanded}
         aria-controls={`content-${id}`}
       >
-        <span className="font-medium text-gray-800 text-sm">{title}</span>
+        <span className="font-medium text-white text-sm">{title}</span>
         {expanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <ChevronUp className="h-4 w-4 text-zinc-500 flex-shrink-0" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <ChevronDown className="h-4 w-4 text-zinc-500 flex-shrink-0" />
         )}
       </button>
       {expanded && (
-        <div id={`content-${id}`} className="px-4 pb-4 text-gray-600 text-sm">
+        <div id={`content-${id}`} className="px-4 pb-4 text-zinc-400 text-sm">
           {children}
         </div>
       )}
@@ -248,23 +248,23 @@ export default function ComoJogarPage() {
     <PageLayout title="COMO JOGAR">
       <div className="p-4 space-y-4">
         {/* Tabs */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-zinc-800/50 rounded-xl p-1">
           <button
             onClick={() => setActiveTab('como-jogar')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
               activeTab === 'como-jogar'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-zinc-700 text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             Como Jogar
           </button>
           <button
             onClick={() => setActiveTab('tabela')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
               activeTab === 'tabela'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-zinc-700 text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             Tabela de Inversao
@@ -273,11 +273,11 @@ export default function ComoJogarPage() {
 
         {/* Content */}
         {activeTab === 'como-jogar' ? (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-[#E5A220] text-white font-bold text-center py-3">
+          <div className="bg-[#1A1F2B] rounded-xl shadow-sm overflow-hidden border border-zinc-700/40">
+            <div className="bg-[#E5A220] text-zinc-900 font-bold text-center py-3">
               Modalidades de Jogo
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-zinc-700/40">
               {modalidades.map((modalidade) => (
                 <AccordionItem
                   key={modalidade.id}
@@ -296,11 +296,11 @@ export default function ComoJogarPage() {
             {tabelasInversao.map((tabela) => (
               <div
                 key={tabela.id}
-                className="bg-white rounded-lg shadow-sm overflow-hidden"
+                className="bg-[#1A1F2B] rounded-xl shadow-sm overflow-hidden border border-zinc-700/40"
               >
                 <button
                   onClick={() => toggleItem(tabela.id)}
-                  className="w-full flex items-center justify-between py-3 px-4 bg-[#1A202C] text-white"
+                  className="w-full flex items-center justify-between py-3 px-4 bg-[#1A202C] text-white active:scale-[0.98] transition-all"
                 >
                   <span className="font-medium text-sm">{tabela.title}</span>
                   {expandedItems.includes(tabela.id) ? (
@@ -311,51 +311,51 @@ export default function ComoJogarPage() {
                 </button>
                 {expandedItems.includes(tabela.id) && (
                   <div className="p-4">
-                    <p className="text-gray-600 text-sm mb-3">{tabela.description}</p>
+                    <p className="text-zinc-400 text-sm mb-3">{tabela.description}</p>
 
                     {tabela.data && tabela.data.length > 0 && (
-                      <div className="overflow-hidden rounded-lg border border-gray-200">
-                        <div className="grid grid-cols-2 bg-gray-100 font-medium text-sm">
-                          <div className="px-3 py-2 border-r border-gray-200">Combinacao</div>
+                      <div className="overflow-hidden rounded-xl border border-zinc-700/40">
+                        <div className="grid grid-cols-2 bg-zinc-800/50 font-medium text-sm text-zinc-300">
+                          <div className="px-3 py-2 border-r border-zinc-700/40">Combinacao</div>
                           <div className="px-3 py-2">Quantidade</div>
                         </div>
                         {tabela.data.map((row, index) => (
                           <div
                             key={index}
                             className={`grid grid-cols-2 text-sm ${
-                              index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                              index % 2 === 0 ? 'bg-[#1A1F2B]' : 'bg-zinc-800/30'
                             }`}
                           >
-                            <div className="px-3 py-2 border-r border-gray-200 text-gray-700">
+                            <div className="px-3 py-2 border-r border-zinc-700/40 text-zinc-300">
                               {row.combinacao}
                             </div>
-                            <div className="px-3 py-2 text-gray-700">{row.quantidade}</div>
+                            <div className="px-3 py-2 text-zinc-300">{row.quantidade}</div>
                           </div>
                         ))}
                       </div>
                     )}
 
                     {tabela.examples && tabela.examples.length > 0 && (
-                      <div className="overflow-hidden rounded-lg border border-gray-200">
-                        <div className="grid grid-cols-3 bg-gray-100 font-medium text-sm">
-                          <div className="px-3 py-2 border-r border-gray-200">Numero</div>
-                          <div className="px-3 py-2 border-r border-gray-200">Combinacoes</div>
+                      <div className="overflow-hidden rounded-xl border border-zinc-700/40">
+                        <div className="grid grid-cols-3 bg-zinc-800/50 font-medium text-sm text-zinc-300">
+                          <div className="px-3 py-2 border-r border-zinc-700/40">Numero</div>
+                          <div className="px-3 py-2 border-r border-zinc-700/40">Combinacoes</div>
                           <div className="px-3 py-2">Total</div>
                         </div>
                         {tabela.examples.map((row, index) => (
                           <div
                             key={index}
                             className={`grid grid-cols-3 text-sm ${
-                              index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                              index % 2 === 0 ? 'bg-[#1A1F2B]' : 'bg-zinc-800/30'
                             }`}
                           >
-                            <div className="px-3 py-2 border-r border-gray-200 font-mono text-gray-800">
+                            <div className="px-3 py-2 border-r border-zinc-700/40 font-mono text-white">
                               {row.numero}
                             </div>
-                            <div className="px-3 py-2 border-r border-gray-200 text-gray-600 text-xs">
+                            <div className="px-3 py-2 border-r border-zinc-700/40 text-zinc-400 text-xs">
                               {row.combinacoes}
                             </div>
-                            <div className="px-3 py-2 text-gray-700">{row.total}</div>
+                            <div className="px-3 py-2 text-zinc-300">{row.total}</div>
                           </div>
                         ))}
                       </div>

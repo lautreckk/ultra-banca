@@ -41,10 +41,10 @@ export function CotacoesShareButton({ titulo, groupedData, showCategories }: Cot
   return (
     <button
       onClick={handleShare}
-      className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 py-4 text-white active:bg-zinc-700"
+      className="flex w-full items-center justify-center gap-2 rounded-xl h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 text-white font-semibold active:bg-zinc-700 active:scale-[0.98] transition-all"
     >
       <Share2 className="h-5 w-5" />
-      <span className="font-semibold">Compartilhar</span>
+      <span>Compartilhar</span>
     </button>
   );
 }

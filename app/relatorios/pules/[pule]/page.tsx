@@ -235,7 +235,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
     <PageLayout title="PULE" showBack>
       <div className="space-y-4 p-4">
         {/* Header com codigo e status */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className={`px-4 py-3 ${getStatusColor(aposta.status)}`}>
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold text-white">
@@ -252,7 +252,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         </div>
 
         {/* Informacoes do Jogo */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">INFORMACOES DO JOGO</span>
           </div>
@@ -279,7 +279,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         </div>
 
         {/* Palpites */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">PALPITES</span>
           </div>
@@ -288,7 +288,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               {aposta.palpites.map((palpite, index) => (
                 <span
                   key={index}
-                  className="rounded-lg bg-zinc-800/30 px-3 py-2 font-mono font-semibold text-white"
+                  className="rounded-xl bg-zinc-800/30 px-3 py-2 font-mono font-semibold text-white"
                 >
                   {palpite}
                 </span>
@@ -298,7 +298,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         </div>
 
         {/* Horarios */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">HORARIOS</span>
           </div>
@@ -307,7 +307,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               {aposta.horarios.map((horario, index) => (
                 <span
                   key={index}
-                  className="rounded-lg bg-zinc-800 px-3 py-2 text-sm font-semibold text-white"
+                  className="rounded-xl bg-zinc-800 px-3 py-2 text-sm font-semibold text-white"
                 >
                   {horario}
                 </span>
@@ -317,7 +317,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         </div>
 
         {/* Valores */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">VALORES</span>
           </div>
@@ -343,7 +343,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
 
         {/* Premio (se ganhou) */}
         {aposta.status === 'premiada' && aposta.premio_valor && (
-          <div className="overflow-hidden rounded-lg bg-green-500 shadow-sm">
+          <div className="overflow-hidden rounded-xl bg-green-500 shadow-sm">
             <div className="px-4 py-4 text-center">
               <p className="text-sm text-white/80">PREMIO</p>
               <p className="text-2xl font-bold text-white">
@@ -361,13 +361,13 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               {cancelCheck.allowed ? (
                 <button
                   onClick={() => setShowCancelConfirm(true)}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500 py-4 text-white active:bg-red-600"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl h-14 min-h-[56px] bg-red-500 text-white font-bold active:bg-red-600 active:scale-[0.98] transition-all"
                 >
                   <XCircle className="h-5 w-5" />
-                  <span className="font-semibold">Cancelar Aposta</span>
+                  <span>Cancelar Aposta</span>
                 </button>
               ) : (
-                <div className="rounded-lg bg-zinc-800/30 p-3">
+                <div className="rounded-xl bg-zinc-800/30 border border-zinc-700/40 p-3">
                   <div className="flex items-start gap-2">
                     <Clock className="h-5 w-5 text-zinc-500 mt-0.5 shrink-0" />
                     <div>
@@ -385,17 +385,17 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         {/* Share Button */}
         <button
           onClick={handleShare}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 py-4 text-white active:bg-zinc-700"
+          className="flex w-full items-center justify-center gap-2 rounded-xl h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 text-white font-semibold active:bg-zinc-700 active:scale-[0.98] transition-all"
         >
           <Share2 className="h-5 w-5" />
-          <span className="font-semibold">Compartilhar</span>
+          <span>Compartilhar</span>
         </button>
       </div>
 
       {/* Cancel Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-[#1A1F2B] p-6 shadow-xl">
+          <div className="w-full max-w-sm rounded-xl bg-[#1A1F2B] border border-zinc-700/40 p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
                 <XCircle className="h-6 w-6 text-red-500" />
@@ -406,7 +406,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               </div>
             </div>
 
-            <div className="mb-4 rounded-lg bg-zinc-800/30 p-3">
+            <div className="mb-4 rounded-xl bg-zinc-800/30 border border-zinc-700/40 p-3">
               <p className="text-sm text-zinc-400">
                 O valor de <strong className="text-white">{formatCurrency(aposta?.valor_total || 0)}</strong> sera
                 estornado para seu saldo.
@@ -417,14 +417,14 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               <button
                 onClick={() => setShowCancelConfirm(false)}
                 disabled={cancelling}
-                className="flex-1 rounded-lg bg-zinc-700 py-3 font-semibold text-zinc-200 active:bg-zinc-600 disabled:opacity-50"
+                className="flex-1 rounded-xl h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 font-semibold text-zinc-200 active:bg-zinc-600 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 Voltar
               </button>
               <button
                 onClick={handleCancelBet}
                 disabled={cancelling}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 py-3 font-semibold text-white active:bg-red-600 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl h-14 min-h-[56px] bg-red-500 font-bold text-white active:bg-red-600 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 {cancelling && <Loader2 className="h-4 w-4 animate-spin" />}
                 Confirmar

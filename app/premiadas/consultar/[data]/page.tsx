@@ -97,7 +97,7 @@ export default function PremiadasPorDataPage() {
 
   return (
     <PageLayout title={`PREMIADAS - ${formatDate(data)}`} showBack>
-      <div className="space-y-4 p-4">
+      <div className="bg-[#111318] min-h-screen space-y-4 p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-[#D4A84B]" />
@@ -115,7 +115,7 @@ export default function PremiadasPorDataPage() {
                   {resultados.map((resultado) => (
                     <div
                       key={resultado.id}
-                      className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3"
+                      className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-3"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[#D4A84B] font-medium">{resultado.horario}</span>
@@ -125,7 +125,7 @@ export default function PremiadasPorDataPage() {
                           const premio = resultado[`premio_${i}` as keyof Resultado] as string | null;
                           return (
                             <div key={i} className="text-center">
-                              <span className="text-xs text-gray-300">{i}º</span>
+                              <span className="text-xs text-zinc-300">{i}º</span>
                               <p className="font-mono text-white text-sm">{premio || '-'}</p>
                             </div>
                           );
@@ -142,11 +142,11 @@ export default function PremiadasPorDataPage() {
               <div className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/20 rounded-xl p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-300">Apostas Premiadas</p>
+                    <p className="text-sm text-zinc-300">Apostas Premiadas</p>
                     <p className="text-2xl font-bold text-white">{apostas.length}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-300">Total em Prêmios</p>
+                    <p className="text-sm text-zinc-300">Total em Prêmios</p>
                     <p className="text-2xl font-bold text-emerald-400">{formatCurrency(totalPremios)}</p>
                   </div>
                 </div>
@@ -161,28 +161,28 @@ export default function PremiadasPorDataPage() {
               </h2>
 
               {apostas.length === 0 ? (
-                <div className="bg-zinc-900/50 rounded-xl p-8 text-center">
-                  <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">Nenhuma aposta premiada nesta data</p>
+                <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-8 text-center">
+                  <Trophy className="h-12 w-12 text-zinc-400 mx-auto mb-3" />
+                  <p className="text-zinc-500">Nenhuma aposta premiada nesta data</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {apostas.map((aposta) => (
                     <div
                       key={aposta.id}
-                      className="bg-zinc-900/80 border border-emerald-500/20 rounded-xl p-4 space-y-3"
+                      className="bg-[#1A1F2B] border border-emerald-500/20 rounded-xl p-4 space-y-3"
                     >
                       <div className="flex items-start justify-between">
                         <div>
                           {aposta.profiles && (
-                            <p className="text-sm text-gray-300">{aposta.profiles.nome}</p>
+                            <p className="text-sm text-zinc-300">{aposta.profiles.nome}</p>
                           )}
                           <p className="text-white font-medium capitalize">
                             {aposta.tipo} - {aposta.modalidade}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-300">Prêmio</p>
+                          <p className="text-xs text-zinc-300">Prêmio</p>
                           <p className="text-lg font-bold text-emerald-400">
                             {formatCurrency(aposta.premio_valor)}
                           </p>
@@ -193,25 +193,25 @@ export default function PremiadasPorDataPage() {
                         {aposta.palpites.map((palpite, i) => (
                           <span
                             key={i}
-                            className="px-2 py-1 bg-[#D4A84B]/20 text-[#D4A84B] rounded-lg text-sm font-mono"
+                            className="px-2 py-1 bg-[#D4A84B]/20 text-[#D4A84B] rounded-xl text-sm font-mono"
                           >
                             {palpite}
                           </span>
                         ))}
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-gray-300">
+                      <div className="flex items-center justify-between text-xs text-zinc-300">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {aposta.horarios.join(', ')}
                         </span>
                         {aposta.pule && (
-                          <span className="text-gray-400">Pule: {aposta.pule}</span>
+                          <span className="text-zinc-500">Pule: {aposta.pule}</span>
                         )}
                       </div>
 
-                      <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-sm">
-                        <span className="text-gray-300">
+                      <div className="pt-2 border-t border-zinc-700/40 flex items-center justify-between text-sm">
+                        <span className="text-zinc-300">
                           Aposta: {formatCurrency(aposta.valor_total)}
                         </span>
                         <span className="text-emerald-400 font-medium flex items-center gap-1">

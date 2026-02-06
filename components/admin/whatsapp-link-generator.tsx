@@ -125,38 +125,38 @@ export function WhatsAppLinkGenerator({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-300">{label}</label>
+      <label className="block text-sm font-medium text-zinc-300">{label}</label>
 
-      <div className="p-4 bg-gray-800/50 rounded-lg space-y-4">
+      <div className="p-4 bg-zinc-800/50 rounded-lg space-y-4">
         {/* Número */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">
+          <label className="block text-xs text-zinc-500 mb-1">
             Número com código do país (ex: 5511999999999)
           </label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <Input
               type="text"
               value={displayPhone(phone)}
               onChange={handlePhoneChange}
               placeholder="+55 (11) 99999-9999"
-              className="pl-10 bg-gray-700 border-gray-600 text-white"
+              className="pl-10 bg-zinc-800/50 border-zinc-700/40 text-white"
             />
           </div>
         </div>
 
         {/* Mensagem */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">
+          <label className="block text-xs text-zinc-500 mb-1">
             Mensagem inicial (opcional)
           </label>
           <div className="relative">
-            <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
             <textarea
               value={message}
               onChange={handleMessageChange}
               placeholder="Olá, preciso de ajuda!"
-              className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-md text-sm resize-none"
+              className="w-full pl-10 pr-3 py-2 bg-zinc-800/50 border border-zinc-700/40 text-white rounded-md text-sm resize-none"
               rows={2}
             />
           </div>
@@ -165,7 +165,7 @@ export function WhatsAppLinkGenerator({
         {/* Link Gerado */}
         {generatedLink && (
           <div className="space-y-2">
-            <label className="block text-xs text-gray-400">Link gerado:</label>
+            <label className="block text-xs text-zinc-500">Link gerado:</label>
             <div className="flex items-center gap-2">
               <div className="flex-1 flex items-center gap-2 p-2 bg-green-500/10 border border-green-500/30 rounded-lg">
                 <Link2 className="h-4 w-4 text-green-400 flex-shrink-0" />
@@ -176,7 +176,7 @@ export function WhatsAppLinkGenerator({
                 variant="outline"
                 size="sm"
                 onClick={handleCopy}
-                className="border-gray-600 text-gray-300 hover:bg-gray-700 flex-shrink-0"
+                className="border-zinc-700/40 text-zinc-300 hover:bg-zinc-700/30 flex-shrink-0"
               >
                 {copied ? (
                   <Check className="h-4 w-4 text-green-400" />
@@ -189,7 +189,7 @@ export function WhatsAppLinkGenerator({
                 variant="outline"
                 size="sm"
                 onClick={handleClear}
-                className="border-gray-600 text-gray-300 hover:bg-gray-700 flex-shrink-0"
+                className="border-zinc-700/40 text-zinc-300 hover:bg-zinc-700/30 flex-shrink-0"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
@@ -199,7 +199,7 @@ export function WhatsAppLinkGenerator({
       </div>
 
       {description && (
-        <p className="text-xs text-gray-500">{description}</p>
+        <p className="text-xs text-zinc-500">{description}</p>
       )}
     </div>
   );

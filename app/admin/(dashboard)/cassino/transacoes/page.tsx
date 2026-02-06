@@ -64,7 +64,7 @@ export default function AdminCassinoTransacoesPage() {
     {
       key: 'created_at',
       header: 'Data',
-      render: (value) => <span className="text-gray-300 text-sm">{formatDate(value as string)}</span>,
+      render: (value) => <span className="text-zinc-300 text-sm">{formatDate(value as string)}</span>,
     },
     {
       key: 'user_name',
@@ -72,25 +72,25 @@ export default function AdminCassinoTransacoesPage() {
       render: (value, row) => (
         <div>
           <span className="font-medium text-white text-sm">{value as string}</span>
-          <p className="text-xs text-gray-500">{row.user_cpf}</p>
+          <p className="text-xs text-zinc-500">{row.user_cpf}</p>
         </div>
       ),
     },
     {
       key: 'provider_code',
       header: 'Provedor',
-      render: (value) => <span className="text-gray-300 text-sm">{(value as string) || '-'}</span>,
+      render: (value) => <span className="text-zinc-300 text-sm">{(value as string) || '-'}</span>,
     },
     {
       key: 'game_code',
       header: 'Jogo',
-      render: (value) => <span className="text-gray-300 text-sm truncate max-w-[120px] block">{(value as string) || '-'}</span>,
+      render: (value) => <span className="text-zinc-300 text-sm truncate max-w-[120px] block">{(value as string) || '-'}</span>,
     },
     {
       key: 'txn_type',
       header: 'Tipo',
       render: (value) => {
-        const type = txnTypeLabels[value as string] || { label: value as string, color: 'text-gray-400' };
+        const type = txnTypeLabels[value as string] || { label: value as string, color: 'text-zinc-500' };
         return <span className={`text-sm font-medium ${type.color}`}>{type.label}</span>;
       },
     },
@@ -99,7 +99,7 @@ export default function AdminCassinoTransacoesPage() {
       header: 'Aposta',
       render: (value) => {
         const v = value as number;
-        return <span className={v > 0 ? 'text-red-400 text-sm' : 'text-gray-500 text-sm'}>{v > 0 ? formatCurrency(v) : '-'}</span>;
+        return <span className={v > 0 ? 'text-red-400 text-sm' : 'text-zinc-500 text-sm'}>{v > 0 ? formatCurrency(v) : '-'}</span>;
       },
     },
     {
@@ -107,13 +107,13 @@ export default function AdminCassinoTransacoesPage() {
       header: 'Ganho',
       render: (value) => {
         const v = value as number;
-        return <span className={v > 0 ? 'text-green-400 text-sm' : 'text-gray-500 text-sm'}>{v > 0 ? formatCurrency(v) : '-'}</span>;
+        return <span className={v > 0 ? 'text-green-400 text-sm' : 'text-zinc-500 text-sm'}>{v > 0 ? formatCurrency(v) : '-'}</span>;
       },
     },
     {
       key: 'balance_after',
       header: 'Saldo',
-      render: (value) => <span className="text-gray-300 text-sm">{formatCurrency(value as number)}</span>,
+      render: (value) => <span className="text-zinc-300 text-sm">{formatCurrency(value as number)}</span>,
     },
   ];
 
@@ -121,36 +121,36 @@ export default function AdminCassinoTransacoesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Cassino - Transações</h1>
-        <p className="text-gray-400">Histórico de transações do cassino</p>
+        <p className="text-zinc-500">Histórico de transações do cassino</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-end flex-wrap">
         <div>
-          <label className="text-sm font-medium text-gray-300">Provedor</label>
+          <label className="text-sm font-medium text-zinc-300">Provedor</label>
           <Input
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
-            className="mt-1 bg-gray-700 border-gray-600 text-white"
+            className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
             placeholder="Ex: pragmatic"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-300">Data Início</label>
+          <label className="text-sm font-medium text-zinc-300">Data Início</label>
           <Input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="mt-1 bg-gray-700 border-gray-600 text-white"
+            className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-300">Data Fim</label>
+          <label className="text-sm font-medium text-zinc-300">Data Fim</label>
           <Input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="mt-1 bg-gray-700 border-gray-600 text-white"
+            className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
           />
         </div>
         <Button variant="teal" onClick={handleFilter}>

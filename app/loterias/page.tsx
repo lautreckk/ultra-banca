@@ -75,7 +75,7 @@ export default function LoteriasPage() {
       'seninha': 'bg-green-500',
       'lotinha': 'bg-pink-500',
     };
-    return colors[tipo] || 'bg-gray-500';
+    return colors[tipo] || 'bg-zinc-500';
   };
 
   return (
@@ -95,7 +95,7 @@ export default function LoteriasPage() {
         <button
           onClick={handleRepetirPule}
           disabled={isLoading}
-          className="w-full rounded-lg border-2 border-[#E5A220] bg-[#1A202C] py-3 font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full rounded-xl border-2 border-[#E5A220] bg-[#1A1F2B] min-h-[56px] py-3 font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
         >
           {isLoading ? (
             <>
@@ -112,7 +112,7 @@ export default function LoteriasPage() {
       <div className="grid grid-cols-2 gap-3 px-4">
         {/* LOTERIAS */}
         <Link href="/loterias/loterias" className="block">
-          <div className="aspect-square overflow-hidden rounded-lg border-2 border-[#E5A220]">
+          <div className="aspect-square overflow-hidden rounded-xl border-2 border-[#E5A220]">
             <div className="relative h-full w-full">
               <Image
                 src="/images/LOTERIAS.webp"
@@ -127,7 +127,7 @@ export default function LoteriasPage() {
 
         {/* QUININHA */}
         <Link href="/quininha" className="block">
-          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-[#E5A220] bg-[#1A1F2B]">
+          <div className="flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-[#E5A220] bg-[#1A1F2B]">
             <div className="flex items-center gap-1">
               <svg className="h-10 w-10 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="8" r="4" />
@@ -146,7 +146,7 @@ export default function LoteriasPage() {
 
         {/* SENINHA */}
         <Link href="/seninha" className="block">
-          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-zinc-700/40 bg-[#1A1F2B]">
+          <div className="flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-zinc-700/40 bg-[#1A1F2B]">
             <div className="flex items-center gap-1">
               <svg className="h-10 w-10 text-green-600" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="8" r="4" />
@@ -165,7 +165,7 @@ export default function LoteriasPage() {
 
         {/* LOTINHA */}
         <Link href="/lotinha" className="block">
-          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-zinc-700/40 bg-[#1A1F2B]">
+          <div className="flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-zinc-700/40 bg-[#1A1F2B]">
             <div className="flex items-center gap-1">
               <svg className="h-10 w-10 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="8" r="4" />
@@ -186,14 +186,14 @@ export default function LoteriasPage() {
       {/* Action Buttons List */}
       <div className="space-y-2 p-4">
         {/* SONHOS */}
-        <Link href="/sonhos" className="flex w-full items-center gap-4 rounded-lg bg-[#2D3748] px-4 py-3">
-          <Moon className="h-6 w-6 text-white" />
+        <Link href="/sonhos" className="flex w-full items-center gap-4 rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 min-h-[56px] active:scale-[0.98] transition-all">
+          <Moon className="h-6 w-6 text-purple-400" />
           <span className="font-semibold text-white">SONHOS</span>
         </Link>
 
         {/* HOROSCOPO */}
-        <Link href="/horoscopo" className="flex w-full items-center gap-4 rounded-lg bg-[#4FD1C5] px-4 py-3">
-          <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <Link href="/horoscopo" className="flex w-full items-center gap-4 rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 min-h-[56px] active:scale-[0.98] transition-all">
+          <svg className="h-6 w-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="9" cy="9" r="4" />
             <circle cx="15" cy="15" r="4" />
           </svg>
@@ -201,20 +201,20 @@ export default function LoteriasPage() {
         </Link>
 
         {/* CALCULADORA */}
-        <Link href="/calculadora" className="flex w-full items-center gap-4 rounded-lg bg-[#718096] px-4 py-3">
-          <Calculator className="h-6 w-6 text-white" />
+        <Link href="/calculadora" className="flex w-full items-center gap-4 rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 min-h-[56px] active:scale-[0.98] transition-all">
+          <Calculator className="h-6 w-6 text-blue-400" />
           <span className="font-semibold text-white">CALCULADORA</span>
         </Link>
 
         {/* ATRASADOS */}
-        <Link href="/atrasados" className="flex w-full items-center gap-4 rounded-lg bg-[#4FD1C5] px-4 py-3">
-          <Clock className="h-6 w-6 text-white" />
+        <Link href="/atrasados" className="flex w-full items-center gap-4 rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 min-h-[56px] active:scale-[0.98] transition-all">
+          <Clock className="h-6 w-6 text-emerald-400" />
           <span className="font-semibold text-white">ATRASADOS</span>
         </Link>
 
         {/* TABELA DE BICHOS */}
-        <Link href="/tabela-bichos" className="flex w-full items-center gap-4 rounded-lg bg-[#2D3748] px-4 py-3">
-          <Dog className="h-6 w-6 text-white" />
+        <Link href="/tabela-bichos" className="flex w-full items-center gap-4 rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 min-h-[56px] active:scale-[0.98] transition-all">
+          <Dog className="h-6 w-6 text-amber-400" />
           <span className="font-semibold text-white">TABELA DE BICHOS</span>
         </Link>
       </div>

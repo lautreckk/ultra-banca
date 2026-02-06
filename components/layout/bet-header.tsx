@@ -28,16 +28,22 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
 
   return (
     <>
-      {/* Header - Dark for contrast */}
-      <header className="sticky top-0 z-40 bg-zinc-900 px-4">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-[#1A202C] px-4 pt-safe">
         <div className="flex h-12 items-center justify-between">
           <button
             onClick={handleBack}
-            className="flex h-10 w-10 items-center justify-center"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleBack();
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Voltar"
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">{title}</span>
+          <span className="text-base font-bold text-white">{title}</span>
           <button
             onClick={() => setDrawerOpen(true)}
             onTouchEnd={(e) => {
@@ -53,12 +59,13 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
         </div>
       </header>
 
-      {/* Balance Bar */}
-      <div className="flex items-center justify-between bg-[#E5A220] px-4 py-2">
+      {/* Balance Bar - Golden */}
+      <div className="flex items-center justify-between bg-[#E5A220] px-4 py-2.5">
         <button
           onClick={refresh}
           disabled={loading}
-          className="flex h-8 w-8 items-center justify-center"
+          className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10"
+          aria-label="Atualizar saldo"
         >
           {loading ? (
             <Loader2 className="h-5 w-5 text-zinc-900 animate-spin" />
@@ -70,7 +77,11 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
           <span className="font-bold text-zinc-900">
             R$ {showSaldo ? formatCurrencyCompact(saldo) : '*******'} | {showSaldo ? formatCurrencyCompact(saldoBonus) : '*******'}
           </span>
-          <button onClick={() => setShowSaldo(!showSaldo)}>
+          <button
+            onClick={() => setShowSaldo(!showSaldo)}
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10"
+            aria-label={showSaldo ? 'Ocultar saldo' : 'Mostrar saldo'}
+          >
             {showSaldo ? (
               <Eye className="h-5 w-5 text-zinc-900" />
             ) : (

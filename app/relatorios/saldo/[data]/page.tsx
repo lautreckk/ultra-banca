@@ -152,12 +152,12 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
     <PageLayout title="SALDO" showBack>
       <div className="space-y-4 p-4">
         {/* Date Header */}
-        <div className="rounded-lg bg-zinc-800 px-4 py-3 text-center">
+        <div className="rounded-xl bg-zinc-800 border border-zinc-700/40 px-4 py-3 text-center">
           <span className="text-lg font-bold text-white">{dateDisplay}</span>
         </div>
 
         {/* VENDAS Section */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">VENDAS</span>
           </div>
@@ -178,7 +178,7 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* CREDITO/DEBITO Section */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">CREDITO / DEBITO</span>
           </div>
@@ -199,7 +199,7 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* DETALHES Section */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">DETALHES</span>
           </div>
@@ -220,7 +220,7 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* MOVIMENTACAO DIA Section */}
-        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">MOVIMENTACAO DIA</span>
           </div>
@@ -237,10 +237,10 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         {/* Share Button */}
         <button
           onClick={handleShare}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 py-4 text-white active:bg-zinc-700"
+          className="flex w-full items-center justify-center gap-2 rounded-xl h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 text-white font-semibold active:bg-zinc-700 active:scale-[0.98] transition-all"
         >
           <Share2 className="h-5 w-5" />
-          <span className="font-semibold">Compartilhar</span>
+          <span>Compartilhar</span>
         </button>
       </div>
     </PageLayout>

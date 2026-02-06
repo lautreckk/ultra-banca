@@ -39,7 +39,7 @@ export function PageLayout({
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex justify-center">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
       <div className="w-full max-w-md min-h-screen shadow-xl flex flex-col" style={{ backgroundColor: '#111318' }}>
       {/* Header */}
       <header className="sticky top-0 z-40 flex h-12 items-center justify-between bg-[#1A202C] px-4 pt-safe">
@@ -50,7 +50,7 @@ export function PageLayout({
               e.preventDefault();
               router.back();
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Voltar"
           >
@@ -63,7 +63,7 @@ export function PageLayout({
               e.preventDefault();
               router.push('/home');
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label="Ir para início"
           >
@@ -72,14 +72,14 @@ export function PageLayout({
         ) : (
           <div className="w-11" />
         )}
-        <span className="text-sm font-bold text-white">{title}</span>
+        <span className="text-base font-bold text-white">{title}</span>
         <button
           onClick={() => setDrawerOpen(true)}
           onTouchEnd={(e) => {
             e.preventDefault();
             setDrawerOpen(true);
           }}
-          className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
           style={{ WebkitTapHighlightColor: 'transparent' }}
           aria-label="Abrir menu"
         >
@@ -92,7 +92,7 @@ export function PageLayout({
         <button
           onClick={refresh}
           disabled={loading}
-          className="flex h-8 w-8 items-center justify-center rounded-lg active:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
           aria-label="Atualizar saldo"
         >
           {loading ? (
@@ -107,7 +107,7 @@ export function PageLayout({
           </span>
           <button
             onClick={toggleSaldo}
-            className="flex h-8 w-8 items-center justify-center rounded-lg active:bg-white/10"
+            className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
             aria-label={showSaldo ? 'Ocultar saldo' : 'Mostrar saldo'}
           >
             {showSaldo ? (

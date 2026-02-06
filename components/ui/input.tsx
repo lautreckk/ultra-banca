@@ -21,13 +21,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            'flex h-12 w-full rounded-xl border px-4 py-3 text-base min-h-[44px] transition-all duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-zinc-600',
+            'flex h-14 w-full rounded-xl border px-4 py-3 text-base min-h-[48px] transition-all duration-200',
+            'focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500',
             'disabled:cursor-not-allowed disabled:opacity-50',
             icon && 'pl-12',
             dark
               ? 'bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-500'
-              : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400',
+              : 'bg-zinc-800/50 border-zinc-700/40 text-white placeholder:text-zinc-500',
             error && 'ring-2 ring-red-500/20 border-red-500/50',
             className
           )}

@@ -11,9 +11,9 @@ const badgeVariants = cva(
       variant: {
         default: 'bg-[var(--color-surface)] text-white',
         primary: 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]',
-        secondary: 'bg-gray-100 text-gray-800',
-        outline: 'border border-[var(--color-border)] text-gray-600',
-        white: 'bg-white text-[var(--color-surface)]',
+        secondary: 'bg-zinc-800/50 text-zinc-300',
+        outline: 'border border-zinc-700/40 text-zinc-400',
+        white: 'bg-white text-zinc-900',
       },
       size: {
         default: 'px-3 py-1 text-sm',

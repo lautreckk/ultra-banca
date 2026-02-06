@@ -17,15 +17,15 @@ export default function BaixarAppPage() {
     <PageLayout title="COMO INSTALAR">
       <div className="p-4 space-y-6">
         {isInstalled ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-green-800 text-center font-medium">
+          <div className="bg-green-900/20 border border-green-700/30 rounded-xl p-4">
+            <p className="text-green-400 text-center font-medium">
               O aplicativo ja esta instalado no seu dispositivo!
             </p>
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <p className="text-gray-700 text-center">
+            <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4">
+              <p className="text-zinc-300 text-center">
                 Para instalar o aplicativo, clique no botao abaixo e siga as instrucoes na tela.
               </p>
             </div>
@@ -33,7 +33,7 @@ export default function BaixarAppPage() {
             {canInstall && (
               <button
                 onClick={handleInstallClick}
-                className="w-full flex items-center justify-center gap-2 bg-[#E5A220] hover:bg-[#d4931d] text-white font-bold py-4 px-6 rounded-lg transition-colors"
+                className="w-full h-14 min-h-[56px] flex items-center justify-center gap-2 bg-[#E5A220] hover:bg-[#d4931d] text-zinc-900 font-bold px-6 rounded-xl transition-all active:scale-[0.98]"
               >
                 <Download className="h-5 w-5" />
                 Clique aqui para baixar o APP!
@@ -41,17 +41,17 @@ export default function BaixarAppPage() {
             )}
 
             {showManualInstructions && (
-              <div className="bg-white rounded-lg p-4 shadow-sm space-y-4">
-                <h2 className="font-bold text-gray-800 text-center">
+              <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4 space-y-4">
+                <h2 className="font-bold text-white text-center">
                   Instrucoes de Instalacao Manual
                 </h2>
 
                 {isIOS ? (
                   <div className="space-y-3">
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-zinc-400 text-sm">
                       No Safari (iPhone/iPad):
                     </p>
-                    <ol className="space-y-3 text-gray-700">
+                    <ol className="space-y-3 text-zinc-300">
                       <li className="flex items-start gap-3">
                         <span className="flex-shrink-0 w-6 h-6 bg-[#E5A220] text-white rounded-full flex items-center justify-center text-sm font-bold">
                           1
@@ -68,7 +68,7 @@ export default function BaixarAppPage() {
                         </span>
                         <div className="flex items-center gap-2">
                           <span>Role e toque em</span>
-                          <PlusSquare className="h-5 w-5 text-gray-600" />
+                          <PlusSquare className="h-5 w-5 text-zinc-400" />
                           <span>&quot;Adicionar a Tela de Inicio&quot;</span>
                         </div>
                       </li>
@@ -82,17 +82,17 @@ export default function BaixarAppPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-zinc-400 text-sm">
                       No Chrome (Android):
                     </p>
-                    <ol className="space-y-3 text-gray-700">
+                    <ol className="space-y-3 text-zinc-300">
                       <li className="flex items-start gap-3">
                         <span className="flex-shrink-0 w-6 h-6 bg-[#E5A220] text-white rounded-full flex items-center justify-center text-sm font-bold">
                           1
                         </span>
                         <div className="flex items-center gap-2">
                           <span>Toque no menu</span>
-                          <MoreVertical className="h-5 w-5 text-gray-600" />
+                          <MoreVertical className="h-5 w-5 text-zinc-400" />
                           <span>(tres pontos)</span>
                         </div>
                       </li>

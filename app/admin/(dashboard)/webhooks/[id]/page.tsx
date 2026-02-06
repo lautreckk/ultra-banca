@@ -261,7 +261,7 @@ export default function WebhookDetailPage() {
         );
       default:
         return (
-          <span className="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded-full flex items-center gap-1">
+          <span className="px-2 py-1 bg-zinc-500/20 text-zinc-500 text-xs rounded-full flex items-center gap-1">
             <Clock className="h-3 w-3" /> Pendente
           </span>
         );
@@ -283,7 +283,7 @@ export default function WebhookDetailPage() {
       key: 'created_at',
       header: 'Data',
       render: (value) => (
-        <span className="text-gray-300 text-sm">{formatDate(value as string)}</span>
+        <span className="text-zinc-300 text-sm">{formatDate(value as string)}</span>
       ),
     },
     {
@@ -311,7 +311,7 @@ export default function WebhookDetailPage() {
       key: 'response_status',
       header: 'HTTP',
       render: (value) => {
-        if (!value) return <span className="text-gray-500">-</span>;
+        if (!value) return <span className="text-zinc-500">-</span>;
         const status = value as number;
         const color = status >= 200 && status < 300 ? 'text-green-400' : 'text-red-400';
         return <span className={`${color} font-mono text-sm`}>{status}</span>;
@@ -321,14 +321,14 @@ export default function WebhookDetailPage() {
       key: 'response_time_ms',
       header: 'Tempo',
       render: (value) => {
-        if (!value) return <span className="text-gray-500">-</span>;
-        return <span className="text-gray-300 text-sm">{value as number}ms</span>;
+        if (!value) return <span className="text-zinc-500">-</span>;
+        return <span className="text-zinc-300 text-sm">{value as number}ms</span>;
       },
     },
     {
       key: 'attempt_number',
       header: 'Tentativa',
-      render: (value) => <span className="text-gray-400 text-sm">#{value as number}</span>,
+      render: (value) => <span className="text-zinc-500 text-sm">#{value as number}</span>,
     },
     {
       key: 'actions',
@@ -340,7 +340,7 @@ export default function WebhookDetailPage() {
             e.stopPropagation();
             setSelectedLog(row);
           }}
-          className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+          className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
         >
           <Eye className="h-4 w-4" />
         </button>
@@ -363,13 +363,13 @@ export default function WebhookDetailPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/admin/webhooks')}
-            className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
             <h1 className="text-2xl font-bold text-white">{webhook.name}</h1>
-            <p className="text-gray-400 text-sm flex items-center gap-2">
+            <p className="text-zinc-500 text-sm flex items-center gap-2">
               <ExternalLink className="h-3 w-3" />
               {webhook.url}
             </p>
@@ -382,7 +382,7 @@ export default function WebhookDetailPage() {
             label=""
             size="sm"
           />
-          <span className={`text-sm ${webhook.ativo ? 'text-green-400' : 'text-gray-400'}`}>
+          <span className={`text-sm ${webhook.ativo ? 'text-green-400' : 'text-zinc-500'}`}>
             {webhook.ativo ? 'Ativo' : 'Inativo'}
           </span>
         </div>
@@ -390,46 +390,46 @@ export default function WebhookDetailPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
               <Activity className="h-5 w-5 text-indigo-400" />
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Total de Disparos</p>
+              <p className="text-zinc-500 text-sm">Total de Disparos</p>
               <p className="text-xl font-bold text-white">{stats.total}</p>
             </div>
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="h-5 w-5 text-green-400" />
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Sucessos</p>
+              <p className="text-zinc-500 text-sm">Sucessos</p>
               <p className="text-xl font-bold text-white">{stats.success}</p>
             </div>
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
               <AlertCircle className="h-5 w-5 text-red-400" />
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Falhas</p>
+              <p className="text-zinc-500 text-sm">Falhas</p>
               <p className="text-xl font-bold text-white">{stats.failed}</p>
             </div>
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
               <Timer className="h-5 w-5 text-cyan-400" />
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Tempo Medio</p>
+              <p className="text-zinc-500 text-sm">Tempo Medio</p>
               <p className="text-xl font-bold text-white">{stats.avgResponseTime}ms</p>
             </div>
           </div>
@@ -439,7 +439,7 @@ export default function WebhookDetailPage() {
       {/* Config & Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Configuration */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700/40">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white">Configuracao</h2>
             <Button variant="secondary" size="sm" onClick={() => setShowEditForm(true)}>
@@ -449,11 +449,11 @@ export default function WebhookDetailPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs text-gray-400">URL</label>
+              <label className="text-xs text-zinc-500">URL</label>
               <p className="text-white text-sm break-all">{webhook.url}</p>
             </div>
             <div>
-              <label className="text-xs text-gray-400">Eventos</label>
+              <label className="text-xs text-zinc-500">Eventos</label>
               <div className="flex flex-wrap gap-1 mt-1">
                 {webhook.events.map((e) => (
                   <span
@@ -467,21 +467,21 @@ export default function WebhookDetailPage() {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-xs text-gray-400">Retries</label>
+                <label className="text-xs text-zinc-500">Retries</label>
                 <p className="text-white text-sm">{webhook.max_retries}</p>
               </div>
               <div>
-                <label className="text-xs text-gray-400">Delay</label>
+                <label className="text-xs text-zinc-500">Delay</label>
                 <p className="text-white text-sm">{webhook.retry_delay_seconds}s</p>
               </div>
               <div>
-                <label className="text-xs text-gray-400">Timeout</label>
+                <label className="text-xs text-zinc-500">Timeout</label>
                 <p className="text-white text-sm">{webhook.timeout_seconds}s</p>
               </div>
             </div>
             {webhook.description && (
               <div>
-                <label className="text-xs text-gray-400">Descricao</label>
+                <label className="text-xs text-zinc-500">Descricao</label>
                 <p className="text-white text-sm">{webhook.description}</p>
               </div>
             )}
@@ -489,16 +489,16 @@ export default function WebhookDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700/40">
           <h2 className="text-lg font-bold text-white mb-4">Acoes</h2>
 
           <div className="space-y-4">
             {/* Secret Key */}
-            <div className="bg-gray-900 rounded-lg p-4">
+            <div className="bg-zinc-900 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Key className="h-4 w-4 text-gray-400" />
-                  <label className="text-sm text-gray-300">Secret Key</label>
+                  <Key className="h-4 w-4 text-zinc-500" />
+                  <label className="text-sm text-zinc-300">Secret Key</label>
                 </div>
                 <button
                   onClick={() => setShowRegenerateModal(true)}
@@ -507,8 +507,8 @@ export default function WebhookDetailPage() {
                   Regenerar
                 </button>
               </div>
-              <code className="text-sm text-gray-400 font-mono">{webhook.secret_key}</code>
-              <p className="text-xs text-gray-500 mt-2">
+              <code className="text-sm text-zinc-500 font-mono">{webhook.secret_key}</code>
+              <p className="text-xs text-zinc-500 mt-2">
                 Use esta chave para validar as assinaturas HMAC-SHA256
               </p>
             </div>
@@ -542,8 +542,8 @@ export default function WebhookDetailPage() {
             </div>
 
             {/* Danger Zone */}
-            <div className="pt-4 border-t border-gray-700">
-              <p className="text-xs text-gray-500 mb-2">Zona de perigo</p>
+            <div className="pt-4 border-t border-zinc-700/40">
+              <p className="text-xs text-zinc-500 mb-2">Zona de perigo</p>
               <Button
                 variant="danger"
                 onClick={() => setShowDeleteModal(true)}
@@ -558,8 +558,8 @@ export default function WebhookDetailPage() {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-gray-800 rounded-lg border border-gray-700">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+      <div className="bg-zinc-800 rounded-lg border border-zinc-700/40">
+        <div className="flex items-center justify-between p-4 border-b border-zinc-700/40">
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-indigo-400" />
             <h2 className="text-lg font-bold text-white">Logs de Disparo</h2>
@@ -592,7 +592,7 @@ export default function WebhookDetailPage() {
           <div className="relative bg-[#1f2937] rounded-lg shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowEditForm(false)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700/30 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -601,66 +601,66 @@ export default function WebhookDetailPage() {
 
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-300">Nome</label>
+                <label className="text-sm font-medium text-zinc-300">Nome</label>
                 <Input
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Descricao</label>
+                <label className="text-sm font-medium text-zinc-300">Descricao</label>
                 <textarea
                   value={editFormData.description}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="mt-1 w-full px-3 py-2 bg-zinc-800 border border-zinc-700/40 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   rows={2}
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">URL do Endpoint</label>
+                <label className="text-sm font-medium text-zinc-300">URL do Endpoint</label>
                 <Input
                   type="url"
                   value={editFormData.url}
                   onChange={(e) => setEditFormData({ ...editFormData, url: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Retries</label>
+                  <label className="text-sm font-medium text-zinc-300">Retries</label>
                   <Input
                     type="number"
                     value={editFormData.max_retries}
                     onChange={(e) => setEditFormData({ ...editFormData, max_retries: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                     min="0"
                     max="10"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Delay (s)</label>
+                  <label className="text-sm font-medium text-zinc-300">Delay (s)</label>
                   <Input
                     type="number"
                     value={editFormData.retry_delay_seconds}
                     onChange={(e) => setEditFormData({ ...editFormData, retry_delay_seconds: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                     min="10"
                     max="300"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Timeout (s)</label>
+                  <label className="text-sm font-medium text-zinc-300">Timeout (s)</label>
                   <Input
                     type="number"
                     value={editFormData.timeout_seconds}
                     onChange={(e) => setEditFormData({ ...editFormData, timeout_seconds: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                     min="5"
                     max="60"
                   />
@@ -703,21 +703,21 @@ export default function WebhookDetailPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">Nova Secret Key</h2>
-                <p className="text-gray-400 text-sm">Copie a nova chave abaixo</p>
+                <p className="text-zinc-500 text-sm">Copie a nova chave abaixo</p>
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-4 mb-4">
-              <label className="text-xs font-medium text-gray-400 block mb-2">
+            <div className="bg-zinc-800 rounded-lg p-4 mb-4">
+              <label className="text-xs font-medium text-zinc-500 block mb-2">
                 Secret Key (HMAC-SHA256)
               </label>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm text-cyan-400 bg-gray-900 px-3 py-2 rounded font-mono break-all">
+                <code className="flex-1 text-sm text-cyan-400 bg-zinc-900 px-3 py-2 rounded font-mono break-all">
                   {newSecretKey}
                 </code>
                 <button
                   onClick={handleCopySecret}
-                  className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                  className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700/30 text-white transition-colors"
                 >
                   {copiedSecret ? (
                     <Check className="h-4 w-4 text-green-400" />
@@ -764,7 +764,7 @@ export default function WebhookDetailPage() {
           <div className="relative bg-[#1f2937] rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedLog(null)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700/30 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -777,34 +777,34 @@ export default function WebhookDetailPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-400">Data</label>
+                  <label className="text-xs text-zinc-500">Data</label>
                   <p className="text-white text-sm">{formatDate(selectedLog.created_at)}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Evento</label>
+                  <label className="text-xs text-zinc-500">Evento</label>
                   <p className="text-white text-sm">{selectedLog.event_type}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">HTTP Status</label>
+                  <label className="text-xs text-zinc-500">HTTP Status</label>
                   <p className="text-white text-sm">{selectedLog.response_status || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Tempo de Resposta</label>
+                  <label className="text-xs text-zinc-500">Tempo de Resposta</label>
                   <p className="text-white text-sm">{selectedLog.response_time_ms || '-'}ms</p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Tentativa</label>
+                  <label className="text-xs text-zinc-500">Tentativa</label>
                   <p className="text-white text-sm">#{selectedLog.attempt_number}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Event ID</label>
+                  <label className="text-xs text-zinc-500">Event ID</label>
                   <p className="text-white text-sm font-mono text-xs">{selectedLog.event_id || '-'}</p>
                 </div>
               </div>
 
               {selectedLog.error_message && (
                 <div>
-                  <label className="text-xs text-gray-400">Erro</label>
+                  <label className="text-xs text-zinc-500">Erro</label>
                   <div className="mt-1 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                     <p className="text-red-400 text-sm">{selectedLog.error_message}</p>
                   </div>
@@ -813,8 +813,8 @@ export default function WebhookDetailPage() {
 
               {selectedLog.request_body && (
                 <div>
-                  <label className="text-xs text-gray-400">Request Body</label>
-                  <pre className="mt-1 p-3 bg-gray-900 rounded-lg text-xs text-gray-300 overflow-x-auto">
+                  <label className="text-xs text-zinc-500">Request Body</label>
+                  <pre className="mt-1 p-3 bg-zinc-900 rounded-lg text-xs text-zinc-300 overflow-x-auto">
                     {JSON.stringify(selectedLog.request_body, null, 2)}
                   </pre>
                 </div>
@@ -822,8 +822,8 @@ export default function WebhookDetailPage() {
 
               {selectedLog.response_body && (
                 <div>
-                  <label className="text-xs text-gray-400">Response Body</label>
-                  <pre className="mt-1 p-3 bg-gray-900 rounded-lg text-xs text-gray-300 overflow-x-auto max-h-40">
+                  <label className="text-xs text-zinc-500">Response Body</label>
+                  <pre className="mt-1 p-3 bg-zinc-900 rounded-lg text-xs text-zinc-300 overflow-x-auto max-h-40">
                     {selectedLog.response_body}
                   </pre>
                 </div>

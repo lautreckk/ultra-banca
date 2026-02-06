@@ -85,7 +85,7 @@ export default function AdminSaquesPage() {
       render: (value, row) => (
         <div>
           <p className="font-medium text-white">{value as string}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-zinc-500">
             {(row.user_cpf as string).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function AdminSaquesPage() {
       render: (value, row) => (
         <div>
           <p className="font-semibold text-white">{formatCurrency(value as number)}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-zinc-500">
             Líquido: <span className="text-green-400">{formatCurrency(row.valor_liquido)}</span>
           </p>
         </div>
@@ -109,17 +109,17 @@ export default function AdminSaquesPage() {
       render: (value, row) => (
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-gray-300 truncate" title={value as string}>
+            <p className="text-sm text-zinc-300 truncate" title={value as string}>
               {value as string}
             </p>
-            <p className="text-xs text-gray-500 uppercase">{row.tipo_chave}</p>
+            <p className="text-xs text-zinc-500 uppercase">{row.tipo_chave}</p>
           </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleCopyPix(value as string, row.id);
             }}
-            className="p-2 md:p-1.5 rounded hover:bg-gray-600 text-gray-400 hover:text-white transition-colors flex-shrink-0"
+            className="p-2 md:p-1.5 rounded hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors flex-shrink-0"
             title="Copiar chave PIX"
           >
             {copiedId === row.id ? (
@@ -189,14 +189,14 @@ export default function AdminSaquesPage() {
     <div className="space-y-4 md:space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">Saques</h1>
-        <p className="text-sm md:text-base text-gray-400">Gerenciamento de solicitações de saque</p>
+        <p className="text-sm md:text-base text-zinc-500">Gerenciamento de solicitações de saque</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-gray-400" />
-          <span className="text-sm text-gray-400">Status:</span>
+          <Filter className="h-4 w-4 text-zinc-500" />
+          <span className="text-sm text-zinc-500">Status:</span>
         </div>
         <div className="grid grid-cols-2 sm:flex gap-2">
           {['', 'PENDING', 'PROCESSING', 'PAID', 'REJECTED'].map((status) => (
@@ -209,7 +209,7 @@ export default function AdminSaquesPage() {
               className={`px-3 py-2 md:py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 statusFilter === status
                   ? 'bg-cyan-600 text-white'
-                  : 'bg-gray-700 text-gray-400 hover:text-white'
+                  : 'bg-zinc-800 text-zinc-500 hover:text-white'
               }`}
             >
               {status === '' ? 'Todos' : status === 'PENDING' ? 'Pendentes' : status === 'PROCESSING' ? 'Processando' : status === 'PAID' ? 'Pagos' : 'Rejeitados'}

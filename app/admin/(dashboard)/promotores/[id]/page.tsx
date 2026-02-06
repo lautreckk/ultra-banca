@@ -140,7 +140,7 @@ function EditModal({ promotor, isOpen, onClose, onSave }: EditModalProps) {
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              className="bg-gray-700 border-zinc-800 text-white"
+              className="bg-zinc-800 border-zinc-800 text-white"
             />
           </div>
 
@@ -152,7 +152,7 @@ function EditModal({ promotor, isOpen, onClose, onSave }: EditModalProps) {
                 type="text"
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -171,7 +171,7 @@ function EditModal({ promotor, isOpen, onClose, onSave }: EditModalProps) {
                   max="100"
                   value={comissaoDeposito}
                   onChange={(e) => setComissaoDeposito(e.target.value)}
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -186,7 +186,7 @@ function EditModal({ promotor, isOpen, onClose, onSave }: EditModalProps) {
                   max="100"
                   value={comissaoPerda}
                   onChange={(e) => setComissaoPerda(e.target.value)}
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -320,7 +320,7 @@ function BonusModal({ promotor, isOpen, onClose, onSave }: BonusModalProps) {
                 min="0.01"
                 value={valor}
                 onChange={(e) => setValor(e.target.value)}
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -332,7 +332,7 @@ function BonusModal({ promotor, isOpen, onClose, onSave }: BonusModalProps) {
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               placeholder="Ex: Bônus de performance"
-              className="bg-gray-700 border-zinc-800 text-white"
+              className="bg-zinc-800 border-zinc-800 text-white"
             />
           </div>
         </div>
@@ -420,7 +420,7 @@ function DeleteModal({ promotor, isOpen, onClose, onConfirm }: DeleteModalProps)
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="deletar"
-              className="bg-gray-700 border-zinc-800 text-white"
+              className="bg-zinc-800 border-zinc-800 text-white"
             />
           </div>
         </div>

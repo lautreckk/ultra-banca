@@ -27,7 +27,7 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
 
 export function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-[#111318]">
       <div className="flex flex-col items-center gap-4">
         <LoadingSpinner size="lg" className="text-[var(--color-primary)]" />
         <span className="text-white font-semibold">Carregando...</span>

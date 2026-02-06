@@ -52,23 +52,23 @@ export function BalanceDisplay({
         <div className="flex items-center gap-2">
           <button
             onClick={onRefresh}
-            className="flex h-8 w-8 items-center justify-center rounded-lg active:bg-white/10"
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
             aria-label="Atualizar saldo"
           >
-            <RefreshCw className="h-4 w-4 text-zinc-400" />
+            <RefreshCw className="h-5 w-5 text-zinc-400" />
           </button>
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-bold text-white">Saldo</span>
               <button
                 onClick={toggleBalance}
-                className="flex h-6 w-6 items-center justify-center rounded active:bg-white/10"
+                className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
                 aria-label={showBalance ? 'Ocultar saldo' : 'Mostrar saldo'}
               >
                 {showBalance ? (
-                  <Eye className="h-4 w-4 text-zinc-400" />
+                  <Eye className="h-5 w-5 text-zinc-400" />
                 ) : (
-                  <EyeOff className="h-4 w-4 text-zinc-400" />
+                  <EyeOff className="h-5 w-5 text-zinc-400" />
                 )}
               </button>
             </div>

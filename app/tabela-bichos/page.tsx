@@ -14,19 +14,19 @@ export default function TabelaBichosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
       <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
           <div className="flex h-12 items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex h-10 w-10 items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all"
             >
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
-            <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
-            <button className="flex h-10 w-10 items-center justify-center">
+            <span className="text-base font-bold text-white">{config.site_name.toUpperCase()}</span>
+            <button className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all">
               <Menu className="h-5 w-5 text-white" />
             </button>
           </div>
@@ -42,9 +42,9 @@ export default function TabelaBichosPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-gray-100 flex-1 p-4">
+        <div className="bg-[#111318] flex-1 p-4">
         {/* Title */}
-        <h1 className="text-xl font-bold text-gray-900 mb-4">
+        <h1 className="text-xl font-bold text-white mb-4">
           Tabela de Bichos
         </h1>
 
@@ -53,10 +53,10 @@ export default function TabelaBichosPage() {
           {BICHOS.map((bicho) => (
             <div
               key={bicho.numero}
-              className="bg-white rounded-lg border border-gray-200 p-2 flex flex-col items-center"
+              className="bg-[#1A1F2B] rounded-xl border border-zinc-700/40 p-2 flex flex-col items-center"
             >
               {/* Group Number */}
-              <div className="self-start text-xs font-bold text-gray-900">
+              <div className="self-start text-xs font-bold text-white">
                 {formatDezena(bicho.numero)}
               </div>
 
@@ -66,7 +66,7 @@ export default function TabelaBichosPage() {
               </div>
 
               {/* Dezenas */}
-              <div className="text-xs text-gray-600 text-center">
+              <div className="text-xs text-zinc-400 text-center">
                 {bicho.dezenas.map(d => formatDezena(d)).join(' ')}
               </div>
             </div>

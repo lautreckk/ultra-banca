@@ -17,15 +17,15 @@ export function SearchInput({
   className,
 }: SearchInputProps) {
   return (
-    <div className={cn('px-4 py-2 bg-white border-b border-[var(--color-border)]', className)}>
+    <div className={cn('px-4 py-2 bg-[#111318] border-b border-zinc-700/40', className)}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="h-10 w-full rounded-lg bg-gray-100 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          className="h-14 min-h-[48px] w-full rounded-xl bg-zinc-900/80 pl-10 pr-4 text-base text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
         />
       </div>
     </div>

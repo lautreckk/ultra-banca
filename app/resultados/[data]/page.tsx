@@ -44,9 +44,9 @@ export default function SelecionarLoteriaPage() {
 
   return (
     <PageLayout title="SELECIONE A LOTERIA" showBack>
-      <div className="bg-[#1A1F2B] min-h-screen">
+      <div className="bg-[#111318] min-h-screen">
         {/* Accordion Groups */}
-        <div className="border border-zinc-700/40 rounded-lg mx-4 mt-4 overflow-hidden">
+        <div className="border border-zinc-700/40 rounded-xl mx-4 mt-4 overflow-hidden">
           {BANCAS.map((banca, index) => {
             const isExpanded = expandedGroups.includes(banca.id);
             const selectedCount = getSelectedCountForGroup(banca.id);
@@ -56,7 +56,7 @@ export default function SelecionarLoteriaPage() {
                 {/* Group Header */}
                 <button
                   onClick={() => toggleGroup(banca.id)}
-                  className={`w-full flex items-center justify-between px-4 py-4 bg-[#1A1F2B] hover:bg-zinc-700/50 ${
+                  className={`w-full flex items-center justify-between px-4 h-14 bg-[#1A1F2B] hover:bg-zinc-700/50 active:scale-[0.98] transition-all ${
                     index > 0 ? 'border-t border-zinc-700/40' : ''
                   }`}
                 >
@@ -77,7 +77,7 @@ export default function SelecionarLoteriaPage() {
 
                 {/* Sub-loterias */}
                 {isExpanded && (
-                  <div className="bg-[#1A1F2B]">
+                  <div className="bg-[#111318]">
                     {banca.subLoterias.map((sub) => {
                       const isSelected = selectedLoterias.includes(sub.id);
                       const hour = sub.horario.split(':')[0];
@@ -87,7 +87,7 @@ export default function SelecionarLoteriaPage() {
                         <button
                           key={sub.id}
                           onClick={() => toggleLoteria(sub.id)}
-                          className="w-full flex items-center gap-3 px-4 py-3 border-t border-zinc-700/40 hover:bg-zinc-700/50"
+                          className="w-full flex items-center gap-3 px-4 h-12 border-t border-zinc-700/40 hover:bg-zinc-700/50 active:scale-[0.98] transition-all"
                         >
                           <div
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
@@ -112,16 +112,17 @@ export default function SelecionarLoteriaPage() {
         </div>
 
         {/* Bottom Section */}
-        <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2B] border-t border-dashed border-zinc-700/40 p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#111318] border-t border-dashed border-zinc-700/40 p-4">
           <div className="max-w-md mx-auto">
             <button
               onClick={handleAvancar}
               disabled={selectedLoterias.length === 0}
-              className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${
+              className={`w-full h-14 min-h-[56px] rounded-xl font-bold transition-all active:scale-[0.98] ${
                 selectedLoterias.length > 0
-                  ? 'bg-[#E5A220]'
-                  : 'bg-zinc-700 cursor-not-allowed'
+                  ? 'bg-[#E5A220] text-zinc-900'
+                  : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
               }`}
+              aria-label="Avançar para ver resultados"
             >
               AVANÇAR
             </button>

@@ -110,7 +110,7 @@ async function RecentBetsTable() {
             Nenhuma aposta finalizada ainda
           </div>
         ) : (
-          <div className="divide-y divide-gray-600">
+          <div className="divide-y divide-zinc-700/40">
             {bets.map((bet) => (
               <div key={bet.id} className="p-3 space-y-2">
                 <div className="flex justify-between items-start">
@@ -142,7 +142,7 @@ async function RecentBetsTable() {
               <th className="px-4 py-2 text-left text-xs font-semibold text-zinc-500">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-600">
+          <tbody className="divide-y divide-zinc-700/40">
             {bets.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-6 text-center text-zinc-500">
@@ -190,7 +190,7 @@ async function RecentDepositsTable() {
             Nenhum depósito registrado ainda
           </div>
         ) : (
-          <div className="divide-y divide-gray-600">
+          <div className="divide-y divide-zinc-700/40">
             {deposits.map((deposit) => (
               <div key={deposit.id} className="p-3 space-y-2">
                 <div className="flex justify-between items-start">
@@ -220,7 +220,7 @@ async function RecentDepositsTable() {
               <th className="px-4 py-2 text-left text-xs font-semibold text-zinc-500">Data</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-600">
+          <tbody className="divide-y divide-zinc-700/40">
             {deposits.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
@@ -267,7 +267,7 @@ async function PendingWithdrawalsTable() {
             Nenhum saque pendente
           </div>
         ) : (
-          <div className="divide-y divide-gray-600">
+          <div className="divide-y divide-zinc-700/40">
             {withdrawals.map((withdrawal) => (
               <div key={withdrawal.id} className="p-3 space-y-2">
                 <div className="flex justify-between items-start">
@@ -299,7 +299,7 @@ async function PendingWithdrawalsTable() {
               <th className="px-4 py-2 text-left text-xs font-semibold text-zinc-500">Data</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-600">
+          <tbody className="divide-y divide-zinc-700/40">
             {withdrawals.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">

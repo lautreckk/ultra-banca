@@ -12,11 +12,11 @@
 
 function SkeletonInviteLink() {
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-sm animate-pulse">
-      <div className="h-4 w-16 bg-gray-200 rounded" />
-      <div className="flex-1 flex items-center gap-2 rounded bg-gray-100 px-2 py-1">
-        <div className="flex-1 h-4 bg-gray-200 rounded" />
-        <div className="h-4 w-4 bg-gray-200 rounded" />
+    <div className="flex items-center gap-2 rounded-lg bg-[#1A1F2B] px-3 py-2 shadow-sm animate-pulse">
+      <div className="h-4 w-16 bg-zinc-700 rounded" />
+      <div className="flex-1 flex items-center gap-2 rounded bg-zinc-800/50 px-2 py-1">
+        <div className="flex-1 h-4 bg-zinc-700 rounded" />
+        <div className="h-4 w-4 bg-zinc-700 rounded" />
       </div>
     </div>
   );
@@ -50,11 +50,11 @@ function SkeletonWinnerBanner() {
 
 function SkeletonGameCard() {
   return (
-    <div className="aspect-square overflow-hidden rounded-xl bg-gray-200 shadow-lg animate-pulse" />
+    <div className="aspect-square overflow-hidden rounded-xl bg-zinc-700 shadow-lg animate-pulse" />
   );
 }
 
-function SkeletonActionCard({ color = 'bg-gray-300' }: { color?: string }) {
+function SkeletonActionCard({ color = 'bg-zinc-700' }: { color?: string }) {
   return (
     <div className={`flex flex-col items-center justify-center gap-2 rounded-xl ${color} py-6 shadow-lg animate-pulse`}>
       <div className="h-8 w-8 bg-white/30 rounded-full" />
@@ -90,7 +90,7 @@ export default function DashboardLoading() {
       {/* PROMOTOR & Amigos */}
       <div className="grid grid-cols-2 gap-3">
         <SkeletonGameCard />
-        <div className="aspect-square overflow-hidden rounded-xl bg-gray-700/60 shadow-lg animate-pulse flex flex-col items-center justify-center">
+        <div className="aspect-square overflow-hidden rounded-xl bg-zinc-700/60 shadow-lg animate-pulse flex flex-col items-center justify-center">
           <div className="h-12 w-12 bg-white/20 rounded-full mb-2" />
           <div className="h-4 w-24 bg-white/20 rounded" />
         </div>
@@ -101,15 +101,15 @@ export default function DashboardLoading() {
 
       {/* Bottom Grid - Resultados, Saques, Premiadas, Relatorios */}
       <div className="grid grid-cols-2 gap-3">
-        <SkeletonActionCard color="bg-gray-800/60" />
+        <SkeletonActionCard color="bg-zinc-800/60" />
         <SkeletonActionCard color="bg-teal-400/60" />
-        <SkeletonActionCard color="bg-gray-800/60" />
-        <SkeletonActionCard color="bg-gray-800/60" />
+        <SkeletonActionCard color="bg-zinc-800/60" />
+        <SkeletonActionCard color="bg-zinc-800/60" />
       </div>
 
       {/* Footer */}
       <div className="py-4 flex justify-center">
-        <div className="h-4 w-16 bg-gray-300 rounded animate-pulse" />
+        <div className="h-4 w-16 bg-zinc-700 rounded animate-pulse" />
       </div>
     </div>
   );

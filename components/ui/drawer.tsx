@@ -92,7 +92,7 @@ export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }:
       {/* Drawer Panel */}
       <div
         className={cn(
-          'fixed z-50 bg-white transition-all duration-300 ease-out',
+          'fixed z-50 bg-[#1A1F2B] transition-all duration-300 ease-out',
           // Mobile: slide from right
           !isDesktop && 'top-0 right-0 bottom-0 w-[280px]',
           // Desktop: centered modal
@@ -102,20 +102,20 @@ export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }:
       >
         {/* Header */}
         <div className={cn(
-          'flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4',
+          'flex h-14 items-center justify-between border-b border-zinc-700/40 px-4',
           isDesktop && 'rounded-t-xl'
         )}>
-          <span className="font-semibold text-gray-800">{title}</span>
+          <span className="font-semibold text-white">{title}</span>
           <button
             onClick={onClose}
             onTouchEnd={(e) => {
               e.preventDefault();
               onClose();
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-gray-100"
+            className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-zinc-700/30 active:scale-[0.98] transition-all"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <X className="h-6 w-6 text-gray-600" />
+            <X className="h-6 w-6 text-zinc-400" />
           </button>
         </div>
 
@@ -157,8 +157,8 @@ export function DrawerItem({ icon, label, highlighted = false, onClick }: Drawer
       onTouchEnd={handleClick}
       className={cn(
         'flex h-12 w-full items-center gap-3 px-4 min-h-[48px]',
-        'transition-colors duration-200 active:bg-gray-100',
-        highlighted ? 'text-[var(--color-accent-orange)]' : 'text-gray-800'
+        'transition-all duration-200 active:bg-zinc-700/30 active:scale-[0.98]',
+        highlighted ? 'text-[var(--color-accent-orange)]' : 'text-white'
       )}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >

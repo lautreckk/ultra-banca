@@ -102,17 +102,17 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
     <PageLayout title="PULES" showBack>
       <div className="space-y-4 p-4">
         {/* Date Header */}
-        <div className="rounded-lg bg-zinc-800 px-4 py-3 text-center">
+        <div className="rounded-xl bg-zinc-800 border border-zinc-700/40 px-4 py-3 text-center">
           <span className="text-lg font-bold text-white">{dateDisplay}</span>
         </div>
 
         {/* Resumo */}
         <div className="flex gap-3">
-          <div className="flex-1 rounded-lg bg-green-500/10 px-4 py-3 text-center">
+          <div className="flex-1 rounded-xl bg-green-500/10 border border-green-500/20 px-4 py-3 text-center">
             <span className="text-2xl font-bold text-green-400">{resumo.registradas}</span>
             <p className="text-sm text-green-400">Registradas</p>
           </div>
-          <div className="flex-1 rounded-lg bg-red-500/10 px-4 py-3 text-center">
+          <div className="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-center">
             <span className="text-2xl font-bold text-red-400">{resumo.canceladas}</span>
             <p className="text-sm text-red-400">Canceladas</p>
           </div>
@@ -120,7 +120,7 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
 
         {/* Lista de Pules */}
         {apostas.length === 0 ? (
-          <div className="rounded-lg bg-[#1A1F2B] px-4 py-8 text-center">
+          <div className="rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 py-8 text-center">
             <p className="text-zinc-500">Nenhuma pule encontrada nesta data</p>
           </div>
         ) : (
@@ -129,9 +129,9 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
               <Link
                 key={aposta.id}
                 href={`/relatorios/pules/${aposta.pule || aposta.id}`}
-                className="block overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm active:bg-zinc-700/50"
+                className="block overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm active:bg-zinc-700/50 active:scale-[0.98] transition-all"
               >
-                <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center justify-between px-4 py-3 min-h-[56px]">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white">

@@ -60,23 +60,23 @@ export default function FazendinhaDataPage({ params }: { params: Promise<{ data:
 
   const getModalidadeBadgeColor = (modalidade: string) => {
     const colors: Record<string, string> = {
-      centena: 'bg-purple-100 text-purple-800',
-      dezena: 'bg-blue-100 text-blue-800',
-      grupo: 'bg-green-100 text-green-800',
-      milhar: 'bg-red-100 text-red-800',
-      duque_dezena: 'bg-orange-100 text-orange-800',
-      duque_grupo: 'bg-yellow-100 text-yellow-800',
-      terno_dezena: 'bg-pink-100 text-pink-800',
-      terno_grupo: 'bg-indigo-100 text-indigo-800',
+      centena: 'bg-purple-900/30 text-purple-300',
+      dezena: 'bg-blue-900/30 text-blue-300',
+      grupo: 'bg-green-900/30 text-green-300',
+      milhar: 'bg-red-900/30 text-red-300',
+      duque_dezena: 'bg-orange-900/30 text-orange-300',
+      duque_grupo: 'bg-yellow-900/30 text-yellow-300',
+      terno_dezena: 'bg-pink-900/30 text-pink-300',
+      terno_grupo: 'bg-indigo-900/30 text-indigo-300',
     };
-    return colors[modalidade.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    return colors[modalidade.toLowerCase()] || 'bg-zinc-800/50 text-white';
   };
 
   if (loading) {
     return (
       <PageLayout title="FAZENDINHA" showBack>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
         </div>
       </PageLayout>
     );
@@ -86,20 +86,20 @@ export default function FazendinhaDataPage({ params }: { params: Promise<{ data:
     <PageLayout title="FAZENDINHA" showBack>
       <div className="space-y-4 p-4">
         {/* Date Header */}
-        <div className="rounded-lg bg-zinc-800 px-4 py-3 text-center">
+        <div className="rounded-xl bg-zinc-800 border border-zinc-700/40 px-4 py-3 text-center">
           <span className="text-lg font-bold text-white">{dateDisplay}</span>
         </div>
 
         {/* Resumo */}
-        <div className="rounded-lg bg-green-100 px-4 py-3 text-center">
-          <span className="text-2xl font-bold text-green-800">{apostas.length}</span>
-          <p className="text-sm text-green-700">Apostas de Fazendinha</p>
+        <div className="rounded-xl bg-green-900/20 border border-green-500/20 px-4 py-3 text-center">
+          <span className="text-2xl font-bold text-green-400">{apostas.length}</span>
+          <p className="text-sm text-green-500">Apostas de Fazendinha</p>
         </div>
 
         {/* Lista de Pules */}
         {apostas.length === 0 ? (
-          <div className="rounded-lg bg-white px-4 py-8 text-center">
-            <p className="text-gray-500">Nenhuma aposta de fazendinha nesta data</p>
+          <div className="rounded-xl bg-[#1A1F2B] border border-zinc-700/40 px-4 py-8 text-center">
+            <p className="text-zinc-500">Nenhuma aposta de fazendinha nesta data</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -107,31 +107,31 @@ export default function FazendinhaDataPage({ params }: { params: Promise<{ data:
               <Link
                 key={aposta.id}
                 href={`/relatorios/pules/${aposta.pule || aposta.id}`}
-                className="block overflow-hidden rounded-lg bg-white shadow-sm active:bg-gray-50"
+                className="block overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm active:bg-zinc-700/30 active:scale-[0.98] transition-all"
               >
-                <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center justify-between px-4 py-3 min-h-[56px]">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-800">
+                      <span className="font-bold text-white">
                         PULE #{aposta.pule || aposta.id.slice(0, 8).toUpperCase()}
                       </span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getModalidadeBadgeColor(aposta.modalidade)}`}>
                         {aposta.modalidade.toUpperCase()}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-zinc-500">
                       {new Date(aposta.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - {aposta.horarios?.join(', ') || 'N/A'}
                     </p>
                     <div className="mt-1 flex items-center gap-3 text-sm">
-                      <span className="text-gray-500">
+                      <span className="text-zinc-500">
                         Vale: {formatCurrency(aposta.valor_unitario)}
                       </span>
-                      <span className="font-semibold text-gray-800">
+                      <span className="font-semibold text-white">
                         Total: {formatCurrency(aposta.valor_total)}
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                  <ChevronRight className="h-5 w-5 text-zinc-500" />
                 </div>
               </Link>
             ))}

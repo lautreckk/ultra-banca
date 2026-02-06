@@ -78,17 +78,17 @@ function NumbersContent({ data }: { data: string }) {
 
   return (
     <PageLayout title="SELECIONAR NÚMEROS">
-      <div className="bg-white min-h-screen pb-32">
+      <div className="bg-[#111318] min-h-screen pb-32">
         {/* Header Info */}
-        <div className="px-4 pt-4 pb-3 border-b border-gray-200">
+        <div className="px-4 pt-4 pb-3 border-b border-zinc-700/40">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">FAZENDINHA</h2>
-              <p className="text-sm text-gray-500">{selectedNumbers.length} PALPITES</p>
+              <h2 className="text-xl font-bold text-white">FAZENDINHA</h2>
+              <p className="text-sm text-zinc-500">{selectedNumbers.length} PALPITES</p>
             </div>
             <div className="text-right">
               <span className="text-lg font-bold text-red-500">{modalidade?.nome}</span>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-zinc-400">
                 R$ {valor.toFixed(2).replace('.', ',')} pra R${' '}
                 {formatPremio(valor, modalidade?.multiplicador || 1)}
               </p>
@@ -111,10 +111,10 @@ function NumbersContent({ data }: { data: string }) {
                   key={num}
                   onClick={() => toggleNumber(num)}
                   className={cn(
-                    'py-2 rounded-md text-sm font-medium transition-all',
+                    'py-2 rounded-xl text-sm font-medium active:scale-[0.98] transition-all',
                     isSelected
                       ? 'bg-[#4CAF50] text-white'
-                      : 'bg-zinc-600 text-white hover:bg-zinc-500'
+                      : 'bg-[#1A1F2B] border border-zinc-700/40 text-white'
                   )}
                 >
                   {num}
@@ -125,12 +125,12 @@ function NumbersContent({ data }: { data: string }) {
         </div>
 
         {/* Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 max-w-md mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2B] border-t border-zinc-700/40 max-w-md mx-auto">
           {/* Total */}
-          <div className="px-4 py-3 border-b border-dashed border-gray-300">
+          <div className="px-4 py-3 border-b border-dashed border-zinc-700/40">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-gray-600">Total:</span>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-zinc-400">Total:</span>
+              <span className="text-xl font-bold text-white">
                 R$ {total.toFixed(2).replace('.', ',')}
               </span>
             </div>
@@ -141,7 +141,7 @@ function NumbersContent({ data }: { data: string }) {
             <button
               onClick={handleBuy}
               disabled={selectedNumbers.length === 0}
-              className="w-full py-3.5 rounded-lg bg-[#4CAF50] text-white font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-[#43A047]"
+              className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] text-zinc-900 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
             >
               Comprar
             </button>
@@ -152,31 +152,31 @@ function NumbersContent({ data }: { data: string }) {
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-sm p-6">
+          <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Confirmar Compra?</h3>
+              <h3 className="text-xl font-bold text-white">Confirmar Compra?</h3>
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-zinc-500 hover:text-zinc-400 active:scale-[0.98] transition-all"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-gray-600 mb-6">Tem certeza de que deseja confirmar a compra?</p>
+            <p className="text-zinc-400 mb-6">Tem certeza de que deseja confirmar a compra?</p>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
                 disabled={isProcessing}
-                className="flex-1 py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 text-zinc-300 font-semibold active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                Não
+                Nao
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={isProcessing}
-                className="flex-1 py-3 rounded-lg bg-[#4CAF50] text-white font-semibold hover:bg-[#43A047] disabled:opacity-50"
+                className="flex-1 h-14 min-h-[56px] rounded-xl bg-[#E5A220] text-zinc-900 font-bold active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 {isProcessing ? 'Processando...' : 'Sim'}
               </button>
@@ -195,8 +195,8 @@ export default function FazendinhaNumbersPage({ params }: FazendinhaNumbersPageP
     <Suspense
       fallback={
         <PageLayout title="SELECIONAR NÚMEROS">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="flex items-center justify-center min-h-screen bg-[#111318]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-500"></div>
           </div>
         </PageLayout>
       }

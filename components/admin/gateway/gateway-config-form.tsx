@@ -143,7 +143,7 @@ export function GatewayConfigForm({
       {/* Back Button */}
       <Link
         href="/admin/pagamentos"
-        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+        className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
       >
         <ArrowLeft className="h-4 w-4" />
         Voltar para Pagamentos
@@ -151,19 +151,19 @@ export function GatewayConfigForm({
 
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">{displayName}</h1>
-        <p className="text-sm md:text-base text-gray-400">{description}</p>
+        <p className="text-sm md:text-base text-zinc-400">{description}</p>
       </div>
 
       {/* Status Card */}
-      <div className="bg-[#374151] rounded-lg p-4 md:p-6">
+      <div className="bg-zinc-800/50 rounded-lg p-4 md:p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 md:gap-4">
-            <div className={`p-2 md:p-3 rounded-lg ${ativo ? 'bg-green-500/20' : 'bg-gray-600'}`}>
-              <CreditCard className={`h-5 w-5 md:h-6 md:w-6 ${ativo ? 'text-green-400' : 'text-gray-400'}`} />
+            <div className={`p-2 md:p-3 rounded-lg ${ativo ? 'bg-green-500/20' : 'bg-zinc-700'}`}>
+              <CreditCard className={`h-5 w-5 md:h-6 md:w-6 ${ativo ? 'text-green-400' : 'text-zinc-400'}`} />
             </div>
             <div>
               <h2 className="text-base md:text-lg font-semibold text-white">Status do Gateway</h2>
-              <p className={`text-sm ${ativo ? 'text-green-400' : 'text-gray-400'}`}>
+              <p className={`text-sm ${ativo ? 'text-green-400' : 'text-zinc-400'}`}>
                 {ativo ? 'Ativado' : 'Desativado'}
               </p>
             </div>
@@ -177,7 +177,7 @@ export function GatewayConfigForm({
       </div>
 
       {/* Config Form */}
-      <div className="bg-[#374151] rounded-lg p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="bg-zinc-800/50 rounded-lg p-4 md:p-6 space-y-4 md:space-y-6">
         <h2 className="text-base md:text-lg font-semibold text-white">Credenciais</h2>
 
         {/* Error */}
@@ -199,14 +199,14 @@ export function GatewayConfigForm({
         <div className="space-y-4">
           {fields.map((field) => (
             <div key={field.key}>
-              <label className="block text-sm font-medium text-gray-300 mb-1">{field.label}</label>
+              <label className="block text-sm font-medium text-zinc-300 mb-1">{field.label}</label>
               {field.type === 'textarea' ? (
                 <textarea
                   value={formData[field.key] || ''}
                   onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                   placeholder={field.placeholder}
                   rows={4}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                  className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/40 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
                 />
               ) : field.type === 'password' ? (
                 <div className="relative">
@@ -215,12 +215,12 @@ export function GatewayConfigForm({
                     value={formData[field.key] || ''}
                     onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                     placeholder={field.placeholder}
-                    className="bg-gray-700 border-gray-600 text-white pr-10"
+                    className="bg-zinc-800/50 border-zinc-700/40 text-white pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => toggleShowSecret(field.key)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
                   >
                     {showSecrets[field.key] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -231,11 +231,11 @@ export function GatewayConfigForm({
                   value={formData[field.key] || ''}
                   onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                   placeholder={field.placeholder}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-zinc-800/50 border-zinc-700/40 text-white"
                 />
               )}
               {field.helpText && (
-                <p className="mt-1 text-xs text-gray-500">{field.helpText}</p>
+                <p className="mt-1 text-xs text-zinc-500">{field.helpText}</p>
               )}
             </div>
           ))}
@@ -243,9 +243,9 @@ export function GatewayConfigForm({
       </div>
 
       {/* Info Card */}
-      <div className="bg-[#374151] rounded-lg p-4 md:p-6">
+      <div className="bg-zinc-800/50 rounded-lg p-4 md:p-6">
         <h2 className="text-base md:text-lg font-semibold text-white mb-3">Informações</h2>
-        <ul className="space-y-2 text-sm text-gray-400">
+        <ul className="space-y-2 text-sm text-zinc-400">
           {infoItems.map((item, index) => (
             <li key={index} className="flex items-start gap-2">
               <span className="text-cyan-400">•</span>

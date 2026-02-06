@@ -80,7 +80,7 @@ export function CasinoLobby() {
           <div className="flex items-center justify-between px-3 py-2 bg-zinc-900 border-b border-white/10 shrink-0">
             <button
               onClick={handleCloseGame}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all active:scale-[0.98]"
             >
               <ArrowLeft className="h-4 w-4 text-white" />
               <span className="text-white text-sm font-medium">Voltar</span>
@@ -111,13 +111,13 @@ export function CasinoLobby() {
         {/* Search Bar */}
         {games.length > 6 && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
             <input
               type="text"
               placeholder="Buscar jogos..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl bg-white/10 border border-white/20 py-3 pl-10 pr-4 text-sm text-white placeholder-gray-400 outline-none transition-colors focus:border-white/40 focus:bg-white/15"
+              className="w-full h-14 min-h-[48px] rounded-xl bg-zinc-900/80 border border-zinc-700/40 pl-10 pr-4 text-base text-white placeholder-zinc-500 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
         )}
@@ -125,13 +125,13 @@ export function CasinoLobby() {
         {/* Games Grid */}
         {filteredGames.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-lg font-medium text-gray-400">
+            <p className="text-lg font-medium text-zinc-500">
               Nenhum jogo encontrado
             </p>
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="mt-2 text-sm underline text-green-400"
+                className="mt-2 text-sm underline text-green-400 active:scale-[0.98] transition-all"
               >
                 Limpar busca
               </button>

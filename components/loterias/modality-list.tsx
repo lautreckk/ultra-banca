@@ -47,7 +47,7 @@ export function ModalityList({ baseHref, tipoJogo = 'loterias', className, modal
   // Para Loterias com dados do banco
   if (useDBModalidades && modalidadesFromDB) {
     return (
-      <div className={cn('bg-white', className)}>
+      <div className={cn('bg-[#1A1F2B]', className)}>
         {CATEGORIAS_DB.map((categoria) => {
           const modalidadesCategoria = modalidadesFromDB.filter(
             (m) => m.categoria === categoria.id
@@ -57,7 +57,7 @@ export function ModalityList({ baseHref, tipoJogo = 'loterias', className, modal
 
           return (
             <div key={categoria.id} className="mb-2">
-              <div className="bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-700 uppercase tracking-wide">
+              <div className="bg-zinc-800/50 px-4 py-2 text-sm font-bold text-zinc-300 uppercase tracking-wide">
                 {categoria.nome}
               </div>
               <div className="divide-y divide-[var(--color-border)]">
@@ -79,7 +79,7 @@ export function ModalityList({ baseHref, tipoJogo = 'loterias', className, modal
   // Para Loterias com dados hardcoded (fallback)
   if (tipoJogo === 'loterias') {
     return (
-      <div className={cn('bg-white', className)}>
+      <div className={cn('bg-[#1A1F2B]', className)}>
         {CATEGORIAS_MODALIDADES.map((categoria) => {
           const modalidadesCategoria = modalidades.filter(
             (m) => m.categoria === categoria.id
@@ -89,7 +89,7 @@ export function ModalityList({ baseHref, tipoJogo = 'loterias', className, modal
 
           return (
             <div key={categoria.id} className="mb-2">
-              <div className="bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-700 uppercase tracking-wide">
+              <div className="bg-zinc-800/50 px-4 py-2 text-sm font-bold text-zinc-300 uppercase tracking-wide">
                 {categoria.nome}
               </div>
               <div className="divide-y divide-[var(--color-border)]">
@@ -110,7 +110,7 @@ export function ModalityList({ baseHref, tipoJogo = 'loterias', className, modal
 
   // Para outros jogos (Quininha, Seninha, Lotinha), lista simples
   return (
-    <div className={cn('bg-white divide-y divide-[var(--color-border)]', className)}>
+    <div className={cn('bg-[#1A1F2B] divide-y divide-zinc-700/40', className)}>
       {modalidades.map((modalidade) => (
         <ModalityItem
           key={modalidade.id}
@@ -131,14 +131,14 @@ function ModalityItem({ modalidade, baseHref }: ModalityItemProps) {
   return (
     <Link
       href={`${baseHref}/${modalidade.id}`}
-      className="flex h-14 items-center justify-between px-4 min-h-[44px] transition-colors duration-200 active:bg-gray-50"
+      className="flex h-14 items-center justify-between px-4 min-h-[56px] transition-colors duration-200 active:bg-zinc-700/30"
     >
-      <span className="font-semibold text-zinc-800">{modalidade.nome}</span>
+      <span className="font-semibold text-white">{modalidade.nome}</span>
       <div className="flex items-center gap-2">
-        <span className="font-bold text-blue-600">
+        <span className="font-bold text-blue-400">
           {formatMultiplicador(modalidade.multiplicador)}
         </span>
-        <ChevronRight className="h-5 w-5 text-gray-400" />
+        <ChevronRight className="h-5 w-5 text-zinc-500" />
       </div>
     </Link>
   );
@@ -154,14 +154,14 @@ function ModalityItemDB({ modalidade, baseHref }: ModalityItemDBProps) {
   return (
     <Link
       href={`${baseHref}/${modalidade.codigo}`}
-      className="flex h-14 items-center justify-between px-4 min-h-[44px] transition-colors duration-200 active:bg-gray-50"
+      className="flex h-14 items-center justify-between px-4 min-h-[56px] transition-colors duration-200 active:bg-zinc-700/30"
     >
-      <span className="font-semibold text-zinc-800">{modalidade.nome}</span>
+      <span className="font-semibold text-white">{modalidade.nome}</span>
       <div className="flex items-center gap-2">
-        <span className="font-bold text-blue-600">
+        <span className="font-bold text-blue-400">
           {formatMultiplicador(modalidade.multiplicador)}
         </span>
-        <ChevronRight className="h-5 w-5 text-gray-400" />
+        <ChevronRight className="h-5 w-5 text-zinc-500" />
       </div>
     </Link>
   );

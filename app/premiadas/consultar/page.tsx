@@ -17,15 +17,15 @@ export default function ConsultarPremiadasPage() {
 
   return (
     <PageLayout title="CONSULTAR POR PREMIADAS" showBack>
-      <div className="divide-y divide-gray-200 bg-white">
+      <div className="bg-[#111318] min-h-screen p-4 space-y-3">
         {dates.map((date) => (
           <Link
             key={date.param}
             href={`/premiadas/consultar/${date.param}`}
-            className="flex items-center justify-between px-4 py-4 active:bg-gray-50"
+            className="flex items-center justify-between px-4 h-14 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl active:scale-[0.98] transition-all"
           >
-            <span className="text-gray-800">{date.display}</span>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <span className="text-white">{date.display}</span>
+            <ChevronRight className="h-5 w-5 text-zinc-500" />
           </Link>
         ))}
       </div>

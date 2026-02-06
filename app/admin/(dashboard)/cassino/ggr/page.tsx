@@ -50,12 +50,12 @@ export default function AdminCassinoGGRPage() {
     {
       key: 'bets',
       header: 'Apostas',
-      render: (value) => <span className="text-gray-300">{formatCurrency(value as number)}</span>,
+      render: (value) => <span className="text-zinc-300">{formatCurrency(value as number)}</span>,
     },
     {
       key: 'wins',
       header: 'Ganhos',
-      render: (value) => <span className="text-gray-300">{formatCurrency(value as number)}</span>,
+      render: (value) => <span className="text-zinc-300">{formatCurrency(value as number)}</span>,
     },
     {
       key: 'ggr',
@@ -72,7 +72,7 @@ export default function AdminCassinoGGRPage() {
     {
       key: 'players',
       header: 'Jogadores',
-      render: (value) => <span className="text-gray-300">{value as number}</span>,
+      render: (value) => <span className="text-zinc-300">{value as number}</span>,
     },
   ];
 
@@ -80,27 +80,27 @@ export default function AdminCassinoGGRPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Cassino - Relatório GGR</h1>
-        <p className="text-gray-400">Gross Gaming Revenue por período</p>
+        <p className="text-zinc-500">Gross Gaming Revenue por período</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-end">
         <div>
-          <label className="text-sm font-medium text-gray-300">Data Início</label>
+          <label className="text-sm font-medium text-zinc-300">Data Início</label>
           <Input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 bg-gray-700 border-gray-600 text-white"
+            className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-300">Data Fim</label>
+          <label className="text-sm font-medium text-zinc-300">Data Fim</label>
           <Input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="mt-1 bg-gray-700 border-gray-600 text-white"
+            className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
           />
         </div>
         <Button variant="teal" onClick={loadGGR} disabled={loading}>
@@ -117,7 +117,7 @@ export default function AdminCassinoGGRPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+              <div className="flex items-center gap-2 text-zinc-500 mb-1">
                 <TrendingDown className="h-4 w-4" />
                 <span className="text-sm">Total Apostas</span>
               </div>
@@ -125,7 +125,7 @@ export default function AdminCassinoGGRPage() {
             </div>
 
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+              <div className="flex items-center gap-2 text-zinc-500 mb-1">
                 <TrendingUp className="h-4 w-4" />
                 <span className="text-sm">Total Ganhos</span>
               </div>
@@ -133,7 +133,7 @@ export default function AdminCassinoGGRPage() {
             </div>
 
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+              <div className="flex items-center gap-2 text-zinc-500 mb-1">
                 <DollarSign className="h-4 w-4" />
                 <span className="text-sm">GGR</span>
               </div>
@@ -143,7 +143,7 @@ export default function AdminCassinoGGRPage() {
             </div>
 
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
+              <div className="flex items-center gap-2 text-zinc-500 mb-1">
                 <Users className="h-4 w-4" />
                 <span className="text-sm">Jogadores</span>
               </div>
@@ -161,7 +161,7 @@ export default function AdminCassinoGGRPage() {
           />
         </>
       ) : (
-        <p className="text-gray-400 text-center py-8">Nenhum dado disponível</p>
+        <p className="text-zinc-500 text-center py-8">Nenhum dado disponível</p>
       )}
     </div>
   );

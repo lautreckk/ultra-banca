@@ -6,7 +6,7 @@ import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
 // Generate next 6 days
 function getNextDays(): { date: Date; dayNum: number; dayName: string }[] {
   const days = [];
-  const dayNames = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
+  const dayNames = ['DOMINGO', 'SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO'];
 
   for (let i = 0; i < 6; i++) {
     const date = new Date();
@@ -30,18 +30,22 @@ export default function QuininhaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A202C]">
+    <div className="min-h-screen bg-[#111318]">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
         <div className="flex h-12 items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center"
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            aria-label="Voltar"
           >
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
-          <span className="text-sm font-bold text-white">TIPO DE JOGO</span>
-          <button className="flex h-10 w-10 items-center justify-center">
+          <span className="text-base font-bold text-white">TIPO DE JOGO</span>
+          <button
+            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+            aria-label="Menu"
+          >
             <Menu className="h-5 w-5 text-white" />
           </button>
         </div>
@@ -49,10 +53,14 @@ export default function QuininhaPage() {
 
       {/* Balance Bar */}
       <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-        <RefreshCw className="h-5 w-5 text-white" />
+        <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
+          <RefreshCw className="h-5 w-5 text-white" />
+        </button>
         <div className="flex items-center gap-2">
           <span className="text-white font-medium">R$ ******* | *******</span>
-          <EyeOff className="h-5 w-5 text-white" />
+          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
+            <EyeOff className="h-5 w-5 text-white" />
+          </button>
         </div>
       </div>
 
@@ -62,7 +70,7 @@ export default function QuininhaPage() {
         <h1 className="text-2xl font-bold text-[#E5A220] mb-1" style={{ fontFamily: 'serif' }}>
           QUININHA
         </h1>
-        <p className="text-gray-400 text-sm mb-6">
+        <p className="text-zinc-500 text-sm mb-6">
           SELECIONE O DIA DO SORTEIO
         </p>
 
@@ -72,10 +80,11 @@ export default function QuininhaPage() {
             <button
               key={index}
               onClick={() => handleSelectDay(day.date)}
-              className="bg-[#2D3748] rounded-lg p-6 flex flex-col items-center justify-center hover:bg-[#3D4758] transition-colors"
+              className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-[#2D3748] active:scale-[0.98] transition-all"
+              aria-label={`Selecionar dia ${day.dayNum} ${day.dayName}`}
             >
-              <div className="bg-white rounded-lg w-14 h-14 flex items-center justify-center mb-2">
-                <span className="text-2xl font-bold text-gray-900">{day.dayNum}</span>
+              <div className="bg-[#111318] rounded-xl w-14 h-14 flex items-center justify-center mb-2">
+                <span className="text-2xl font-bold text-white">{day.dayNum}</span>
               </div>
               <span className="text-white font-bold text-sm">{day.dayName}</span>
             </button>

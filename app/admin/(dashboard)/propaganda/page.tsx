@@ -188,7 +188,7 @@ export default function AdminPropagandaPage() {
       header: 'Imagem',
       className: 'w-20',
       render: (value) => (
-        <div className="w-16 h-12 bg-gray-700 rounded overflow-hidden">
+        <div className="w-16 h-12 bg-zinc-800 rounded overflow-hidden">
           {value ? (
             <img
               src={value as string}
@@ -200,7 +200,7 @@ export default function AdminPropagandaPage() {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="h-5 w-5 text-gray-500" />
+              <ImageIcon className="h-5 w-5 text-zinc-500" />
             </div>
           )}
         </div>
@@ -238,18 +238,18 @@ export default function AdminPropagandaPage() {
     {
       key: 'prioridade',
       header: 'Prioridade',
-      render: (value) => <span className="text-gray-400">{value as number}</span>,
+      render: (value) => <span className="text-zinc-500">{value as number}</span>,
     },
     {
       key: 'data_fim',
       header: 'Validade',
       render: (value) => {
-        if (!value) return <span className="text-gray-400">Sem limite</span>;
+        if (!value) return <span className="text-zinc-500">Sem limite</span>;
         const date = new Date(value as string);
         const now = new Date();
         const isExpired = date < now;
         return (
-          <span className={isExpired ? 'text-red-400' : 'text-gray-300'}>
+          <span className={isExpired ? 'text-red-400' : 'text-zinc-300'}>
             {date.toLocaleDateString('pt-BR')}
           </span>
         );
@@ -278,7 +278,7 @@ export default function AdminPropagandaPage() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-cyan-400 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-cyan-400 transition-colors"
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -288,7 +288,7 @@ export default function AdminPropagandaPage() {
               e.stopPropagation();
               handleEdit(row);
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
           >
             <Edit className="h-4 w-4" />
           </button>
@@ -297,7 +297,7 @@ export default function AdminPropagandaPage() {
               e.stopPropagation();
               setDeleteModal({ open: true, id: row.id });
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-red-400 transition-colors"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -311,7 +311,7 @@ export default function AdminPropagandaPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Propaganda</h1>
-          <p className="text-gray-400">Gerenciamento de banners e anúncios</p>
+          <p className="text-zinc-500">Gerenciamento de banners e anúncios</p>
         </div>
         <Button variant="teal" onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -344,7 +344,7 @@ export default function AdminPropagandaPage() {
                 setEditingId(null);
                 setFormData(initialFormData);
               }}
-              className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700/30 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -355,21 +355,21 @@ export default function AdminPropagandaPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-300">Título *</label>
+                <label className="text-sm font-medium text-zinc-300">Título *</label>
                 <Input
                   value={formData.titulo}
                   onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Descrição</label>
+                <label className="text-sm font-medium text-zinc-300">Descrição</label>
                 <textarea
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="mt-1 w-full px-3 py-2 bg-zinc-800 border border-zinc-700/40 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   rows={2}
                 />
               </div>
@@ -384,18 +384,18 @@ export default function AdminPropagandaPage() {
               />
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Link URL (opcional)</label>
+                <label className="text-sm font-medium text-zinc-300">Link URL (opcional)</label>
                 <Input
                   type="url"
                   value={formData.link_url}
                   onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   placeholder="https://..."
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300 block mb-2">Gatilhos *</label>
+                <label className="text-sm font-medium text-zinc-300 block mb-2">Gatilhos *</label>
                 <div className="flex flex-wrap gap-2">
                   {gatilhosOptions.map((option) => (
                     <button
@@ -405,49 +405,49 @@ export default function AdminPropagandaPage() {
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                         formData.gatilhos.includes(option.value)
                           ? 'bg-cyan-500 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700/30'
                       }`}
                     >
                       {option.label}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   Selecione quando a propaganda deve aparecer
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Prioridade</label>
+                <label className="text-sm font-medium text-zinc-300">Prioridade</label>
                 <Input
                   type="number"
                   value={formData.prioridade}
                   onChange={(e) => setFormData({ ...formData, prioridade: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   min="0"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   Maior número = maior prioridade de exibição
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Data Início</label>
+                  <label className="text-sm font-medium text-zinc-300">Data Início</label>
                   <Input
                     type="date"
                     value={formData.data_inicio}
                     onChange={(e) => setFormData({ ...formData, data_inicio: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Data Fim</label>
+                  <label className="text-sm font-medium text-zinc-300">Data Fim</label>
                   <Input
                     type="date"
                     value={formData.data_fim}
                     onChange={(e) => setFormData({ ...formData, data_fim: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   />
                 </div>
               </div>

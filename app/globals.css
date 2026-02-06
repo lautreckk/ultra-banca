@@ -39,6 +39,12 @@
   --color-border-dark: #27272a; /* zinc-800 */
   --color-border-subtle: #3f3f46; /* zinc-700 */
 
+  /* === LAYOUT === */
+  --color-page-bg: #111318;
+  --color-header-bg: #1A202C;
+  --color-card-bg: #1A1F2B;
+  --color-balance-gold: #E5A220;
+
   /* === SAFE AREAS === */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -90,6 +96,11 @@ body {
 /* Touch target minimum */
 .min-h-touch {
   min-height: 44px;
+}
+
+/* Large button minimum */
+.min-h-btn {
+  min-height: 56px;
 }
 
 /* Active states for mobile */

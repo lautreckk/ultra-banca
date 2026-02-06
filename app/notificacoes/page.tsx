@@ -37,7 +37,7 @@ export default function NotificacoesPage() {
   return (
     <PageLayout title="NOTIFICACOES">
       <div className="p-4 space-y-6">
-        <div className="bg-[#1A1F2B] rounded-lg p-4 shadow-sm space-y-4">
+        <div className="bg-[#1A1F2B] rounded-xl p-4 shadow-sm space-y-4 border border-zinc-700/40">
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-[#E5A220] rounded-full flex items-center justify-center">
               <Bell className="h-8 w-8 text-white" />
@@ -73,23 +73,23 @@ export default function NotificacoesPage() {
         </div>
 
         {permissionStatus === 'granted' ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-green-800 text-center font-medium">
+          <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4">
+            <p className="text-green-400 text-center font-medium">
               Notificacoes ativadas com sucesso!
             </p>
           </div>
         ) : permissionStatus === 'denied' ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
-            <p className="text-red-800 text-center font-medium">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 space-y-2">
+            <p className="text-red-400 text-center font-medium">
               Permissao negada
             </p>
-            <p className="text-red-600 text-center text-sm">
+            <p className="text-red-400/80 text-center text-sm">
               Para ativar, acesse as configuracoes do navegador e permita notificacoes para este site.
             </p>
           </div>
         ) : permissionStatus === 'unsupported' ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-yellow-800 text-center font-medium">
+          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4">
+            <p className="text-yellow-400 text-center font-medium">
               Seu navegador nao suporta notificacoes.
             </p>
           </div>
@@ -97,14 +97,14 @@ export default function NotificacoesPage() {
           <button
             onClick={handleActivateNotifications}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-[#1A202C] hover:bg-[#2D3748] disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors"
+            className="w-full h-14 min-h-[56px] flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700/40 hover:bg-[#2D3748] disabled:bg-zinc-700 text-white font-bold px-6 rounded-xl transition-all active:scale-[0.98]"
           >
             <Bell className="h-5 w-5" />
             {loading ? 'Ativando...' : 'Ativar Notificacoes'}
           </button>
         )}
 
-        <p className="text-gray-500 text-xs text-center">
+        <p className="text-zinc-500 text-xs text-center">
           Voce pode desativar as notificacoes a qualquer momento nas configuracoes do seu navegador.
         </p>
       </div>

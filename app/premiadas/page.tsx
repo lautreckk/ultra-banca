@@ -214,31 +214,31 @@ export default function PremiadasPage() {
 
   return (
     <PageLayout title="PREMIADAS" showBack>
-      <div className="bg-white min-h-screen">
+      <div className="bg-[#111318] min-h-screen">
         <div className="space-y-4 p-4">
           {/* Menu de consulta */}
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+          <div className="bg-[#1A1F2B] rounded-xl overflow-hidden shadow-sm border border-zinc-700/40">
             <Link
               href="/premiadas/consultar"
-              className="flex items-center justify-between px-4 py-4 active:bg-gray-50"
+              className="flex items-center justify-between px-4 h-14 active:scale-[0.98] transition-all"
             >
               <div className="flex items-center gap-3">
                 <Calendar className="h-5 w-5 text-[#D4A84B]" />
-                <span className="font-medium text-gray-800">CONSULTAR POR DATA</span>
+                <span className="font-medium text-white">CONSULTAR POR DATA</span>
               </div>
-              <ChevronRight className="h-5 w-5 text-gray-400" />
+              <ChevronRight className="h-5 w-5 text-zinc-500" />
             </Link>
           </div>
 
-          {/* Total de prêmios */}
+          {/* Total de premios */}
           {totalPremios > 0 && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+            <div className="bg-green-900/20 border border-green-700/30 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <Trophy className="h-5 w-5 text-green-600" />
+                <div className="w-10 h-10 rounded-full bg-green-900/30 flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-green-700">Total em Prêmios</p>
+                  <p className="text-sm text-green-400">Total em Prêmios</p>
                   <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPremios)}</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function PremiadasPage() {
 
           {/* Lista de premiadas */}
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#D4A84B]" />
               Minhas Premiadas
             </h2>
@@ -261,15 +261,15 @@ export default function PremiadasPage() {
                 {displayApostas.map((aposta) => (
                   <div
                     key={aposta.id}
-                    className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm"
+                    className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4 space-y-3 shadow-sm"
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">{aposta.tipo}</p>
-                        <p className="text-gray-900 font-semibold capitalize">{aposta.modalidade}</p>
+                        <p className="text-xs text-zinc-500 uppercase tracking-wide">{aposta.tipo}</p>
+                        <p className="text-white font-semibold capitalize">{aposta.modalidade}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">Prêmio</p>
+                        <p className="text-xs text-zinc-500">Prêmio</p>
                         <p className="text-lg font-bold text-green-600">
                           {formatCurrency(aposta.premio_valor)}
                         </p>
@@ -280,14 +280,14 @@ export default function PremiadasPage() {
                       {aposta.palpites.map((palpite, i) => (
                         <span
                           key={i}
-                          className="px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-sm font-mono font-medium"
+                          className="px-3 py-1 bg-zinc-800/50 text-white rounded-xl text-sm font-mono font-medium"
                         >
                           {palpite}
                         </span>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
                       <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -299,15 +299,15 @@ export default function PremiadasPage() {
                         </span>
                       </div>
                       {aposta.pule && (
-                        <span className="text-gray-400">Pule: {aposta.pule}</span>
+                        <span className="text-zinc-500">Pule: {aposta.pule}</span>
                       )}
                     </div>
 
-                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
-                      <span className="text-gray-500">
+                    <div className="pt-3 border-t border-zinc-700/40 flex items-center justify-between text-sm">
+                      <span className="text-zinc-500">
                         Aposta: {formatCurrency(aposta.valor_total)}
                       </span>
-                      <span className="text-green-600 font-semibold flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
+                      <span className="text-green-500 font-semibold flex items-center gap-1 bg-green-900/20 px-2 py-1 rounded-xl">
                         <Trophy className="h-4 w-4" />
                         PREMIADA
                       </span>

@@ -17,12 +17,12 @@ export default function PulesDataPage() {
 
   return (
     <PageLayout title="PULES POR DATA" showBack>
-      <div className="divide-y divide-zinc-700/30 bg-[#1A1F2B]">
+      <div className="divide-y divide-zinc-700/30 bg-[#1A1F2B] rounded-xl border border-zinc-700/40 mx-4 mt-4 overflow-hidden">
         {dates.map((date) => (
           <Link
             key={date.param}
             href={`/relatorios/pules/data/${date.param}`}
-            className="flex items-center justify-between px-4 py-4 active:bg-zinc-700/50"
+            className="flex items-center justify-between px-4 py-4 min-h-[56px] active:bg-zinc-700/50 active:scale-[0.98] transition-all"
           >
             <span className="text-white">{date.display}</span>
             <ChevronRight className="h-5 w-5 text-zinc-500" />

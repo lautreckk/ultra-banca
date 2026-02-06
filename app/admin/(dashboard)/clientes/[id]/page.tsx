@@ -73,10 +73,10 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-700 rounded w-48 animate-pulse" />
+        <div className="h-8 bg-zinc-800 rounded w-48 animate-pulse" />
         <div className="bg-[#374151] rounded-lg p-6 space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-6 bg-gray-600 rounded animate-pulse" />
+            <div key={i} className="h-6 bg-zinc-700 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -88,13 +88,13 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
       <div className="space-y-6">
         <Link
           href="/admin/clientes"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar para clientes
         </Link>
         <div className="bg-[#374151] rounded-lg p-6 text-center">
-          <p className="text-gray-400">Usuário não encontrado</p>
+          <p className="text-zinc-500">Usuário não encontrado</p>
         </div>
       </div>
     );
@@ -107,13 +107,13 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         <div className="flex items-center gap-4">
           <Link
             href="/admin/clientes"
-            className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-white">{user.nome}</h1>
-            <p className="text-gray-400">
+            <p className="text-zinc-500">
               CPF: {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
             </p>
           </div>
@@ -137,28 +137,28 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         {/* Basic Info */}
         <div className="bg-[#374151] rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gray-600 rounded-lg">
+            <div className="p-2 bg-zinc-700 rounded-lg">
               <User className="h-5 w-5 text-cyan-400" />
             </div>
             <h2 className="text-lg font-semibold text-white">Informações Básicas</h2>
           </div>
           <div className="space-y-3">
             <div>
-              <label className="text-sm text-gray-400">Nome</label>
+              <label className="text-sm text-zinc-500">Nome</label>
               <p className="text-white">{user.nome}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">CPF</label>
+              <label className="text-sm text-zinc-500">CPF</label>
               <p className="text-white">
                 {user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
               </p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Telefone</label>
+              <label className="text-sm text-zinc-500">Telefone</label>
               <p className="text-white">{user.telefone || '-'}</p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Código de Convite</label>
+              <label className="text-sm text-zinc-500">Código de Convite</label>
               <p className="text-white">{user.codigo_convite || '-'}</p>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         {/* Financial Info */}
         <div className="bg-[#374151] rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gray-600 rounded-lg">
+            <div className="p-2 bg-zinc-700 rounded-lg">
               <Wallet className="h-5 w-5 text-green-400" />
             </div>
             <h2 className="text-lg font-semibold text-white">Saldo</h2>
@@ -176,36 +176,36 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
             {isEditMode ? (
               <>
                 <div>
-                  <label className="text-sm text-gray-400">Saldo Principal (R$)</label>
+                  <label className="text-sm text-zinc-500">Saldo Principal (R$)</label>
                   <Input
                     type="number"
                     step="0.01"
                     value={editedSaldo}
                     onChange={(e) => setEditedSaldo(e.target.value)}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400">Saldo Bônus (R$)</label>
+                  <label className="text-sm text-zinc-500">Saldo Bônus (R$)</label>
                   <Input
                     type="number"
                     step="0.01"
                     value={editedSaldoBonus}
                     onChange={(e) => setEditedSaldoBonus(e.target.value)}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   />
                 </div>
               </>
             ) : (
               <>
                 <div>
-                  <label className="text-sm text-gray-400">Saldo Principal</label>
+                  <label className="text-sm text-zinc-500">Saldo Principal</label>
                   <p className="text-2xl font-bold text-green-400">
                     {formatCurrency(user.saldo)}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400">Saldo Bônus</label>
+                  <label className="text-sm text-zinc-500">Saldo Bônus</label>
                   <p className="text-xl font-semibold text-cyan-400">
                     {formatCurrency(user.saldo_bonus)}
                   </p>
@@ -218,20 +218,20 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         {/* Stats Info */}
         <div className="bg-[#374151] rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gray-600 rounded-lg">
+            <div className="p-2 bg-zinc-700 rounded-lg">
               <Receipt className="h-5 w-5 text-yellow-400" />
             </div>
             <h2 className="text-lg font-semibold text-white">Estatísticas</h2>
           </div>
           <div className="space-y-3">
             <div>
-              <label className="text-sm text-gray-400">Total de Apostas</label>
+              <label className="text-sm text-zinc-500">Total de Apostas</label>
               <p className="text-xl font-semibold text-white">
                 {user.total_apostas.toLocaleString('pt-BR')}
               </p>
             </div>
             <div>
-              <label className="text-sm text-gray-400">Total de Ganhos</label>
+              <label className="text-sm text-zinc-500">Total de Ganhos</label>
               <p className="text-xl font-semibold text-green-400">
                 {formatCurrency(user.total_ganhos)}
               </p>
@@ -242,14 +242,14 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         {/* Account Info */}
         <div className="bg-[#374151] rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gray-600 rounded-lg">
+            <div className="p-2 bg-zinc-700 rounded-lg">
               <Calendar className="h-5 w-5 text-purple-400" />
             </div>
             <h2 className="text-lg font-semibold text-white">Conta</h2>
           </div>
           <div className="space-y-3">
             <div>
-              <label className="text-sm text-gray-400">Data de Cadastro</label>
+              <label className="text-sm text-zinc-500">Data de Cadastro</label>
               <p className="text-white">
                 {new Date(user.created_at).toLocaleDateString('pt-BR', {
                   day: '2-digit',

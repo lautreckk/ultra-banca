@@ -155,7 +155,7 @@ export default function AdminBonusDepositoPage() {
       key: 'bonus_maximo',
       header: 'Máximo',
       render: (value) => {
-        if (!value) return <span className="text-gray-400">Sem limite</span>;
+        if (!value) return <span className="text-zinc-500">Sem limite</span>;
         return <span className="text-green-400">{formatCurrency(value as number)}</span>;
       },
     },
@@ -181,7 +181,7 @@ export default function AdminBonusDepositoPage() {
               e.stopPropagation();
               handleEdit(row);
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
           >
             <Edit className="h-4 w-4" />
           </button>
@@ -190,7 +190,7 @@ export default function AdminBonusDepositoPage() {
               e.stopPropagation();
               setDeleteModal({ open: true, id: row.id });
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-red-400 transition-colors"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -204,7 +204,7 @@ export default function AdminBonusDepositoPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Bônus de Depósito</h1>
-          <p className="text-gray-400">Configure as faixas de bônus por valor de depósito</p>
+          <p className="text-zinc-500">Configure as faixas de bônus por valor de depósito</p>
         </div>
         <Button variant="teal" onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -215,10 +215,10 @@ export default function AdminBonusDepositoPage() {
       {/* Info Card */}
       <div className="bg-[#1f2937] border border-cyan-500/30 rounded-lg p-4 flex items-start gap-3">
         <Info className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-        <div className="text-sm text-gray-300">
+        <div className="text-sm text-zinc-300">
           <p className="font-medium text-cyan-400 mb-1">Como funciona:</p>
-          <ul className="space-y-1 text-gray-400">
-            <li>• O bônus é creditado automaticamente em <code className="text-cyan-300 bg-gray-700 px-1 rounded">saldo_bonus</code> quando o depósito é aprovado.</li>
+          <ul className="space-y-1 text-zinc-500">
+            <li>• O bônus é creditado automaticamente em <code className="text-cyan-300 bg-zinc-800 px-1 rounded">saldo_bonus</code> quando o depósito é aprovado.</li>
             <li>• É aplicada a maior faixa em que o valor do depósito se encaixa (ex: depósito de R$80 usa a faixa de R$50).</li>
             <li>• O saldo de bônus só pode ser usado para apostas, não para saques.</li>
           </ul>
@@ -250,7 +250,7 @@ export default function AdminBonusDepositoPage() {
                 setEditingId(null);
                 setFormData(initialFormData);
               }}
-              className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -261,51 +261,51 @@ export default function AdminBonusDepositoPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-300">Depósito Mínimo (R$) *</label>
+                <label className="text-sm font-medium text-zinc-300">Depósito Mínimo (R$) *</label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={formData.deposito_minimo}
                   onChange={(e) => setFormData({ ...formData, deposito_minimo: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   placeholder="Ex: 50.00"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   Valor mínimo do depósito para ativar esta faixa
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Percentual de Bônus (%) *</label>
+                <label className="text-sm font-medium text-zinc-300">Percentual de Bônus (%) *</label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={formData.bonus_percentual}
                   onChange={(e) => setFormData({ ...formData, bonus_percentual: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   placeholder="Ex: 70"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   Percentual do depósito que será creditado como bônus
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Bônus Máximo (R$)</label>
+                <label className="text-sm font-medium text-zinc-300">Bônus Máximo (R$)</label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
                   value={formData.bonus_maximo}
                   onChange={(e) => setFormData({ ...formData, bonus_maximo: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   placeholder="Deixe vazio para sem limite"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   Teto máximo do bônus (opcional)
                 </p>
               </div>
@@ -321,8 +321,8 @@ export default function AdminBonusDepositoPage() {
 
               {/* Preview */}
               {formData.deposito_minimo && formData.bonus_percentual && (
-                <div className="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
-                  <p className="text-xs text-gray-400 mb-2">Exemplo de cálculo:</p>
+                <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/40">
+                  <p className="text-xs text-zinc-500 mb-2">Exemplo de cálculo:</p>
                   <p className="text-sm text-white">
                     Depósito de <span className="text-cyan-400">{formatCurrency(parseFloat(formData.deposito_minimo) || 0)}</span>
                     {' → '}

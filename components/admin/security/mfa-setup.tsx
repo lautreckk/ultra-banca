@@ -217,29 +217,29 @@ export function MFASetup() {
   // Loading state
   if (status === 'loading') {
     return (
-      <div className="bg-[#374151] rounded-lg p-6">
+      <div className="bg-zinc-800/50 rounded-lg p-6">
         <div className="flex items-center gap-3">
           <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
-          <span className="text-gray-300">Verificando status do 2FA...</span>
+          <span className="text-zinc-300">Verificando status do 2FA...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#374151] rounded-lg p-6 space-y-6">
+    <div className="bg-zinc-800/50 rounded-lg p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-lg ${status === 'enabled' ? 'bg-green-500/20' : 'bg-gray-600'}`}>
+        <div className={`p-3 rounded-lg ${status === 'enabled' ? 'bg-green-500/20' : 'bg-zinc-700'}`}>
           {status === 'enabled' ? (
             <ShieldCheck className="h-6 w-6 text-green-400" />
           ) : (
-            <Shield className="h-6 w-6 text-gray-400" />
+            <Shield className="h-6 w-6 text-zinc-400" />
           )}
         </div>
         <div>
           <h2 className="text-lg font-semibold text-white">Autenticação de Dois Fatores (2FA)</h2>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-zinc-400">
             {status === 'enabled'
               ? 'Sua conta está protegida com 2FA'
               : 'Adicione uma camada extra de segurança'}
@@ -266,9 +266,9 @@ export function MFASetup() {
       {/* MFA Disabled - Show Activation Button */}
       {status === 'disabled' && (
         <div className="space-y-4">
-          <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="bg-zinc-800/30 rounded-lg p-4">
             <h3 className="text-sm font-medium text-white mb-2">Como funciona?</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <ul className="space-y-2 text-sm text-zinc-400">
               <li className="flex items-start gap-2">
                 <span className="text-cyan-400">1.</span>
                 <span>Instale um app autenticador (Google Authenticator, Authy, etc.)</span>
@@ -313,7 +313,7 @@ export function MFASetup() {
             <div className="bg-white p-4 rounded-lg">
               <img src={qrCodeUrl} alt="QR Code para 2FA" className="w-48 h-48" />
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-zinc-400">
               <Smartphone className="h-4 w-4" />
               <span className="text-sm">Escaneie com seu app autenticador</span>
             </div>
@@ -321,10 +321,10 @@ export function MFASetup() {
 
           {/* Manual Secret */}
           {secret && (
-            <div className="bg-gray-800/50 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">Ou digite o código manualmente:</p>
+            <div className="bg-zinc-800/30 rounded-lg p-4">
+              <p className="text-sm text-zinc-400 mb-2">Ou digite o código manualmente:</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 bg-gray-900 px-3 py-2 rounded text-sm text-cyan-400 font-mono break-all">
+                <code className="flex-1 bg-zinc-900 px-3 py-2 rounded text-sm text-cyan-400 font-mono break-all">
                   {secret}
                 </code>
                 <Button
@@ -345,7 +345,7 @@ export function MFASetup() {
 
           {/* Verification Input */}
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-300">
+            <label className="block text-sm font-medium text-zinc-300">
               Digite o código de 6 dígitos do app:
             </label>
             <div className="flex gap-3">
@@ -355,7 +355,7 @@ export function MFASetup() {
                 onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
                 maxLength={6}
-                className="bg-gray-700 border-gray-600 text-white text-center text-2xl tracking-[0.5em] font-mono"
+                className="bg-zinc-800/50 border-zinc-700/40 text-white text-center text-2xl tracking-[0.5em] font-mono"
                 disabled={status === 'verifying'}
               />
             </div>
@@ -399,7 +399,7 @@ export function MFASetup() {
               <ShieldCheck className="h-5 w-5 text-green-400" />
               <div>
                 <p className="text-green-400 font-medium">2FA Ativo</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-zinc-400">
                   {factors.length} dispositivo(s) configurado(s)
                 </p>
               </div>
@@ -411,13 +411,13 @@ export function MFASetup() {
             {factors.map((factor) => (
               <div
                 key={factor.id}
-                className="flex items-center justify-between bg-gray-800/50 rounded-lg p-3"
+                className="flex items-center justify-between bg-zinc-800/30 rounded-lg p-3"
               >
                 <div className="flex items-center gap-3">
-                  <Smartphone className="h-5 w-5 text-gray-400" />
+                  <Smartphone className="h-5 w-5 text-zinc-400" />
                   <div>
                     <p className="text-sm text-white">{factor.friendly_name || 'App Autenticador'}</p>
-                    <p className="text-xs text-gray-500">TOTP</p>
+                    <p className="text-xs text-zinc-500">TOTP</p>
                   </div>
                 </div>
                 <Button
@@ -437,7 +437,7 @@ export function MFASetup() {
           </div>
 
           {/* Aviso */}
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-zinc-500">
             Remover o 2FA reduz a segurança da sua conta. Recomendamos manter ativo.
           </p>
         </div>

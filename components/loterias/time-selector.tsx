@@ -18,8 +18,8 @@ export function TimeSelector({
   return (
     <div className={cn('px-4', className)}>
       <div className="flex items-center gap-2 mb-4">
-        <Clock className="h-5 w-5 text-gray-600" />
-        <span className="font-semibold text-gray-800">Selecione os horarios</span>
+        <Clock className="h-5 w-5 text-zinc-400" />
+        <span className="font-semibold text-white">Selecione os horarios</span>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -34,7 +34,7 @@ export function TimeSelector({
                 'flex flex-col items-center justify-center rounded-lg py-3 px-2 transition-all duration-200 active:scale-[0.98]',
                 isSelected
                   ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
-                  : 'bg-gray-100 text-gray-800'
+                  : 'bg-zinc-800/50 text-white'
               )}
             >
               <span className="font-bold text-sm">{horario.nome}</span>
@@ -64,7 +64,7 @@ export function TimeSelector({
             });
           }
         }}
-        className="mt-4 w-full rounded-lg border border-[var(--color-border)] py-3 text-sm font-semibold text-gray-600 active:bg-gray-50"
+        className="mt-4 w-full rounded-lg border border-[var(--color-border)] py-3 text-sm font-semibold text-zinc-400 active:bg-zinc-700/30"
       >
         {HORARIOS.every((h) => selectedHorarios.includes(h.id))
           ? 'Desmarcar Todos'

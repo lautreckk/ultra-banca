@@ -22,23 +22,23 @@ export function BetSummaryCard({ item, onRemove, className }: BetSummaryCardProp
   return (
     <div
       className={cn(
-        'rounded-lg border border-[var(--color-border)] bg-white p-4',
+        'rounded-lg border border-[var(--color-border)] bg-[#1A1F2B] p-4',
         className
       )}
     >
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-bold text-gray-900">
+          <h3 className="font-bold text-white">
             {modalidade?.nome || item.modalidade} - {colocacao?.nome || item.colocacao}
           </h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-zinc-500 mt-1">
             {item.data} | {item.horarios.map((h) => getHorarioById(h)?.nome || h).join(', ')}
           </p>
         </div>
         <button
           onClick={() => onRemove(item.id)}
-          className="flex h-8 w-8 items-center justify-center rounded text-gray-400 active:bg-gray-100"
+          className="flex h-8 w-8 items-center justify-center rounded text-zinc-500 active:bg-zinc-700/30"
         >
           <Trash2 className="h-4 w-4" />
         </button>
@@ -55,8 +55,8 @@ export function BetSummaryCard({ item, onRemove, className }: BetSummaryCardProp
 
       {/* Price */}
       <div className="mt-3 flex items-center justify-between text-sm">
-        <span className="font-bold text-gray-900">{formatCurrency(valorTotal)}</span>
-        <span className="text-gray-500">
+        <span className="font-bold text-white">{formatCurrency(valorTotal)}</span>
+        <span className="text-zinc-500">
           {formatCurrency(item.valorUnitario)} / CADA ({quantidade}x)
         </span>
       </div>

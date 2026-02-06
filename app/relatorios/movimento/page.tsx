@@ -137,7 +137,7 @@ TOTAL GERAL: ${formatCurrency(totalGeral)}
     return (
       <PageLayout title="MOVIMENTO LOTERIAS" showBack>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
         </div>
       </PageLayout>
     );
@@ -147,7 +147,7 @@ TOTAL GERAL: ${formatCurrency(totalGeral)}
     <PageLayout title="MOVIMENTO LOTERIAS" showBack>
       <div className="space-y-4 p-4">
         {/* Header Info */}
-        <div className="overflow-hidden rounded-lg bg-zinc-800 shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-zinc-800 border border-zinc-700/40 shadow-sm">
           <div className="px-4 py-3 text-center">
             <p className="text-sm text-zinc-400">{config.site_name.toUpperCase()}</p>
             {profile && (
@@ -162,26 +162,26 @@ TOTAL GERAL: ${formatCurrency(totalGeral)}
         </div>
 
         {/* Date Header */}
-        <div className="rounded-lg bg-[#E5A220] px-4 py-3 text-center">
+        <div className="rounded-xl bg-[#E5A220] px-4 py-3 text-center">
           <span className="font-bold text-zinc-900">MOVIMENTO LOTERIAS - {dateDisplay}</span>
         </div>
 
         {/* Movimento por Horário */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
-          <div className="divide-y divide-gray-100">
+        <div className="overflow-hidden rounded-xl bg-[#1A1F2B] border border-zinc-700/40 shadow-sm">
+          <div className="divide-y divide-zinc-700/40">
             {movimento.map((item) => {
               const horarioInfo = HORARIOS.find(h => h.id === item.horario);
               return (
-                <div key={item.horario} className="flex items-center justify-between px-4 py-3">
+                <div key={item.horario} className="flex items-center justify-between px-4 py-3 min-h-[56px]">
                   <div>
-                    <span className="font-medium text-gray-800">
+                    <span className="font-medium text-white">
                       {horarioInfo?.nomeCompleto || item.horario}
                     </span>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-zinc-500">
                       {item.quantidade} {item.quantidade === 1 ? 'aposta' : 'apostas'}
                     </p>
                   </div>
-                  <span className={`font-bold ${item.total > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span className={`font-bold ${item.total > 0 ? 'text-green-600' : 'text-zinc-500'}`}>
                     {formatCurrency(item.total)}
                   </span>
                 </div>
@@ -191,7 +191,7 @@ TOTAL GERAL: ${formatCurrency(totalGeral)}
         </div>
 
         {/* Total Geral */}
-        <div className="overflow-hidden rounded-lg bg-green-500 shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-green-500 shadow-sm">
           <div className="flex items-center justify-between px-4 py-4">
             <span className="font-bold text-white">TOTAL GERAL</span>
             <span className="text-2xl font-bold text-white">
@@ -203,10 +203,10 @@ TOTAL GERAL: ${formatCurrency(totalGeral)}
         {/* Share Button */}
         <button
           onClick={handleShare}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 py-4 text-white active:bg-zinc-700"
+          className="flex w-full items-center justify-center gap-2 rounded-xl h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 text-white font-semibold active:bg-zinc-700 active:scale-[0.98] transition-all"
         >
           <Share2 className="h-5 w-5" />
-          <span className="font-semibold">Compartilhar</span>
+          <span>Compartilhar</span>
         </button>
       </div>
     </PageLayout>

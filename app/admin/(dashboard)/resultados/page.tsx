@@ -179,7 +179,7 @@ export default function AdminResultadosPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Todos os Resultados</h1>
-          <p className="text-gray-400">
+          <p className="text-zinc-500">
             {total.toLocaleString()} resultados encontrados
           </p>
         </div>

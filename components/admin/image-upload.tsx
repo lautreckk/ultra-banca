@@ -91,12 +91,12 @@ export function ImageUpload({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-300">{label}</label>
-      <p className="text-xs text-gray-500 mb-2">Tamanho recomendado: {recommendedSize}</p>
+      <label className="block text-sm font-medium text-zinc-300">{label}</label>
+      <p className="text-xs text-zinc-500 mb-2">Tamanho recomendado: {recommendedSize}</p>
 
       <div className="flex gap-4">
         {/* Preview */}
-        <div className="relative w-24 h-24 bg-gray-700 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center overflow-hidden">
+        <div className="relative w-24 h-24 bg-zinc-800/50 rounded-lg border-2 border-dashed border-zinc-700/40 flex items-center justify-center overflow-hidden">
           {isValidUrl ? (
             <>
               <img
@@ -116,7 +116,7 @@ export function ImageUpload({
               </button>
             </>
           ) : (
-            <ImageIcon className="h-8 w-8 text-gray-500" />
+            <ImageIcon className="h-8 w-8 text-zinc-500" />
           )}
         </div>
 
@@ -135,20 +135,20 @@ export function ImageUpload({
             htmlFor={`upload-${label}`}
             className={`
               flex items-center justify-center gap-2 px-4 py-3
-              bg-gray-700 border border-gray-600 rounded-lg
-              cursor-pointer hover:bg-gray-600 transition-colors
+              bg-zinc-800/50 border border-zinc-700/40 rounded-lg
+              cursor-pointer hover:bg-zinc-700/30 transition-colors
               ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
             `}
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                <span className="text-sm text-gray-400">Enviando...</span>
+                <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+                <span className="text-sm text-zinc-400">Enviando...</span>
               </>
             ) : (
               <>
-                <Upload className="h-5 w-5 text-gray-400" />
-                <span className="text-sm text-gray-300">Fazer upload</span>
+                <Upload className="h-5 w-5 text-zinc-400" />
+                <span className="text-sm text-zinc-300">Fazer upload</span>
               </>
             )}
           </label>
@@ -160,7 +160,7 @@ export function ImageUpload({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Ou cole uma URL"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white text-sm rounded-md placeholder-gray-500"
+              className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700/40 text-white text-sm rounded-md placeholder-zinc-500"
             />
           </div>
 

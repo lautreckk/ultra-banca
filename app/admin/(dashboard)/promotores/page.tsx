@@ -183,7 +183,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Nome do promotor"
-              className="bg-gray-700 border-zinc-800 text-white"
+              className="bg-zinc-800 border-zinc-800 text-white"
             />
           </div>
 
@@ -198,7 +198,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@exemplo.com"
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -214,7 +214,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
                 placeholder="(00) 00000-0000"
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -230,7 +230,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
                   value={codigoAfiliado}
                   onChange={(e) => setCodigoAfiliado(e.target.value.toUpperCase())}
                   placeholder="Deixe vazio para gerar automaticamente"
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white uppercase"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white uppercase"
                 />
               </div>
             </div>
@@ -269,7 +269,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
                   value={comissaoDeposito}
                   onChange={(e) => setComissaoDeposito(e.target.value)}
                   placeholder="0.00"
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -285,7 +285,7 @@ function PromotorModal({ promotor, isOpen, onClose, onSave }: PromotorModalProps
                   value={comissaoPerda}
                   onChange={(e) => setComissaoPerda(e.target.value)}
                   placeholder="0.00"
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -424,7 +424,7 @@ function BonusModal({ promotor, isOpen, onClose, onSave }: BonusModalProps) {
                 value={valor}
                 onChange={(e) => setValor(e.target.value)}
                 placeholder="0.00"
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -436,7 +436,7 @@ function BonusModal({ promotor, isOpen, onClose, onSave }: BonusModalProps) {
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               placeholder="Ex: Bônus de performance"
-              className="bg-gray-700 border-zinc-800 text-white"
+              className="bg-zinc-800 border-zinc-800 text-white"
             />
           </div>
         </div>
@@ -555,7 +555,7 @@ function ResetPasswordModal({ promotor, isOpen, onClose, onSave }: ResetPassword
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -569,7 +569,7 @@ function ResetPasswordModal({ promotor, isOpen, onClose, onSave }: ResetPassword
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirme a nova senha"
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -878,7 +878,7 @@ export default function AdminPromotoresPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Buscar por nome, email ou código..."
-            className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent"
           />
         </div>
         <select
@@ -945,7 +945,7 @@ export default function AdminPromotoresPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-32">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-600">
+                <tbody className="divide-y divide-zinc-700/40">
                   {promotores.map((promotor) => (
                     <tr key={promotor.id} className="hover:bg-zinc-800/50 transition-colors">
                       <td className="px-4 py-3 text-sm">

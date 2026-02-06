@@ -159,7 +159,7 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
                 value={formatCPFDisplay(cpf)}
                 onChange={handleCPFChange}
                 placeholder="000.000.000-00"
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
                 step="0.01"
                 value={saldo}
                 onChange={(e) => setSaldo(e.target.value)}
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -189,7 +189,7 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
                 step="0.01"
                 value={saldoBonus}
                 onChange={(e) => setSaldoBonus(e.target.value)}
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -207,7 +207,7 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Digite a nova senha"
-                className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
           </div>
@@ -223,7 +223,7 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirme a nova senha"
-                  className="pl-10 bg-gray-700 border-zinc-800 text-white"
+                  className="pl-10 bg-zinc-800 border-zinc-800 text-white"
                 />
               </div>
             </div>
@@ -426,7 +426,7 @@ export default function AdminClientesPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Buscar por nome ou CPF..."
-              className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-transparent"
             />
           </div>
           <button
@@ -558,7 +558,7 @@ export default function AdminClientesPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-24">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-600">
+                <tbody className="divide-y divide-zinc-700/40">
                   {users.map((user, index) => (
                     <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-zinc-300">

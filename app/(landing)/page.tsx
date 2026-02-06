@@ -5,7 +5,7 @@ import { Crown, MessageCircle, LogIn, Shield, Zap, TrendingUp } from 'lucide-rea
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
+    <div className="min-h-screen bg-[#111318] relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl" />
@@ -80,7 +80,7 @@ export default function LandingPage() {
             href="https://t.me/cupulabarao"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-[#0088cc]/10 hover:bg-[#0088cc]/20 border border-[#0088cc]/30 hover:border-[#0088cc]/50 text-[#0088cc] font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="flex-1 flex items-center justify-center gap-3 px-6 h-14 min-h-[56px] bg-[#0088cc]/10 hover:bg-[#0088cc]/20 border border-[#0088cc]/30 hover:border-[#0088cc]/50 text-[#0088cc] font-semibold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             <MessageCircle className="h-5 w-5" />
             <span>Telegram</span>
@@ -89,7 +89,7 @@ export default function LandingPage() {
           {/* Login Button */}
           <Link
             href="/login"
-            className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-500/10 to-amber-500/10 hover:from-purple-500/20 hover:to-amber-500/20 border border-purple-500/30 hover:border-purple-500/50 text-white font-semibold rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="flex-1 flex items-center justify-center gap-3 px-6 h-14 min-h-[56px] bg-gradient-to-r from-purple-500/10 to-amber-500/10 hover:from-purple-500/20 hover:to-amber-500/20 border border-purple-500/30 hover:border-purple-500/50 text-white font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             <LogIn className="h-5 w-5" />
             <span>Entrar</span>

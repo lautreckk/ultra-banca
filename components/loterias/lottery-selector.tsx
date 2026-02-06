@@ -119,36 +119,36 @@ export function LotterySelector({
   const totalValue = total.toFixed(2).replace('.', ',');
 
   return (
-    <div className={cn('bg-white min-h-screen', className)}>
+    <div className={cn('bg-[#1A1F2B] min-h-screen', className)}>
       {/* Total Row */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700/40">
         <div>
-          <span className="font-bold text-gray-900">Total</span>
+          <span className="font-bold text-white">Total</span>
           {pendingItemsCount > 1 && (
-            <span className="text-sm text-gray-500 ml-2">({pendingItemsCount} apostas)</span>
+            <span className="text-sm text-zinc-500 ml-2">({pendingItemsCount} apostas)</span>
           )}
         </div>
-        <span className="font-bold text-gray-900">R$ {totalValue}</span>
+        <span className="font-bold text-white">R$ {totalValue}</span>
       </div>
 
       {/* Section Label */}
       <div className="px-4 py-3">
-        <span className="text-gray-700 font-medium">Selecione as loterias:</span>
+        <span className="text-zinc-300 font-medium">Selecione as loterias:</span>
       </div>
 
       {/* Bancas Accordion */}
-      <div className="mx-4 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="mx-4 border border-zinc-700/40 rounded-lg overflow-hidden">
         {bancasVisiveis.map((banca, index) => {
           const isExpanded = expandedBancas.includes(banca.id);
           const allSelected = isAllSelectedInBanca(banca.id);
           const someSelected = isSomeSelectedInBanca(banca.id);
 
           return (
-            <div key={banca.id} className={index > 0 ? 'border-t border-gray-200' : ''}>
+            <div key={banca.id} className={index > 0 ? 'border-t border-zinc-700/40' : ''}>
               {/* Banca Header */}
               <button
                 onClick={() => toggleBanca(banca.id)}
-                className="w-full flex items-center justify-between px-4 py-4 bg-white"
+                className="w-full flex items-center justify-between px-4 py-4 bg-[#1A1F2B]"
               >
                 <div className="flex items-center gap-3">
                   <button
@@ -158,13 +158,13 @@ export function LotterySelector({
                       allSelected
                         ? 'bg-zinc-900 border-zinc-900'
                         : someSelected
-                        ? 'border-zinc-900 bg-gray-100'
-                        : 'border-gray-300'
+                        ? 'border-zinc-900 bg-zinc-800/50'
+                        : 'border-zinc-700/40'
                     )}
                   >
                     {allSelected && <Check className="h-3 w-3 text-white" />}
                   </button>
-                  <span className="font-bold text-gray-900">{banca.nome}</span>
+                  <span className="font-bold text-white">{banca.nome}</span>
                   {banca.id === 'federal' && (
                     <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">
                       <BadgeCheck className="h-3.5 w-3.5" />
@@ -173,15 +173,15 @@ export function LotterySelector({
                   )}
                 </div>
                 {isExpanded ? (
-                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                  <ChevronUp className="h-5 w-5 text-zinc-500" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <ChevronDown className="h-5 w-5 text-zinc-500" />
                 )}
               </button>
 
               {/* Sub-Loterias - Vertical List */}
               {isExpanded && (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-zinc-700/40">
                   {banca.subLoterias.map((sub) => {
                     const isSelected = selectedLotteries.includes(sub.id);
                     const isMaluca = sub.nome.toLowerCase().includes('maluca');
@@ -192,14 +192,14 @@ export function LotterySelector({
                       return (
                         <div
                           key={sub.id}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left bg-gray-100 opacity-50 cursor-not-allowed"
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left bg-zinc-800/50 opacity-50 cursor-not-allowed"
                         >
-                          <div className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center flex-shrink-0">
-                            <Clock className="h-3 w-3 text-gray-400" />
+                          <div className="w-5 h-5 rounded border-2 border-zinc-700/40 flex items-center justify-center flex-shrink-0">
+                            <Clock className="h-3 w-3 text-zinc-500" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-500 line-through">
+                              <span className="font-medium text-zinc-500 line-through">
                                 {sub.nome} {sub.horario.replace(':', 'H').replace(':00', 'HS').replace(':20', 'HS').replace(':15', 'HS')}
                               </span>
                             </div>
@@ -217,7 +217,7 @@ export function LotterySelector({
                         onClick={() => onToggleLottery(sub.id)}
                         className={cn(
                           'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
-                          isSelected ? 'bg-[#E5A220]/10' : 'bg-white hover:bg-gray-50'
+                          isSelected ? 'bg-[#E5A220]/10' : 'bg-[#1A1F2B] hover:bg-zinc-700/30'
                         )}
                       >
                         <div
@@ -225,19 +225,19 @@ export function LotterySelector({
                             'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0',
                             isSelected
                               ? 'bg-[#E5A220] border-[#E5A220]'
-                              : 'border-gray-300'
+                              : 'border-zinc-700/40'
                           )}
                         >
                           {isSelected && <Check className="h-3 w-3 text-black" />}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-white">
                               {sub.nome} {sub.horario.replace(':', 'H').replace(':00', 'HS').replace(':20', 'HS').replace(':15', 'HS')}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-gray-500">{sub.horario}</span>
+                            <span className="text-xs text-zinc-500">{sub.horario}</span>
                             {isMaluca && (
                               <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">
                                 MALUCA
@@ -259,18 +259,18 @@ export function LotterySelector({
       <div className="h-32" />
 
       {/* Fixed Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2B] border-t border-zinc-700/40 p-4 pb-safe">
         <div className="max-w-md mx-auto space-y-3">
           <button
             onClick={onConfirm}
             disabled={selectedLotteries.length === 0}
-            className="w-full h-12 bg-[#E5A220] rounded-lg font-semibold text-white disabled:opacity-50"
+            className="w-full h-16 min-h-[64px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 disabled:opacity-50 active:scale-[0.98] transition-all"
           >
             Confirmar
           </button>
           <button
             onClick={onBack}
-            className="w-full h-12 bg-zinc-900 rounded-lg font-semibold text-white"
+            className="w-full h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white active:scale-[0.98] transition-all"
           >
             Voltar
           </button>

@@ -113,7 +113,7 @@ export default function SaquesPage() {
 
   return (
     <PageLayout title="SAQUES">
-      <div className="bg-[#1A1F2B] min-h-screen">
+      <div className="bg-[#111318] min-h-screen">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 text-zinc-500 animate-spin" />
@@ -126,31 +126,31 @@ export default function SaquesPage() {
             </p>
           </div>
         ) : (
-          <div>
+          <div className="p-4 space-y-3">
             {saques.map((saque) => (
-              <div key={saque.id} className="border-b border-zinc-700/40 px-4 py-4">
+              <div key={saque.id} className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-white">
                         {keyTypeLabels[saque.tipo_chave] || saque.tipo_chave}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[saque.status] || 'text-gray-600 bg-gray-50'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[saque.status] || 'text-zinc-400 bg-zinc-800/30'}`}>
                         {statusLabels[saque.status] || saque.status}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 mb-1">
+                    <p className="text-sm text-zinc-500 mb-1">
                       {maskPixKey(saque.chave_pix, saque.tipo_chave)}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-zinc-500">
                       {formatDate(saque.created_at)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-800">
+                    <p className="font-bold text-white">
                       {formatCurrency(saque.valor)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-zinc-500">
                       Líquido: {formatCurrency(saque.valor_liquido)}
                     </p>
                     {saque.taxa > 0 && (
@@ -166,9 +166,9 @@ export default function SaquesPage() {
         )}
 
         {/* Withdraw Button */}
-        <div className="p-4 sticky bottom-0 bg-white border-t border-gray-100">
+        <div className="p-4 sticky bottom-0 bg-[#111318] border-t border-zinc-700/40">
           <Link href="/saques/novo">
-            <button className="w-full rounded-lg bg-[#1A202C] py-3 font-bold text-white">
+            <button className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] font-bold text-zinc-900 active:scale-[0.98] transition-all" aria-label="Novo saque">
               Novo Saque
             </button>
           </Link>

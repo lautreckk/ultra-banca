@@ -211,7 +211,7 @@ export default function FinalizarApostaPage() {
 
         <div className="flex-1 bg-zinc-800/30 p-4">
           {/* Receipt Card */}
-          <div className="bg-[#1A1F2B] rounded-lg border-2 border-dashed border-zinc-700/40 p-4">
+          <div className="bg-[#1A1F2B] rounded-xl border-2 border-dashed border-zinc-700/40 p-4">
             {/* Pule # */}
             <div className="text-sm font-medium text-zinc-200 mb-2">
               {puleNumbers.length > 0
@@ -233,7 +233,7 @@ export default function FinalizarApostaPage() {
                     unoptimized={config.logo_url.includes('supabase.co')}
                   />
                 ) : (
-                  <div className="w-28 h-20 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                  <div className="w-28 h-20 bg-[#1A202C] rounded-xl flex items-center justify-center">
                     <span className="text-[#E5A220] font-bold text-lg text-center">{config.site_name}</span>
                   </div>
                 )}
@@ -291,8 +291,9 @@ export default function FinalizarApostaPage() {
                       {!isConfirmed && todasLoterias.length > 1 && (
                         <button
                           onClick={() => removeLoteriaFromAll(loteriaId)}
-                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-500/100/10 rounded-full transition-colors"
+                          className="h-11 w-11 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors active:scale-[0.98]"
                           title={`Remover ${loteria?.nome || loteriaId}`}
+                          aria-label={`Remover ${loteria?.nome || loteriaId}`}
                         >
                           <MinusCircle className="h-4 w-4" />
                         </button>
@@ -333,8 +334,9 @@ export default function FinalizarApostaPage() {
                     {!isConfirmed && items.length > 1 && (
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="p-1.5 text-red-500 hover:bg-red-500/100/10 rounded-lg transition-colors"
+                        className="h-11 w-11 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-lg transition-colors active:scale-[0.98]"
                         title="Remover aposta"
+                        aria-label="Remover aposta"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -457,7 +459,8 @@ export default function FinalizarApostaPage() {
               <button
                 onClick={handleVoltar}
                 disabled={isLoading}
-                className="h-14 bg-[#1A202C] rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                className="h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
+                aria-label="Voltar"
               >
                 <Home className="h-5 w-5" />
                 Voltar
@@ -465,9 +468,10 @@ export default function FinalizarApostaPage() {
               <button
                 onClick={handleFinalizar}
                 disabled={isLoading || saldoInsuficiente || balanceLoading}
-                className={`h-14 rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 ${
-                  saldoInsuficiente ? 'bg-red-400 cursor-not-allowed' : 'bg-[#3B82F6]'
+                className={`h-14 min-h-[56px] rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all ${
+                  saldoInsuficiente ? 'bg-red-400 text-white cursor-not-allowed' : 'bg-[#E5A220] text-zinc-900'
                 }`}
+                aria-label="Finalizar e salvar"
               >
                 {isLoading ? (
                   <>
@@ -493,21 +497,24 @@ export default function FinalizarApostaPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleVoltar}
-                className="flex-1 h-14 bg-[#1A202C] rounded-lg font-semibold text-white flex items-center justify-center gap-2"
+                className="flex-1 h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                aria-label="Voltar ao início"
               >
                 <Home className="h-5 w-5" />
                 Voltar
               </button>
               <button
                 onClick={handleCompartilhar}
-                className="flex-1 h-14 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2"
+                className="flex-1 h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                aria-label="Compartilhar aposta"
               >
                 <Share2 className="h-5 w-5" />
                 Compartilhar
               </button>
               <button
                 onClick={handlePrint}
-                className="h-14 w-14 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center"
+                className="h-14 w-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center active:scale-[0.98] transition-all"
+                aria-label="Imprimir aposta"
               >
                 <Printer className="h-5 w-5" />
               </button>

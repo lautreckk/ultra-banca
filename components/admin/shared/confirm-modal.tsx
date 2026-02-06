@@ -72,25 +72,25 @@ export function ConfirmModal({
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative bg-[#1f2937] rounded-lg shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95"
+        className="relative bg-[#1A1F2B] rounded-lg shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95"
       >
         {/* Close button */}
         <button
           onClick={onClose}
           disabled={isLoading}
-          className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50"
+          className="absolute top-4 right-4 p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-700/30 transition-colors disabled:opacity-50"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Content */}
         <div className="flex flex-col items-center text-center">
-          <div className={cn('p-3 rounded-full bg-gray-800 mb-4', color)}>
+          <div className={cn('p-3 rounded-full bg-zinc-800 mb-4', color)}>
             <Icon className="h-8 w-8" />
           </div>
 
           <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-          <p className="text-gray-400 mb-6">{message}</p>
+          <p className="text-zinc-400 mb-6">{message}</p>
 
           {/* Actions */}
           <div className="flex gap-3 w-full">

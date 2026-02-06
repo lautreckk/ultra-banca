@@ -6,20 +6,20 @@
  * - Grid 2x2 de jogos (Loterias, Quininha, Seninha, Lotinha)
  * - Lista de ações (Sonhos, Horóscopo, Calculadora, Atrasados, Tabela de Bichos)
  *
- * Tema: Light/Clean (bg-zinc-50)
+ * Tema: Light/Clean (bg-[#0D1117])
  */
 
 function SkeletonRepeatButton() {
   return (
-    <div className="w-full rounded-xl border-2 border-amber-500/40 bg-zinc-200 py-3 animate-pulse">
-      <div className="h-5 w-32 mx-auto bg-zinc-300 rounded" />
+    <div className="w-full rounded-xl border-2 border-amber-500/40 bg-zinc-700/50 py-3 animate-pulse">
+      <div className="h-5 w-32 mx-auto bg-zinc-600/50 rounded" />
     </div>
   );
 }
 
 function SkeletonGameCardImage() {
   return (
-    <div className="aspect-square overflow-hidden rounded-xl border-2 border-amber-500/40 bg-zinc-200 animate-pulse">
+    <div className="aspect-square overflow-hidden rounded-xl border-2 border-amber-500/40 bg-zinc-700/50 animate-pulse">
       <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300" />
     </div>
   );
@@ -27,12 +27,12 @@ function SkeletonGameCardImage() {
 
 function SkeletonGameCardWithText() {
   return (
-    <div className="aspect-square overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm animate-pulse flex flex-col items-center justify-center">
+    <div className="aspect-square overflow-hidden rounded-xl border border-zinc-700/40 bg-[#1A1F2B] shadow-sm animate-pulse flex flex-col items-center justify-center">
       <div className="flex items-center gap-2">
-        <div className="h-10 w-10 bg-zinc-200 rounded-full" />
+        <div className="h-10 w-10 bg-zinc-700/50 rounded-full" />
         <div className="flex flex-col gap-1">
-          <div className="h-5 w-20 bg-zinc-200 rounded" />
-          <div className="h-3 w-12 bg-zinc-100 rounded" />
+          <div className="h-5 w-20 bg-zinc-700/50 rounded" />
+          <div className="h-3 w-12 bg-zinc-800/50 rounded" />
         </div>
       </div>
     </div>
@@ -50,7 +50,7 @@ function SkeletonActionButton({ color }: { color: string }) {
 
 export default function LoteriasLoading() {
   return (
-    <div className="bg-zinc-50 min-h-[calc(100vh-8rem)]">
+    <div className="bg-[#0D1117] min-h-[calc(100vh-8rem)]">
       {/* Repetir Pule Button */}
       <div className="p-4">
         <SkeletonRepeatButton />

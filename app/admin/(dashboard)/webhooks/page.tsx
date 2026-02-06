@@ -242,7 +242,7 @@ export default function AdminWebhooksPage() {
 
   const getStatusIcon = (webhook: WebhookConfig) => {
     if (!webhook.last_triggered_at) {
-      return <Clock className="h-4 w-4 text-gray-400" />;
+      return <Clock className="h-4 w-4 text-zinc-500" />;
     }
     if (webhook.last_error) {
       return <AlertCircle className="h-4 w-4 text-red-400" />;
@@ -250,12 +250,12 @@ export default function AdminWebhooksPage() {
     if (webhook.last_success_at) {
       return <CheckCircle className="h-4 w-4 text-green-400" />;
     }
-    return <Clock className="h-4 w-4 text-gray-400" />;
+    return <Clock className="h-4 w-4 text-zinc-500" />;
   };
 
   const getLastStatus = (webhook: WebhookConfig) => {
     if (!webhook.last_triggered_at) {
-      return <span className="text-gray-400 text-sm">Nunca disparado</span>;
+      return <span className="text-zinc-500 text-sm">Nunca disparado</span>;
     }
 
     const lastTriggered = new Date(webhook.last_triggered_at);
@@ -265,7 +265,7 @@ export default function AdminWebhooksPage() {
       return (
         <div className="flex flex-col">
           <span className="text-red-400 text-sm">Falha</span>
-          <span className="text-gray-500 text-xs">{timeAgo}</span>
+          <span className="text-zinc-500 text-xs">{timeAgo}</span>
         </div>
       );
     }
@@ -273,7 +273,7 @@ export default function AdminWebhooksPage() {
     return (
       <div className="flex flex-col">
         <span className="text-green-400 text-sm">Sucesso</span>
-        <span className="text-gray-500 text-xs">{timeAgo}</span>
+        <span className="text-zinc-500 text-xs">{timeAgo}</span>
       </div>
     );
   };
@@ -301,7 +301,7 @@ export default function AdminWebhooksPage() {
       key: 'url',
       header: 'URL',
       render: (value) => (
-        <span className="text-gray-300 text-sm truncate max-w-[200px] block">
+        <span className="text-zinc-300 text-sm truncate max-w-[200px] block">
           {value as string}
         </span>
       ),
@@ -363,7 +363,7 @@ export default function AdminWebhooksPage() {
               handleTest(row.id);
             }}
             disabled={testingId === row.id}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-cyan-400 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-cyan-400 transition-colors disabled:opacity-50"
             title="Testar webhook"
           >
             {testingId === row.id ? (
@@ -377,7 +377,7 @@ export default function AdminWebhooksPage() {
               e.stopPropagation();
               router.push(`/admin/webhooks/${row.id}`);
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
             title="Ver detalhes"
           >
             <Eye className="h-4 w-4" />
@@ -387,7 +387,7 @@ export default function AdminWebhooksPage() {
               e.stopPropagation();
               handleEdit(row);
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
             title="Editar"
           >
             <Edit className="h-4 w-4" />
@@ -397,7 +397,7 @@ export default function AdminWebhooksPage() {
               e.stopPropagation();
               setDeleteModal({ open: true, id: row.id });
             }}
-            className="p-1.5 rounded-lg hover:bg-gray-600 text-gray-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-red-400 transition-colors"
             title="Deletar"
           >
             <Trash2 className="h-4 w-4" />
@@ -412,7 +412,7 @@ export default function AdminWebhooksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Webhooks</h1>
-          <p className="text-gray-400">Configure endpoints para receber notificacoes de eventos</p>
+          <p className="text-zinc-500">Configure endpoints para receber notificacoes de eventos</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={fetchWebhooks} disabled={isLoading}>
@@ -452,7 +452,7 @@ export default function AdminWebhooksPage() {
                 setEditingId(null);
                 setFormData(initialFormData);
               }}
-              className="absolute top-4 right-4 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-700/30 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -463,44 +463,44 @@ export default function AdminWebhooksPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-300">Nome *</label>
+                <label className="text-sm font-medium text-zinc-300">Nome *</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   placeholder="Ex: Scalecore Lead"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">Descricao</label>
+                <label className="text-sm font-medium text-zinc-300">Descricao</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="mt-1 w-full px-3 py-2 bg-zinc-800 border border-zinc-700/40 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   rows={2}
                   placeholder="Descricao opcional do webhook"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300">URL do Endpoint *</label>
+                <label className="text-sm font-medium text-zinc-300">URL do Endpoint *</label>
                 <Input
                   type="url"
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  className="mt-1 bg-gray-700 border-gray-600 text-white"
+                  className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   placeholder="https://api.scalecore.com/webhook/leads"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   O endpoint deve aceitar requisicoes POST com JSON
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-300 block mb-2">Eventos *</label>
+                <label className="text-sm font-medium text-zinc-300 block mb-2">Eventos *</label>
                 <div className="space-y-2">
                   {eventOptions.map((option) => (
                     <button
@@ -510,7 +510,7 @@ export default function AdminWebhooksPage() {
                       className={`w-full text-left px-3 py-3 rounded-lg border transition-colors ${
                         formData.events.includes(option.value)
                           ? 'bg-cyan-500/20 border-cyan-500/50 text-white'
-                          : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                          : 'bg-zinc-800 border-zinc-700/40 text-zinc-300 hover:bg-zinc-700/30'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -519,7 +519,7 @@ export default function AdminWebhooksPage() {
                           <Check className="h-4 w-4 text-cyan-400" />
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">{option.description}</p>
+                      <p className="text-xs text-zinc-500 mt-1">{option.description}</p>
                     </button>
                   ))}
                 </div>
@@ -527,40 +527,40 @@ export default function AdminWebhooksPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Retries</label>
+                  <label className="text-sm font-medium text-zinc-300">Retries</label>
                   <Input
                     type="number"
                     value={formData.max_retries}
                     onChange={(e) => setFormData({ ...formData, max_retries: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                     min="0"
                     max="10"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Delay (s)</label>
+                  <label className="text-sm font-medium text-zinc-300">Delay (s)</label>
                   <Input
                     type="number"
                     value={formData.retry_delay_seconds}
                     onChange={(e) => setFormData({ ...formData, retry_delay_seconds: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                     min="10"
                     max="300"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-300">Timeout (s)</label>
+                  <label className="text-sm font-medium text-zinc-300">Timeout (s)</label>
                   <Input
                     type="number"
                     value={formData.timeout_seconds}
                     onChange={(e) => setFormData({ ...formData, timeout_seconds: e.target.value })}
-                    className="mt-1 bg-gray-700 border-gray-600 text-white"
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                     min="5"
                     max="60"
                   />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 -mt-2">
+              <p className="text-xs text-zinc-500 -mt-2">
                 Em caso de falha, o sistema fara ate {formData.max_retries} tentativas com delay
                 exponencial
               </p>
@@ -607,21 +607,21 @@ export default function AdminWebhooksPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">Webhook Criado!</h2>
-                <p className="text-gray-400 text-sm">Copie a secret key abaixo</p>
+                <p className="text-zinc-500 text-sm">Copie a secret key abaixo</p>
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-4 mb-4">
-              <label className="text-xs font-medium text-gray-400 block mb-2">
+            <div className="bg-zinc-800 rounded-lg p-4 mb-4">
+              <label className="text-xs font-medium text-zinc-500 block mb-2">
                 Secret Key (HMAC-SHA256)
               </label>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm text-cyan-400 bg-gray-900 px-3 py-2 rounded font-mono break-all">
+                <code className="flex-1 text-sm text-cyan-400 bg-zinc-900 px-3 py-2 rounded font-mono break-all">
                   {newSecretKey}
                 </code>
                 <button
                   onClick={handleCopySecret}
-                  className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                  className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700/30 text-white transition-colors"
                 >
                   {copiedSecret ? (
                     <Check className="h-4 w-4 text-green-400" />

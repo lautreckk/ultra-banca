@@ -98,19 +98,19 @@ export default function AtrasadosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
       <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
           <div className="flex h-12 items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex h-10 w-10 items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all"
             >
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
-            <span className="text-sm font-bold text-white">{config.site_name.toUpperCase()}</span>
-            <button className="flex h-10 w-10 items-center justify-center">
+            <span className="text-base font-bold text-white">{config.site_name.toUpperCase()}</span>
+            <button className="flex h-10 w-10 items-center justify-center active:scale-[0.98] transition-all">
               <Menu className="h-5 w-5 text-white" />
             </button>
           </div>
@@ -126,21 +126,21 @@ export default function AtrasadosPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-white flex-1 p-4">
+        <div className="bg-[#111318] flex-1 p-4">
         {/* Title */}
-        <h1 className="text-xl font-bold text-gray-900 mb-1">
+        <h1 className="text-xl font-bold text-white mb-1">
           Lista de atrasados
         </h1>
-        <p className="text-gray-600 text-sm mb-4">
+        <p className="text-zinc-400 text-sm mb-4">
           Escolha uma das Loterias para visualizar os mais atrasados dela.
         </p>
 
         {/* Divider */}
-        <div className="border-t border-gray-200 mb-4" />
+        <div className="border-t border-zinc-700/40 mb-4" />
 
         {/* Loteria Select */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Loteria:
           </label>
           <div className="relative">
@@ -149,16 +149,16 @@ export default function AtrasadosPage() {
                 setShowLoteriaDropdown(!showLoteriaDropdown);
                 setShowColocacaoDropdown(false);
               }}
-              className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
+              className="w-full h-14 min-h-[48px] px-4 border border-zinc-700/40 rounded-xl flex items-center justify-between bg-zinc-900/80 text-left focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 active:scale-[0.98] transition-all"
             >
-              <span className={selectedLoteria ? 'text-gray-900' : 'text-gray-400'}>
+              <span className={selectedLoteria ? 'text-white text-base' : 'text-zinc-500 text-base'}>
                 {selectedLoteria?.displayName || 'Selecione...'}
               </span>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-zinc-500" />
             </button>
 
             {showLoteriaDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl shadow-lg z-20 max-h-80 overflow-y-auto">
                 {LOTERIAS_OPTIONS.map((loteria) => (
                   <button
                     key={loteria.id}
@@ -181,7 +181,7 @@ export default function AtrasadosPage() {
 
         {/* Colocação Select */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Colocação:
           </label>
           <div className="relative">
@@ -190,16 +190,16 @@ export default function AtrasadosPage() {
                 setShowColocacaoDropdown(!showColocacaoDropdown);
                 setShowLoteriaDropdown(false);
               }}
-              className="w-full h-12 px-4 border border-gray-300 rounded-lg flex items-center justify-between bg-white text-left focus:outline-none focus:border-blue-500"
+              className="w-full h-14 min-h-[48px] px-4 border border-zinc-700/40 rounded-xl flex items-center justify-between bg-zinc-900/80 text-left focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 active:scale-[0.98] transition-all"
             >
-              <span className={selectedColocacao ? 'text-gray-900' : 'text-gray-400'}>
+              <span className={selectedColocacao ? 'text-white text-base' : 'text-zinc-500 text-base'}>
                 {selectedColocacao?.nome || 'Selecione...'}
               </span>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-zinc-500" />
             </button>
 
             {showColocacaoDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#4A5568] rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl shadow-lg z-20 max-h-80 overflow-y-auto">
                 {COLOCACOES_ATRASADOS.map((colocacao) => (
                   <button
                     key={colocacao.id}
@@ -224,7 +224,7 @@ export default function AtrasadosPage() {
         <button
           onClick={handleBuscar}
           disabled={!selectedLoteria || !selectedColocacao}
-          className="w-full h-12 bg-[#1A202C] rounded-lg font-semibold text-white disabled:opacity-50 mb-6"
+          className="w-full h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 disabled:opacity-50 mb-6 active:scale-[0.98] transition-all"
         >
           Buscar :)
         </button>
@@ -233,11 +233,11 @@ export default function AtrasadosPage() {
         {atrasados && selectedLoteria && selectedColocacao && (
           <>
             {/* Divider */}
-            <div className="border-t border-gray-200 mb-6" />
+            <div className="border-t border-zinc-700/40 mb-6" />
 
             {/* Banca Logo */}
             <div className="text-center mb-4">
-              <span className="text-sm font-bold text-gray-700">{config.site_name.toUpperCase()}</span>
+              <span className="text-sm font-bold text-zinc-300">{config.site_name.toUpperCase()}</span>
               <div className="flex justify-center mt-2">
                 {config.logo_url ? (
                   <Image
@@ -249,7 +249,7 @@ export default function AtrasadosPage() {
                     unoptimized={config.logo_url.includes('supabase.co')}
                   />
                 ) : (
-                  <div className="w-24 h-20 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                  <div className="w-24 h-20 bg-[#1A202C] rounded-xl flex items-center justify-center">
                     <span className="text-[#E5A220] font-bold text-sm text-center">{config.site_name}</span>
                   </div>
                 )}
@@ -257,8 +257,8 @@ export default function AtrasadosPage() {
             </div>
 
             {/* Results Header */}
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Atrasados</h2>
-            <p className="text-gray-600 text-sm mb-6">
+            <h2 className="text-xl font-bold text-white mb-1">Atrasados</h2>
+            <p className="text-zinc-400 text-sm mb-6">
               {selectedLoteria.displayName} - {selectedColocacao.nome}
             </p>
 
@@ -267,7 +267,7 @@ export default function AtrasadosPage() {
               {atrasados.map((item) => (
                 <div key={item.grupo} className="flex items-center gap-3">
                   {/* Group Number Badge */}
-                  <div className="w-12 h-12 bg-[#38A169] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-[#38A169] rounded-xl flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-lg">
                       {item.grupo.toString().padStart(2, '0')}
                     </span>
@@ -280,8 +280,8 @@ export default function AtrasadosPage() {
 
                   {/* Animal Info */}
                   <div className="flex-1">
-                    <div className="font-bold text-gray-900">{item.nome}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-bold text-white">{item.nome}</div>
+                    <div className="text-sm text-zinc-400">
                       {item.diasAtras === 1 ? (
                         <>Saiu <span className="font-bold">ontem!</span></>
                       ) : (
@@ -296,7 +296,7 @@ export default function AtrasadosPage() {
             {/* Share Button */}
             <button
               onClick={handleShare}
-              className="w-full h-12 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2"
+              className="w-full h-14 min-h-[56px] bg-[#3B82F6] rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
             >
               <Share2 className="h-5 w-5" />
               Compartilhar

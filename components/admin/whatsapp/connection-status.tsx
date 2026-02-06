@@ -14,7 +14,7 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
   close: { label: 'Desconectado', color: 'text-red-400', bgColor: 'bg-red-500/20' },
   connecting: { label: 'Conectando', color: 'text-yellow-400', bgColor: 'bg-yellow-500/20' },
   disconnected: { label: 'Desconectado', color: 'text-red-400', bgColor: 'bg-red-500/20' },
-  unknown: { label: 'Desconhecido', color: 'text-gray-400', bgColor: 'bg-gray-500/20' },
+  unknown: { label: 'Desconhecido', color: 'text-zinc-400', bgColor: 'bg-zinc-500/20' },
 };
 
 export function ConnectionStatus({ status, showLabel = true, size = 'md' }: ConnectionStatusProps) {

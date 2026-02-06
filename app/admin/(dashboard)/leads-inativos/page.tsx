@@ -134,7 +134,7 @@ function ConfigModal({ isOpen, onClose, config, onSave }: ConfigModalProps) {
               max={365}
               value={thresholdDays}
               onChange={(e) => setThresholdDays(parseInt(e.target.value) || 7)}
-              className="bg-gray-700 border-zinc-800 text-white"
+              className="bg-zinc-800 border-zinc-800 text-white"
             />
             <p className="text-xs text-zinc-500">
               Usuários sem apostas neste período serão listados como inativos
@@ -476,7 +476,7 @@ export default function LeadsInativosPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-600">
+                <tbody className="divide-y divide-zinc-700/40">
                   {leads.map((lead) => {
                     const saldoTotal = lead.saldo + lead.saldo_bonus;
                     return (

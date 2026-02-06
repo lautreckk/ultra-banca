@@ -17,12 +17,12 @@ export default function ResultadosPage() {
 
   return (
     <PageLayout title="CONSULTAR RESULTADOS">
-      <div className="divide-y divide-zinc-700/30 bg-[#1A1F2B]">
+      <div className="bg-[#111318] min-h-screen p-4 space-y-3">
         {dates.map((date) => (
           <Link
             key={date.param}
             href={`/resultados/${date.param}`}
-            className="flex items-center justify-between px-4 py-4 active:bg-zinc-700/50"
+            className="flex items-center justify-between px-4 h-14 bg-[#1A1F2B] border border-zinc-700/40 rounded-xl active:scale-[0.98] transition-all"
           >
             <span className="text-white">{date.display}</span>
             <ChevronRight className="h-5 w-5 text-zinc-500" />

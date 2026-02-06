@@ -240,17 +240,17 @@ export function ColocacaoClient({
   // Render palpite input step
   if (step === 'palpite') {
     return (
-      <div className="flex-1 bg-zinc-50">
+      <div className="flex-1 bg-[#111318]">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
-        <div className="bg-zinc-50 min-h-screen">
+        <div className="bg-[#111318] min-h-screen">
           {/* Info Header */}
           <div className="px-4 pt-4">
             {/* LOTERIAS | CENTENA row */}
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">LOTERIAS</h1>
-                <p className="text-sm text-gray-500">{formattedDate}</p>
+                <h1 className="text-xl font-bold text-white">LOTERIAS</h1>
+                <p className="text-sm text-zinc-500">{formattedDate}</p>
               </div>
               <span className="text-lg font-bold text-[#D97706]">
                 {modalidadeInfo?.nome || modalidade.toUpperCase()}
@@ -258,20 +258,20 @@ export function ColocacaoClient({
             </div>
 
             {/* Divider */}
-            <div className="border-b border-gray-200 my-3" />
+            <div className="border-b border-zinc-700/40 my-3" />
 
             {/* Colocacao | Palpites row */}
             <div className="flex items-center justify-between pb-3">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-white">
                 {colocacaoInfo?.nome || colocacao.replace('_', ' ').toUpperCase()}
               </span>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-white">
                 {palpites.length} PALPITES
               </span>
             </div>
 
             {/* Divider */}
-            <div className="border-b border-gray-200" />
+            <div className="border-b border-zinc-700/40" />
           </div>
 
           {/* Input Section */}
@@ -282,7 +282,7 @@ export function ColocacaoClient({
               value={inputValue}
               onChange={handleInputChange}
               placeholder="Palpite..."
-              className="w-full h-14 px-4 text-lg border-2 border-[#3B82F6] rounded-xl focus:outline-none focus:border-[#2563EB] placeholder:text-gray-400"
+              className="w-full h-14 min-h-[56px] px-4 text-lg text-white bg-zinc-900/80 border-2 border-blue-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 placeholder:text-zinc-500"
             />
 
             {/* Palpites List */}
@@ -310,14 +310,14 @@ export function ColocacaoClient({
           <div className="px-4 grid grid-cols-2 gap-3">
             <button
               onClick={handleSurpresinha}
-              className="h-12 bg-zinc-900 rounded-xl font-semibold text-white"
+              className="h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white active:scale-[0.98] transition-all"
             >
               Surpresinha
             </button>
             <button
               onClick={() => setStep('valor')}
               disabled={palpites.length === 0}
-              className="h-12 bg-[#E5A220] rounded-xl font-semibold text-black disabled:opacity-50"
+              className="h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 disabled:opacity-50 active:scale-[0.98] transition-all"
             >
               Avançar
             </button>
@@ -330,7 +330,7 @@ export function ColocacaoClient({
   // Render value selection step
   if (step === 'valor') {
     return (
-      <div className="flex-1 bg-zinc-50">
+      <div className="flex-1 bg-[#111318]">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <ValueSelector
@@ -347,7 +347,7 @@ export function ColocacaoClient({
   // Render bet summary step
   if (step === 'resumo') {
     return (
-      <div className="flex-1 bg-zinc-50">
+      <div className="flex-1 bg-[#111318]">
         <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
         <BetSummary
@@ -373,7 +373,7 @@ export function ColocacaoClient({
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-[#111318]">
       <BetHeader title={getHeaderTitle()} onBack={handleBack} />
 
       <LotterySelector

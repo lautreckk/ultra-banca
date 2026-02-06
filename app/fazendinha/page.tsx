@@ -9,9 +9,9 @@ export default function FazendinhaPage() {
 
   return (
     <PageLayout title="SELECIONAR DATA">
-      <div className="bg-white min-h-screen">
+      <div className="bg-[#111318] min-h-screen">
         <div className="p-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">FAZENDINHA</h2>
+          <h2 className="text-xl font-bold text-white mb-6">FAZENDINHA</h2>
 
           {/* Grid de Datas 2x2 */}
           <div className="grid grid-cols-2 gap-3">
@@ -19,9 +19,9 @@ export default function FazendinhaPage() {
               <Link
                 key={date.value}
                 href={`/fazendinha/${date.value}`}
-                className="flex flex-col items-center justify-center bg-zinc-900 rounded-xl py-6 px-4 min-h-[120px] transition-all hover:bg-zinc-800 active:scale-[0.98]"
+                className="flex flex-col items-center justify-center bg-[#1A1F2B] border border-zinc-700/40 rounded-xl py-6 px-4 min-h-[120px] active:scale-[0.98] transition-all"
               >
-                <span className="text-2xl font-bold text-white bg-white/10 rounded-lg px-4 py-1.5">
+                <span className="text-2xl font-bold text-white bg-white/10 rounded-xl px-4 py-1.5">
                   {date.day}
                 </span>
                 <span className="text-white font-bold mt-3 uppercase tracking-wide text-lg">

@@ -34,10 +34,10 @@ export function AdPopup({ ad, onClose }: AdPopupProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute -top-3 -right-3 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+          className="absolute -top-3 -right-3 z-10 p-2 bg-zinc-800 rounded-full shadow-lg hover:bg-zinc-700 transition-colors"
           aria-label="Fechar"
         >
-          <X className="h-5 w-5 text-gray-700" />
+          <X className="h-5 w-5 text-zinc-300" />
         </button>
 
         {/* Image container */}
@@ -57,7 +57,7 @@ export function AdPopup({ ad, onClose }: AdPopupProps) {
         {/* Close button below */}
         <button
           onClick={onClose}
-          className="mt-4 w-full py-3 bg-white/90 backdrop-blur rounded-lg font-medium text-gray-800 hover:bg-white transition-colors"
+          className="mt-4 w-full py-3 bg-zinc-800/90 backdrop-blur rounded-lg font-medium text-white hover:bg-zinc-700 transition-colors"
         >
           Fechar
         </button>

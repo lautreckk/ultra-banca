@@ -104,19 +104,23 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
-      <div className="w-full max-w-md bg-[#1A202C] min-h-screen shadow-xl flex flex-col">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
+      <div className="w-full max-w-md bg-[#111318] min-h-screen shadow-xl flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-[#1A202C] px-4">
           <div className="flex h-12 items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex h-10 w-10 items-center justify-center"
+              className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+              aria-label="Voltar"
             >
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
-            <span className="text-sm font-bold text-white">FINALIZAR APOSTA</span>
-            <button className="flex h-10 w-10 items-center justify-center">
+            <span className="text-base font-bold text-white">FINALIZAR APOSTA</span>
+            <button
+              className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
+              aria-label="Menu"
+            >
               <Menu className="h-5 w-5 text-white" />
             </button>
           </div>
@@ -124,21 +128,29 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
 
         {/* Balance Bar */}
         <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-          <RefreshCw className="h-5 w-5 text-white" />
+          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
+            <RefreshCw className="h-5 w-5 text-white" />
+          </button>
           <div className="flex items-center gap-2">
             <span className="text-white font-medium">
               {novoSaldo !== null ? `R$ ${formatCurrency(novoSaldo)}` : 'R$ *******'}
             </span>
-            <EyeOff className="h-5 w-5 text-white" />
+            <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
+              <EyeOff className="h-5 w-5 text-white" />
+            </button>
           </div>
         </div>
 
         {/* Error Toast */}
         {error && (
           <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-50">
-            <div className="bg-red-600 text-white px-4 py-3 rounded-lg flex items-center justify-between shadow-lg">
+            <div className="bg-red-600 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg">
               <span className="text-sm">{error}</span>
-              <button onClick={() => setError(null)}>
+              <button
+                onClick={() => setError(null)}
+                className="flex h-11 w-11 items-center justify-center"
+                aria-label="Fechar erro"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -146,15 +158,15 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
         )}
 
         {/* Content */}
-        <div className="bg-gray-100 flex-1 p-4">
+        <div className="bg-zinc-800/50 flex-1 p-4">
         {/* Receipt Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+        <div className="bg-[#1A1F2B] rounded-xl border border-zinc-700/40 p-4 mb-4">
           {/* Pule Header */}
-          <div className="text-xs text-gray-500 mb-2">PULE #{puleNumber || ''}</div>
+          <div className="text-xs text-zinc-500 mb-2">PULE #{puleNumber || ''}</div>
 
           {/* Banca Logo */}
           <div className="text-center mb-4">
-            <span className="text-lg font-bold text-gray-900">{config.site_name.toUpperCase()}</span>
+            <span className="text-lg font-bold text-white">{config.site_name.toUpperCase()}</span>
             <div className="flex justify-center mt-2">
               {config.logo_url ? (
                 <Image
@@ -166,7 +178,7 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
                   unoptimized={config.logo_url.includes('supabase.co')}
                 />
               ) : (
-                <div className="w-20 h-16 bg-[#1A202C] rounded-lg flex items-center justify-center">
+                <div className="w-20 h-16 bg-[#111318] rounded-xl flex items-center justify-center">
                   <span className="text-[#E5A220] font-bold text-xs text-center">{config.site_name}</span>
                 </div>
               )}
@@ -176,11 +188,11 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
           {/* Vendor & Status */}
           <div className="flex justify-between items-center mb-4">
             <div className="text-center flex-1">
-              <div className="text-xs text-gray-500">VENDEDOR</div>
-              <div className="text-sm font-bold text-gray-900">979536</div>
+              <div className="text-xs text-zinc-500">VENDEDOR</div>
+              <div className="text-sm font-bold text-white">979536</div>
             </div>
             <div className="text-center flex-1">
-              <div className="text-xs text-gray-500">STATUS</div>
+              <div className="text-xs text-zinc-500">STATUS</div>
               <div className={`text-sm font-bold ${isConfirmed ? 'text-green-500' : 'text-yellow-500'}`}>
                 {isConfirmed ? 'REGISTRADA' : 'PENDENTE'}
               </div>
@@ -188,13 +200,13 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
           </div>
 
           {/* Separator */}
-          <div className="border-t border-gray-200 my-3" />
+          <div className="border-t border-zinc-700/40 my-3" />
 
           {/* Sorteio Info */}
           <div className="mb-4">
             {dias.map((dia, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-gray-700 mb-1">
-                <span className="text-gray-400">-</span>
+              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300 mb-1">
+                <span className="text-zinc-500">-</span>
                 <span className={isConfirmed ? 'text-green-600' : ''}>SORTEIO QUINA - {dia}</span>
                 {isConfirmed && <span className="text-green-600 text-xs ml-auto">REGISTRADA</span>}
               </div>
@@ -204,32 +216,32 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
           {/* Modalidades Section */}
           <div className="mb-4">
             <div className="flex items-center justify-center mb-2">
-              <div className="flex-1 border-t border-gray-200" />
-              <span className="px-2 text-xs text-gray-500">MODALIDADES</span>
-              <div className="flex-1 border-t border-gray-200" />
+              <div className="flex-1 border-t border-zinc-700/40" />
+              <span className="px-2 text-xs text-zinc-500">MODALIDADES</span>
+              <div className="flex-1 border-t border-zinc-700/40" />
             </div>
 
-            <div className="font-bold text-gray-900 mb-2">{modalidade.nome}</div>
+            <div className="font-bold text-white mb-2">{modalidade.nome}</div>
 
             {/* Palpites */}
             <div className="space-y-1 mb-3">
               {palpites.map((palpite, index) => (
                 <div
                   key={index}
-                  className="inline-block bg-gray-100 border border-gray-200 rounded px-2 py-1 text-xs mr-2 mb-1"
+                  className="inline-block bg-zinc-800/50 border border-zinc-700/40 rounded-xl px-2 py-1 text-xs mr-2 mb-1"
                 >
                   {palpite}
                 </div>
               ))}
             </div>
 
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-zinc-400">
               R$ {formatCurrency(valorPorPalpite)} / CADA
             </div>
           </div>
 
           {/* Total */}
-          <div className="border-t border-dashed border-gray-300 pt-3">
+          <div className="border-t border-dashed border-zinc-700/40 pt-3">
             <div className="text-center font-bold text-lg">
               TOTAL: R$ {formatCurrency(valorTotal)}
             </div>
@@ -239,7 +251,7 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
           {isConfirmed && (
             <div className="mt-4 text-center">
               <div className="text-green-600 text-sm mb-1">Aposta registrada com sucesso!</div>
-              <div className="text-gray-500 text-xs">{confirmationTime}</div>
+              <div className="text-zinc-500 text-xs">{confirmationTime}</div>
               {novoSaldo !== null && (
                 <div className="text-green-600 text-sm mt-2">
                   Novo saldo: R$ {formatCurrency(novoSaldo)}
@@ -250,7 +262,7 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
         </div>
 
         {/* Border dashed separator */}
-        <div className="border-t border-dashed border-gray-300 my-4" />
+        <div className="border-t border-dashed border-zinc-700/40 my-4" />
 
         {/* Action Buttons */}
         {!isConfirmed ? (
@@ -258,7 +270,8 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
             <button
               onClick={handleVoltar}
               disabled={isLoading}
-              className="h-12 bg-[#1A202C] rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+              className="h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
+              aria-label="Voltar ao inicio"
             >
               <Home className="h-5 w-5" />
               Voltar
@@ -266,7 +279,8 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
             <button
               onClick={handleFinalizar}
               disabled={isLoading}
-              className="h-12 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+              className="h-14 min-h-[56px] bg-[#3B82F6] rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
+              aria-label="Finalizar e salvar aposta"
             >
               {isLoading ? (
                 <>
@@ -282,14 +296,16 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleShare}
-              className="h-12 bg-[#3B82F6] rounded-lg font-semibold text-white flex items-center justify-center gap-2"
+              className="h-14 min-h-[56px] bg-[#3B82F6] rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              aria-label="Compartilhar aposta"
             >
               <Share2 className="h-5 w-5" />
               Compartilhar
             </button>
             <button
               onClick={() => window.print()}
-              className="h-12 bg-[#1A202C] rounded-lg font-semibold text-white flex items-center justify-center gap-2"
+              className="h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              aria-label="Imprimir comprovante"
             >
               <Printer className="h-5 w-5" />
               Imprimir
@@ -301,7 +317,8 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
         {isConfirmed && (
           <button
             onClick={handleVoltar}
-            className="w-full mt-3 h-12 bg-gray-200 rounded-lg font-semibold text-gray-700 flex items-center justify-center gap-2"
+            className="w-full mt-3 h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-zinc-300 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+            aria-label="Voltar ao inicio"
           >
             <Home className="h-5 w-5" />
             Voltar ao Inicio
@@ -315,7 +332,7 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
 
 export function QuininhaFinalizarClient(props: QuininhaFinalizarClientProps) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#1A202C]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#111318]" />}>
       <QuininhaFinalizarContent {...props} />
     </Suspense>
   );

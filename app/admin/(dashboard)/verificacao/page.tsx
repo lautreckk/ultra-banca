@@ -152,7 +152,7 @@ export default function AdminVerificacaoPage() {
       render: (value, row) => (
         <div>
           <p className="font-medium text-white">{value as string}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-zinc-500">
             {(row.user_cpf as string)?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
           </p>
         </div>
@@ -209,7 +209,7 @@ export default function AdminVerificacaoPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Verificação de Prêmios</h1>
-          <p className="text-gray-400">Dashboard de verificação e pagamento de apostas</p>
+          <p className="text-zinc-500">Dashboard de verificação e pagamento de apostas</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

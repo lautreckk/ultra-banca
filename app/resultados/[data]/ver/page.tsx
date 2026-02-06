@@ -375,7 +375,7 @@ export default function ResultadoVerPage() {
   if (loading) {
     return (
       <PageLayout title="RESULTADO" showBack>
-        <div className="bg-[#1A1F2B] min-h-screen flex items-center justify-center">
+        <div className="bg-[#111318] min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-[#E5A220]" />
             <p className="text-zinc-400">Carregando resultados...</p>
@@ -387,7 +387,7 @@ export default function ResultadoVerPage() {
 
   return (
     <PageLayout title="RESULTADO" showBack>
-      <div className="bg-[#1A1F2B] min-h-screen">
+      <div className="bg-[#111318] min-h-screen">
         {/* Header Info */}
         <div className="px-4 py-4 border-b border-zinc-700/40">
           <h1 className="text-xl font-bold text-center text-white mb-4">{config.site_name.toUpperCase()}</h1>
@@ -442,7 +442,8 @@ export default function ResultadoVerPage() {
                   <h2 className="font-bold text-white">{info.nome}</h2>
                   <button
                     onClick={handlePrint}
-                    className="p-2 text-zinc-500 hover:text-zinc-200"
+                    className="h-11 w-11 flex items-center justify-center text-zinc-500 hover:text-zinc-200 rounded-lg active:bg-white/10 transition-all"
+                    aria-label="Imprimir resultado"
                   >
                     <Printer className="h-5 w-5" />
                   </button>
@@ -474,7 +475,8 @@ export default function ResultadoVerPage() {
         <div className="px-4 pb-8">
           <button
             onClick={handleShare}
-            className="w-full py-3 bg-zinc-800/30 hover:bg-zinc-700/50 rounded-lg font-medium text-zinc-200 flex items-center justify-center gap-2 transition-colors"
+            className="w-full h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 hover:bg-zinc-700/50 rounded-xl font-medium text-zinc-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            aria-label="Compartilhar resultados"
           >
             <Share2 className="h-5 w-5" />
             Compartilhar

@@ -27,7 +27,7 @@ export function InviteLink({ code, className }: InviteLinkProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border border-[var(--color-border)] bg-white p-4',
+        'rounded-xl border border-zinc-700/40 bg-[#1A1F2B] p-4',
         className
       )}
     >
@@ -36,14 +36,14 @@ export function InviteLink({ code, className }: InviteLinkProps) {
           <Users className="h-5 w-5 text-[var(--color-primary)]" />
         </div>
         <div>
-          <p className="font-bold text-gray-900">Convide Amigos</p>
-          <p className="text-xs text-gray-500">Ganhe bonus por indicacao</p>
+          <p className="font-bold text-white">Convide Amigos</p>
+          <p className="text-xs text-zinc-500">Ganhe bonus por indicacao</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex-1 rounded-lg bg-gray-100 px-3 py-2">
-          <p className="text-xs text-gray-500 truncate">{inviteUrl}</p>
+        <div className="flex-1 rounded-lg bg-zinc-800/50 px-3 py-2">
+          <p className="text-xs text-zinc-400 truncate">{inviteUrl}</p>
         </div>
         <button
           onClick={handleCopy}

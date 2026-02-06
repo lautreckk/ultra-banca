@@ -17,15 +17,15 @@ export default function FazendinhaPage() {
 
   return (
     <PageLayout title="FAZENDINHA" showBack>
-      <div className="divide-y divide-gray-200 bg-white">
+      <div className="divide-y divide-zinc-700/40 bg-[#1A1F2B] rounded-xl border border-zinc-700/40 mx-4 mt-4 overflow-hidden">
         {dates.map((date) => (
           <Link
             key={date.param}
             href={`/relatorios/fazendinha/${date.param}`}
-            className="flex items-center justify-between px-4 py-4 active:bg-gray-50"
+            className="flex items-center justify-between px-4 py-4 min-h-[56px] active:bg-zinc-700/30 active:scale-[0.98] transition-all"
           >
-            <span className="text-gray-800">{date.display}</span>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <span className="text-white">{date.display}</span>
+            <ChevronRight className="h-5 w-5 text-zinc-500" />
           </Link>
         ))}
       </div>

@@ -29,22 +29,22 @@ export default function BSPayConfigPage() {
             <h3 className="text-base font-semibold text-white mb-1">
               URL do Webhook (configure no painel BSPay)
             </h3>
-            <p className="text-sm text-gray-400 mb-3">
+            <p className="text-sm text-zinc-500 mb-3">
               Copie esta URL e configure no painel do BSPay para receber notificações de pagamento.
             </p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 px-3 py-2 bg-gray-800 rounded text-sm text-cyan-300 font-mono overflow-x-auto">
+              <code className="flex-1 px-3 py-2 bg-zinc-800 rounded text-sm text-cyan-300 font-mono overflow-x-auto">
                 {webhookUrl}
               </code>
               <button
                 onClick={handleCopyWebhook}
-                className="p-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                className="p-2 bg-zinc-800 rounded hover:bg-zinc-700/30 transition-colors"
                 title="Copiar URL"
               >
                 {copied ? (
                   <CheckCircle className="h-5 w-5 text-green-400" />
                 ) : (
-                  <Copy className="h-5 w-5 text-gray-400" />
+                  <Copy className="h-5 w-5 text-zinc-500" />
                 )}
               </button>
             </div>
