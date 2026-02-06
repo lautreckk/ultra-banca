@@ -2,6 +2,7 @@
 
 import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 /**
  * Hash SHA256 para dados do usuário (requerido pelo Facebook CAPI)
@@ -29,10 +30,12 @@ export async function sendCAPIEvent(params: CAPIEventParams): Promise<{ success:
   try {
     const supabase = await createClient();
 
-    // Buscar configurações do Pixel
+    // Buscar configurações do Pixel (multi-tenant: tabela platforms)
+    const platformId = await getPlatformId();
     const { data: config, error: configError } = await supabase
-      .from('platform_config')
+      .from('platforms')
       .select('facebook_pixel_id, facebook_access_token')
+      .eq('id', platformId)
       .single();
 
     if (configError || !config) {

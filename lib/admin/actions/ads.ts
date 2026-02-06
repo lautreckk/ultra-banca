@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface Propaganda {
   id: string;
@@ -34,6 +35,7 @@ export interface AdsListResult {
 
 export async function getAds(params: AdsListParams = {}): Promise<AdsListResult> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
   const { page = 1, pageSize = 20, ativo } = params;
   const offset = (page - 1) * pageSize;
 
@@ -42,7 +44,8 @@ export async function getAds(params: AdsListParams = {}): Promise<AdsListResult>
     .select(`
       *,
       profiles(nome)
-    `, { count: 'exact' });
+    `, { count: 'exact' })
+    .eq('platform_id', platformId);
 
   if (ativo !== undefined) {
     query = query.eq('ativo', ativo);
@@ -92,6 +95,7 @@ export interface CreateAdInput {
 
 export async function createAd(input: CreateAdInput): Promise<{ success: boolean; error?: string; id?: string }> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -108,6 +112,7 @@ export async function createAd(input: CreateAdInput): Promise<{ success: boolean
       data_fim: input.data_fim || null,
       ativo: input.ativo ?? true,
       created_by: user?.id || null,
+      platform_id: platformId,
     })
     .select('id')
     .single();
@@ -195,6 +200,7 @@ export async function toggleAdStatus(id: string): Promise<{ success: boolean; er
 // Function for user-facing: get active ads by trigger
 export async function getActiveAdsByTrigger(trigger: 'login' | 'saque' | 'deposito'): Promise<Propaganda[]> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
   const now = new Date().toISOString();
 
@@ -202,6 +208,7 @@ export async function getActiveAdsByTrigger(trigger: 'login' | 'saque' | 'deposi
     .from('propagandas')
     .select('*')
     .eq('ativo', true)
+    .eq('platform_id', platformId)
     .contains('gatilhos', [trigger])
     .or(`data_inicio.is.null,data_inicio.lte.${now}`)
     .or(`data_fim.is.null,data_fim.gte.${now}`)

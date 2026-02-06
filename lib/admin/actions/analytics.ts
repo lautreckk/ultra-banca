@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 export interface VisitorStats {
   realtime: number;
@@ -181,10 +182,13 @@ export async function getHouseProfitData(): Promise<HouseProfitData> {
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+  const platformId = await getPlatformId();
+
   async function getPeriodStats(startDate?: Date) {
     let betsQuery = supabase
       .from('apostas')
       .select('valor_total, premio_valor, status')
+      .eq('platform_id', platformId)
       .in('status', ['ganhou', 'perdeu']);
 
     if (startDate) {

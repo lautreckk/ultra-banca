@@ -1,7 +1,8 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
 // GATEWAY CONFIG
@@ -31,11 +32,13 @@ function maskSecret(secret: string | null): string | null {
 
 export async function getGatewayConfig(gatewayName: string): Promise<GatewayConfig | null> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
   const { data, error } = await supabase
     .from('gateway_config')
     .select('id, gateway_name, ativo, client_id, client_secret, webhook_url, config, updated_at')
     .eq('gateway_name', gatewayName)
+    .eq('platform_id', platformId)
     .single();
 
   if (error || !data) {
@@ -58,10 +61,12 @@ export async function getGatewayConfig(gatewayName: string): Promise<GatewayConf
 
 export async function getAllGateways(): Promise<GatewayConfig[]> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
   const { data, error } = await supabase
     .from('gateway_config')
     .select('id, gateway_name, ativo, client_id, client_secret, webhook_url, config, updated_at')
+    .eq('platform_id', platformId)
     .order('gateway_name');
 
   if (error) {
@@ -85,45 +90,54 @@ export async function getAllGateways(): Promise<GatewayConfig[]> {
 
 export async function setPrimaryGateway(gatewayName: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
-  // Update both primary_gateway and active_gateway settings
-  const { error: error1 } = await supabase
-    .from('system_settings')
-    .upsert({
-      key: 'primary_gateway',
-      value: gatewayName,
-      description: 'Gateway de pagamento principal para depósitos',
-      category: 'payments',
+  // Verificar se o usuario e admin
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Nao autenticado' };
+
+  const { data: adminRole } = await supabase
+    .from('admin_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!adminRole) return { success: false, error: 'Acesso nao autorizado' };
+
+  // Usar admin client (service role) para bypass de RLS
+  // RLS de platforms so permite UPDATE para super_admin
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient
+    .from('platforms')
+    .update({
+      active_gateway: gatewayName,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'key' });
+    })
+    .eq('id', platformId);
 
-  const { error: error2 } = await supabase
-    .from('system_settings')
-    .upsert({
-      key: 'active_gateway',
-      value: gatewayName,
-      description: 'Gateway de pagamento ativo (bspay ou washpay)',
-      category: 'payments',
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'key' });
-
-  if (error1 || error2) {
-    return { success: false, error: error1?.message || error2?.message };
+  if (error) {
+    return { success: false, error: error.message };
   }
+
+  revalidatePath('/admin/pagamentos');
+  revalidatePath('/', 'layout');
 
   return { success: true };
 }
 
 export async function getPrimaryGateway(): Promise<string> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
+  // Ler de platforms.active_gateway (mesma fonte que a Edge Function usa)
   const { data } = await supabase
-    .from('system_settings')
-    .select('value')
-    .eq('key', 'active_gateway')
+    .from('platforms')
+    .select('active_gateway')
+    .eq('id', platformId)
     .single();
 
-  return data?.value || 'bspay';
+  return data?.active_gateway || 'bspay';
 }
 
 export async function getActiveGateway(): Promise<string> {
@@ -157,10 +171,13 @@ export async function updateGatewayConfig(
   if (config.webhook_url !== undefined) updateData.webhook_url = config.webhook_url;
   if (config.config !== undefined) updateData.config = config.config;
 
+  const platformId = await getPlatformId();
+
   const { error } = await supabase
     .from('gateway_config')
     .update(updateData)
-    .eq('gateway_name', gatewayName);
+    .eq('gateway_name', gatewayName)
+    .eq('platform_id', platformId);
 
   if (error) {
     return { success: false, error: error.message };
@@ -174,8 +191,6 @@ export async function updateGatewayConfig(
 // =============================================
 // Estrutura (nome, categoria, posições) = modalidades_config (global)
 // Valores (multiplicador, limites, ativo) = platform_modalidades (por banca)
-
-import { getPlatformId } from '@/lib/utils/platform';
 
 export interface ModalidadeConfig {
   id: string;                // ID da modalidade na platform_modalidades

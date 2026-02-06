@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
 // BONUS DEPOSIT CONFIG TYPES
@@ -57,12 +58,14 @@ export interface BonusAppliedRecord {
  */
 export async function getBonusTiers(params: BonusTierListParams = {}): Promise<BonusTierListResult> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
   const { page = 1, pageSize = 50, ativo } = params;
   const offset = (page - 1) * pageSize;
 
   let query = supabase
     .from('bonus_deposito_config')
-    .select('*', { count: 'exact' });
+    .select('*', { count: 'exact' })
+    .eq('platform_id', platformId);
 
   if (ativo !== undefined) {
     query = query.eq('ativo', ativo);
@@ -108,11 +111,14 @@ export async function createBonusTier(input: CreateBonusTierInput): Promise<{ su
     return { success: false, error: 'O percentual de bônus deve ser maior que zero' };
   }
 
-  // Verificar se já existe uma faixa com o mesmo valor mínimo
+  const platformId = await getPlatformId();
+
+  // Verificar se já existe uma faixa com o mesmo valor mínimo nesta plataforma
   const { data: existing } = await supabase
     .from('bonus_deposito_config')
     .select('id')
     .eq('deposito_minimo', input.deposito_minimo)
+    .eq('platform_id', platformId)
     .single();
 
   if (existing) {
@@ -127,6 +133,7 @@ export async function createBonusTier(input: CreateBonusTierInput): Promise<{ su
       bonus_maximo: input.bonus_maximo || null,
       ativo: input.ativo ?? true,
       created_by: user?.id || null,
+      platform_id: platformId,
     })
     .select('id')
     .single();
@@ -156,12 +163,15 @@ export async function updateBonusTier(
     return { success: false, error: 'O percentual de bônus deve ser maior que zero' };
   }
 
-  // Se está alterando o deposito_minimo, verificar duplicação
+  const platformId = await getPlatformId();
+
+  // Se está alterando o deposito_minimo, verificar duplicação na mesma plataforma
   if (input.deposito_minimo !== undefined) {
     const { data: existing } = await supabase
       .from('bonus_deposito_config')
       .select('id')
       .eq('deposito_minimo', input.deposito_minimo)
+      .eq('platform_id', platformId)
       .neq('id', id)
       .single();
 
@@ -246,19 +256,21 @@ export async function toggleBonusTierStatus(id: string): Promise<{ success: bool
  * Calcula o bônus para um determinado valor de depósito
  * Retorna a faixa aplicável e o valor do bônus calculado
  */
-export async function calculateBonus(valorDeposito: number): Promise<{
+export async function calculateBonus(valorDeposito: number, platformIdOverride?: string): Promise<{
   tierId: string | null;
   percentual: number;
   valorBonus: number;
   bonusMaximo: number | null;
 }> {
   const supabase = await createClient();
+  const platformId = platformIdOverride || await getPlatformId();
 
-  // Buscar a faixa de bônus aplicável (maior deposito_minimo <= valorDeposito)
+  // Buscar a faixa de bônus aplicável (maior deposito_minimo <= valorDeposito) para esta plataforma
   const { data: tier } = await supabase
     .from('bonus_deposito_config')
     .select('*')
     .eq('ativo', true)
+    .eq('platform_id', platformId)
     .lte('deposito_minimo', valorDeposito)
     .order('deposito_minimo', { ascending: false })
     .limit(1)
@@ -292,7 +304,8 @@ export async function calculateBonus(valorDeposito: number): Promise<{
 export async function applyDepositBonus(
   userId: string,
   pagamentoId: string,
-  valorDeposito: number
+  valorDeposito: number,
+  platformIdOverride?: string
 ): Promise<{
   success: boolean;
   error?: string;
@@ -300,6 +313,7 @@ export async function applyDepositBonus(
   percentualApplied: number;
 }> {
   const supabase = await createClient();
+  const platformId = platformIdOverride || await getPlatformId();
 
   // Verificar se já foi aplicado bônus para este pagamento
   const { data: existingBonus } = await supabase
@@ -312,8 +326,8 @@ export async function applyDepositBonus(
     return { success: true, bonusApplied: 0, percentualApplied: 0 }; // Já aplicado, não é erro
   }
 
-  // Calcular bônus
-  const { tierId, percentual, valorBonus } = await calculateBonus(valorDeposito);
+  // Calcular bônus para esta plataforma
+  const { tierId, percentual, valorBonus } = await calculateBonus(valorDeposito, platformId);
 
   if (!tierId || valorBonus <= 0) {
     return { success: true, bonusApplied: 0, percentualApplied: 0 }; // Sem bônus aplicável
@@ -329,6 +343,7 @@ export async function applyDepositBonus(
       valor_deposito: valorDeposito,
       percentual_aplicado: percentual,
       valor_bonus: valorBonus,
+      platform_id: platformId,
     });
 
   if (insertError) {
@@ -378,6 +393,7 @@ export async function getBonusHistory(params: {
   pageSize: number;
 }> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
   const { page = 1, pageSize = 20, userId } = params;
   const offset = (page - 1) * pageSize;
 
@@ -386,7 +402,8 @@ export async function getBonusHistory(params: {
     .select(`
       *,
       profiles(nome, cpf)
-    `, { count: 'exact' });
+    `, { count: 'exact' })
+    .eq('platform_id', platformId);
 
   if (userId) {
     query = query.eq('user_id', userId);

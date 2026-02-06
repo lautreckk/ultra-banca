@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
 // TYPES
@@ -55,15 +56,17 @@ export interface InactivityConfig {
 
 export async function getInactiveLeadsStats(): Promise<InactiveLeadsStats> {
   const supabase = await createClient();
+  const platformId = await getPlatformId();
 
   const now = new Date();
   const seteDiasAtras = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const trintaDiasAtras = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Buscar todos os profiles com suas últimas apostas
+  // Buscar profiles desta plataforma
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, saldo, saldo_bonus');
+    .select('id, saldo, saldo_bonus')
+    .eq('platform_id', platformId);
 
   if (!profiles || profiles.length === 0) {
     return {
@@ -154,10 +157,13 @@ export async function getInactiveLeads(
     ? null
     : new Date(now.getTime() - diasInatividade * 24 * 60 * 60 * 1000).toISOString();
 
-  // Buscar todos os profiles
+  const platformId = await getPlatformId();
+
+  // Buscar profiles desta plataforma
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, created_at, last_login');
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, created_at, last_login')
+    .eq('platform_id', platformId);
 
   if (!profiles || profiles.length === 0) {
     return { leads: [], total: 0, page, pageSize };
