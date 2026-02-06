@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Loader2, X } from 'lucide-react';
+import { Search, Loader2, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import { GameCard } from './game-card';
 import { getGames, launchGame } from '@/lib/actions/casino';
 import type { CasinoGame } from '@/lib/actions/casino';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 export function CasinoLobby() {
+  const config = usePlatformConfig();
   const [games, setGames] = useState<CasinoGame[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -74,18 +77,30 @@ export function CasinoLobby() {
       {/* Game iframe overlay */}
       {activeGame && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
-          <div className="absolute top-3 right-3 z-10">
+          <div className="flex items-center justify-between px-3 py-2 bg-zinc-900 border-b border-white/10 shrink-0">
             <button
               onClick={handleCloseGame}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 transition-colors shadow-lg"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
             >
-              <X className="h-5 w-5 text-white" />
-              <span className="text-white text-sm font-medium">Fechar</span>
+              <ArrowLeft className="h-4 w-4 text-white" />
+              <span className="text-white text-sm font-medium">Voltar</span>
             </button>
+            {config.logo_url ? (
+              <Image
+                src={config.logo_url}
+                alt={config.platform_name || 'Logo'}
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <span className="text-white text-sm font-bold">{config.platform_name}</span>
+            )}
+            <div className="w-[88px]" />
           </div>
           <iframe
             src={activeGame.url}
-            className="w-full h-full border-0"
+            className="w-full flex-1 border-0"
             allow="autoplay; fullscreen; clipboard-write"
             allowFullScreen
           />
