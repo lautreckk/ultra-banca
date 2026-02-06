@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { PWAInstallBanner } from '@/components/shared/pwa-install-banner';
 import type { LayoutProps } from '@/lib/layouts/types';
 
 const layouts = {
@@ -13,5 +14,10 @@ const layouts = {
 export function LayoutWrapper(props: LayoutProps) {
   const { layout_id } = usePlatformConfig();
   const Layout = layouts[layout_id] || layouts[1];
-  return <Layout {...props} />;
+  return (
+    <>
+      <Layout {...props} />
+      <PWAInstallBanner />
+    </>
+  );
 }
