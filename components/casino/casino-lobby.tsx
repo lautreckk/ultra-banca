@@ -45,6 +45,10 @@ export function CasinoLobby() {
     setLaunchingGame(null);
   }
 
+  const featuredGames = useMemo(() => {
+    return games.filter(g => g.featured);
+  }, [games]);
+
   const filteredGames = useMemo(() => {
     let result = games;
 
@@ -121,7 +125,26 @@ export function CasinoLobby() {
         ))}
       </div>
 
-      {/* Games Grid */}
+      {/* Featured Games */}
+      {featuredGames.length > 0 && !selectedProvider && !search && (
+        <div className="space-y-2">
+          <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+            Populares
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {featuredGames.map((game) => (
+              <GameCard
+                key={`featured-${game.game_code}-${game.provider}`}
+                game={game}
+                onLaunch={handleLaunch}
+                isLaunching={launchingGame === game.game_code}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* All Games Grid */}
       {filteredGames.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <p className="text-lg font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -138,7 +161,13 @@ export function CasinoLobby() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
+        <div className="space-y-2">
+          {featuredGames.length > 0 && !selectedProvider && !search && (
+            <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+              Todos os Jogos
+            </h2>
+          )}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
           {filteredGames.map((game) => (
             <GameCard
               key={`${game.game_code}-${game.provider}`}
@@ -147,6 +176,7 @@ export function CasinoLobby() {
               isLaunching={launchingGame === game.game_code}
             />
           ))}
+          </div>
         </div>
       )}
 

@@ -11,6 +11,7 @@ export interface CasinoGame {
   provider: string;
   image_url: string | null;
   original: boolean;
+  featured: boolean;
 }
 
 export interface CasinoTransaction {
@@ -106,7 +107,8 @@ export async function getGames(
 
     let query = supabase
       .from('playfiver_games_cache')
-      .select('game_code, game_name, provider, image_url, original')
+      .select('game_code, game_name, provider, image_url, original, featured')
+      .order('featured', { ascending: false })
       .order('game_name', { ascending: true });
 
     if (providerFilter) {
