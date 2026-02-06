@@ -328,14 +328,14 @@ export default function RecargaPixPage() {
   if (status === 'PAID') {
     return (
       <PageLayout title="RECARGA PIX">
-        <div className="bg-white min-h-screen p-4">
+        <div className="bg-[#1A1F2B] min-h-screen p-4">
           <div className="text-center py-12">
             <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento Confirmado!</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold text-white mb-2">Pagamento Confirmado!</h2>
+            <p className="text-zinc-400 mb-4">
               Seu depósito de {formatCurrency(paymentData?.valor || 0)} foi processado com sucesso.
             </p>
-            <p className="text-sm text-gray-500 mb-8">Pedido: {paymentData?.orderNumber}</p>
+            <p className="text-sm text-zinc-500 mb-8">Pedido: {paymentData?.orderNumber}</p>
             <div className="space-y-3 max-w-xs mx-auto">
               <button
                 onClick={() => router.push('/')}
@@ -367,24 +367,24 @@ export default function RecargaPixPage() {
 
   return (
     <PageLayout title="RECARGA PIX">
-      <div className="bg-white min-h-screen relative">
+      <div className="bg-[#1A1F2B] min-h-screen relative">
         {/* Loading Overlay */}
         {isGeneratingPix && (
-          <div className="absolute inset-0 z-40 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center min-h-[calc(100vh-7.5rem)]">
+          <div className="absolute inset-0 z-40 bg-[#1A1F2B]/95 backdrop-blur-sm flex flex-col items-center justify-center min-h-[calc(100vh-7.5rem)]">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
-                <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
+                <div className="w-16 h-16 border-4 border-zinc-700/40 rounded-full"></div>
                 <div className="absolute inset-0 w-16 h-16 border-4 border-[#E5A220] rounded-full border-t-transparent animate-spin"></div>
               </div>
-              <p className="text-lg font-semibold text-gray-800">Gerando PIX...</p>
-              <p className="text-sm text-gray-500">Aguarde um momento</p>
+              <p className="text-lg font-semibold text-white">Gerando PIX...</p>
+              <p className="text-sm text-zinc-500">Aguarde um momento</p>
             </div>
           </div>
         )}
         {!paymentData ? (
           <div className="p-4 space-y-6">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400">
                 <AlertCircle className="h-5 w-5 flex-shrink-0" />
                 <span className="text-sm">{error}</span>
               </div>
@@ -414,11 +414,11 @@ export default function RecargaPixPage() {
 
             {/* Amount Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-200 mb-2">
                 Valor da recarga
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">
                   R$
                 </span>
                 <input
@@ -427,15 +427,15 @@ export default function RecargaPixPage() {
                   value={amount}
                   onChange={(e) => handleAmountChange(e.target.value)}
                   placeholder="0,00"
-                  className="w-full rounded-lg border border-gray-300 py-3 pl-12 pr-4 text-lg font-semibold"
+                  className="w-full rounded-lg border border-zinc-700/40 bg-zinc-800/30 py-3 pl-12 pr-4 text-lg font-semibold text-white placeholder-zinc-500"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Valor mínimo: {formatCurrency(depositMin)}</p>
+              <p className="text-xs text-zinc-500 mt-1">Valor mínimo: {formatCurrency(depositMin)}</p>
 
               {/* Bonus Preview */}
               {currentBonus && (
-                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">
+                <div className="mt-2 p-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <p className="text-sm text-green-400">
                     <span className="font-medium">+{currentBonus.percentual}% de bônus:</span>{' '}
                     <span className="font-bold text-green-600">+{formatCurrency(currentBonus.bonus)}</span>
                   </p>
@@ -445,7 +445,7 @@ export default function RecargaPixPage() {
 
             {/* Quick Amounts */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-200 mb-2">
                 Valores rápidos
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -456,7 +456,7 @@ export default function RecargaPixPage() {
                     className={`py-3 rounded-lg font-semibold transition-all active:scale-[0.98] ${
                       amount === value.toString()
                         ? 'bg-[#E5A220] text-white'
-                        : 'bg-gray-100 text-gray-800'
+                        : 'bg-zinc-800/30 text-white'
                     }`}
                   >
                     {formatCurrency(value)}
@@ -475,9 +475,9 @@ export default function RecargaPixPage() {
             </button>
 
             {/* Info */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-2">Informações:</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
+            <div className="bg-zinc-800/30 rounded-lg p-4">
+              <h3 className="font-medium text-white mb-2">Informações:</h3>
+              <ul className="text-sm text-zinc-400 space-y-1">
                 <li>• O depósito é instantâneo via PIX</li>
                 <li>• Valor mínimo: {formatCurrency(depositMin)}</li>
                 <li>• Sem taxa de depósito</li>
@@ -488,7 +488,7 @@ export default function RecargaPixPage() {
         ) : (
           <div className="p-4 space-y-6">
             {/* QR Code */}
-            <div className="flex flex-col items-center py-6 bg-white rounded-xl border border-gray-200">
+            <div className="flex flex-col items-center py-6 bg-[#1A1F2B] rounded-xl border border-zinc-700/40">
               {qrCodeDataUrl ? (
                 <img
                   src={qrCodeDataUrl}
@@ -496,14 +496,14 @@ export default function RecargaPixPage() {
                   className="w-56 h-56 mb-4"
                 />
               ) : (
-                <div className="w-56 h-56 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                  <Clock className="h-12 w-12 text-gray-400 animate-pulse" />
+                <div className="w-56 h-56 bg-zinc-800/30 rounded-lg flex items-center justify-center mb-4">
+                  <Clock className="h-12 w-12 text-zinc-500 animate-pulse" />
                 </div>
               )}
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-white">
                 {formatCurrency(paymentData.valor)}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Pedido: {paymentData.orderNumber}</p>
+              <p className="text-sm text-zinc-500 mt-1">Pedido: {paymentData.orderNumber}</p>
             </div>
 
             {/* Copy Button */}
@@ -527,12 +527,12 @@ export default function RecargaPixPage() {
             </button>
 
             {/* Status indicator */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-yellow-600 animate-pulse" />
+                <Clock className="h-5 w-5 text-amber-400 animate-pulse" />
                 <div>
-                  <p className="font-medium text-yellow-800">Aguardando pagamento...</p>
-                  <p className="text-sm text-yellow-600">
+                  <p className="font-medium text-amber-400">Aguardando pagamento...</p>
+                  <p className="text-sm text-amber-400/70">
                     Escaneie o QR Code ou copie o código para pagar.
                   </p>
                 </div>
@@ -543,7 +543,7 @@ export default function RecargaPixPage() {
             <button
               onClick={handleManualCheck}
               disabled={checking}
-              className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50"
+              className="w-full py-3 bg-zinc-800/30 text-zinc-200 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-zinc-700/50 disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
               {checking ? 'Verificando...' : 'Já paguei, verificar pagamento'}
@@ -552,15 +552,15 @@ export default function RecargaPixPage() {
             {/* New Pix Button */}
             <button
               onClick={handleNewPix}
-              className="w-full rounded-lg border-2 border-gray-300 py-3 font-bold text-gray-700"
+              className="w-full rounded-lg border-2 border-zinc-700/40 py-3 font-bold text-zinc-200"
             >
               Cancelar / Nova Recarga
             </button>
 
             {/* Instructions */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Como pagar:</h3>
-              <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+            <div className="bg-zinc-800/30 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-zinc-200 mb-2">Como pagar:</h3>
+              <ol className="text-sm text-zinc-400 space-y-1 list-decimal list-inside">
                 <li>Abra o app do seu banco</li>
                 <li>Escolha pagar com PIX</li>
                 <li>Escaneie o QR Code ou cole o código copiado</li>

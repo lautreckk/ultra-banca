@@ -22,14 +22,27 @@ export function PageLayout({
 }: PageLayoutProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showSaldo, setShowSaldo] = useState(false);
+  const [showSaldo, setShowSaldo] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('show-balance') === '1';
+    }
+    return false;
+  });
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
 
+  const toggleSaldo = () => {
+    setShowSaldo((prev) => {
+      const next = !prev;
+      localStorage.setItem('show-balance', next ? '1' : '0');
+      return next;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
-      <div className="w-full max-w-md bg-zinc-50 min-h-screen shadow-xl flex flex-col">
-      {/* Header - Dark for contrast */}
-      <header className="sticky top-0 z-40 flex h-12 items-center justify-between bg-zinc-900 px-4">
+    <div className="min-h-screen bg-zinc-950 flex justify-center">
+      <div className="w-full max-w-md min-h-screen shadow-xl flex flex-col" style={{ backgroundColor: '#111318' }}>
+      {/* Header */}
+      <header className="sticky top-0 z-40 flex h-12 items-center justify-between bg-[#1A202C] px-4 pt-safe">
         {showBack ? (
           <button
             onClick={() => router.back()}
@@ -74,28 +87,33 @@ export function PageLayout({
         </button>
       </header>
 
-      {/* Balance Bar - Yellow/Gold */}
-      <div className="flex items-center justify-between bg-[#E5A220] px-4 py-2">
+      {/* Balance Bar */}
+      <div className="flex items-center justify-between border-b border-zinc-700/30 px-4 py-2.5" style={{ backgroundColor: '#1A1F2B' }}>
         <button
           onClick={refresh}
           disabled={loading}
-          className="flex h-8 w-8 items-center justify-center"
+          className="flex h-8 w-8 items-center justify-center rounded-lg active:bg-white/10"
+          aria-label="Atualizar saldo"
         >
           {loading ? (
-            <Loader2 className="h-5 w-5 text-zinc-900 animate-spin" />
+            <Loader2 className="h-5 w-5 text-zinc-400 animate-spin" />
           ) : (
-            <RefreshCw className="h-5 w-5 text-zinc-900" />
+            <RefreshCw className="h-5 w-5 text-zinc-400" />
           )}
         </button>
         <div className="flex items-center gap-2">
-          <span className="font-bold text-zinc-900">
+          <span className="font-bold text-white">
             R$ {showSaldo ? formatCurrencyCompact(saldo) : '*******'} | {showSaldo ? formatCurrencyCompact(saldoBonus) : '*******'}
           </span>
-          <button onClick={() => setShowSaldo(!showSaldo)}>
+          <button
+            onClick={toggleSaldo}
+            className="flex h-8 w-8 items-center justify-center rounded-lg active:bg-white/10"
+            aria-label={showSaldo ? 'Ocultar saldo' : 'Mostrar saldo'}
+          >
             {showSaldo ? (
-              <Eye className="h-5 w-5 text-zinc-900" />
+              <Eye className="h-5 w-5 text-zinc-400" />
             ) : (
-              <EyeOff className="h-5 w-5 text-zinc-900" />
+              <EyeOff className="h-5 w-5 text-zinc-400" />
             )}
           </button>
         </div>

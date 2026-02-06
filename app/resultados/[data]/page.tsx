@@ -44,9 +44,9 @@ export default function SelecionarLoteriaPage() {
 
   return (
     <PageLayout title="SELECIONE A LOTERIA" showBack>
-      <div className="bg-white min-h-screen">
+      <div className="bg-[#1A1F2B] min-h-screen">
         {/* Accordion Groups */}
-        <div className="border border-gray-200 rounded-lg mx-4 mt-4 overflow-hidden">
+        <div className="border border-zinc-700/40 rounded-lg mx-4 mt-4 overflow-hidden">
           {BANCAS.map((banca, index) => {
             const isExpanded = expandedGroups.includes(banca.id);
             const selectedCount = getSelectedCountForGroup(banca.id);
@@ -56,28 +56,28 @@ export default function SelecionarLoteriaPage() {
                 {/* Group Header */}
                 <button
                   onClick={() => toggleGroup(banca.id)}
-                  className={`w-full flex items-center justify-between px-4 py-4 bg-white hover:bg-gray-50 ${
-                    index > 0 ? 'border-t border-gray-200' : ''
+                  className={`w-full flex items-center justify-between px-4 py-4 bg-[#1A1F2B] hover:bg-zinc-700/50 ${
+                    index > 0 ? 'border-t border-zinc-700/40' : ''
                   }`}
                 >
-                  <span className="font-semibold text-gray-900">{banca.nome}</span>
+                  <span className="font-semibold text-white">{banca.nome}</span>
                   <div className="flex items-center gap-2">
                     {selectedCount > 0 && (
-                      <span className="bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      <span className="bg-zinc-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                         {selectedCount}
                       </span>
                     )}
                     {isExpanded ? (
-                      <ChevronUp className="h-5 w-5 text-gray-400" />
+                      <ChevronUp className="h-5 w-5 text-zinc-500" />
                     ) : (
-                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                      <ChevronDown className="h-5 w-5 text-zinc-500" />
                     )}
                   </div>
                 </button>
 
                 {/* Sub-loterias */}
                 {isExpanded && (
-                  <div className="bg-white">
+                  <div className="bg-[#1A1F2B]">
                     {banca.subLoterias.map((sub) => {
                       const isSelected = selectedLoterias.includes(sub.id);
                       const hour = sub.horario.split(':')[0];
@@ -87,18 +87,18 @@ export default function SelecionarLoteriaPage() {
                         <button
                           key={sub.id}
                           onClick={() => toggleLoteria(sub.id)}
-                          className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-100 hover:bg-gray-50"
+                          className="w-full flex items-center gap-3 px-4 py-3 border-t border-zinc-700/40 hover:bg-zinc-700/50"
                         >
                           <div
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                               isSelected
                                 ? 'bg-green-500 border-green-500'
-                                : 'border-gray-300 bg-white'
+                                : 'border-zinc-700/40 bg-zinc-800/30'
                             }`}
                           >
                             {isSelected && <Check className="h-3 w-3 text-white" />}
                           </div>
-                          <span className={`text-sm ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-700'}`}>
+                          <span className={`text-sm ${isSelected ? 'text-white font-medium' : 'text-zinc-200'}`}>
                             {displayName}
                           </span>
                         </button>
@@ -112,7 +112,7 @@ export default function SelecionarLoteriaPage() {
         </div>
 
         {/* Bottom Section */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-dashed border-gray-300 p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2B] border-t border-dashed border-zinc-700/40 p-4">
           <div className="max-w-md mx-auto">
             <button
               onClick={handleAvancar}
@@ -120,7 +120,7 @@ export default function SelecionarLoteriaPage() {
               className={`w-full py-3 rounded-lg font-bold text-white transition-colors ${
                 selectedLoterias.length > 0
                   ? 'bg-[#E5A220]'
-                  : 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-zinc-700 cursor-not-allowed'
               }`}
             >
               AVANÇAR

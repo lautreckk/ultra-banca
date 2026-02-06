@@ -127,7 +127,7 @@ export default function LoteriasPage() {
 
         {/* QUININHA */}
         <Link href="/quininha" className="block">
-          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-[#E5A220] bg-white">
+          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-[#E5A220] bg-[#1A1F2B]">
             <div className="flex items-center gap-1">
               <svg className="h-10 w-10 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="8" r="4" />
@@ -137,7 +137,7 @@ export default function LoteriasPage() {
                 <circle cx="15" cy="20" r="2.5" />
               </svg>
               <div>
-                <p className="text-xl font-bold text-blue-800">QUININHA</p>
+                <p className="text-xl font-bold text-blue-400">QUININHA</p>
                 <p className="text-xs text-blue-600">QUINA</p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function LoteriasPage() {
 
         {/* SENINHA */}
         <Link href="/seninha" className="block">
-          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-gray-300 bg-white">
+          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-zinc-700/40 bg-[#1A1F2B]">
             <div className="flex items-center gap-1">
               <svg className="h-10 w-10 text-green-600" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="8" r="4" />
@@ -156,7 +156,7 @@ export default function LoteriasPage() {
                 <circle cx="15" cy="20" r="2.5" />
               </svg>
               <div>
-                <p className="text-xl font-bold text-green-800">SENINHA</p>
+                <p className="text-xl font-bold text-green-400">SENINHA</p>
                 <p className="text-xs text-green-600">MEGA-SENA</p>
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function LoteriasPage() {
 
         {/* LOTINHA */}
         <Link href="/lotinha" className="block">
-          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-gray-300 bg-white">
+          <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-zinc-700/40 bg-[#1A1F2B]">
             <div className="flex items-center gap-1">
               <svg className="h-10 w-10 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="8" r="4" />
@@ -175,7 +175,7 @@ export default function LoteriasPage() {
                 <circle cx="15" cy="20" r="2.5" />
               </svg>
               <div>
-                <p className="text-xl font-bold text-pink-800">LOTINHA</p>
+                <p className="text-xl font-bold text-pink-400">LOTINHA</p>
                 <p className="text-xs text-pink-600">LOTOFACIL</p>
               </div>
             </div>
@@ -223,9 +223,9 @@ export default function LoteriasPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowModal(false)} />
-          <div className="relative bg-white w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col">
+          <div className="relative bg-[#1A1F2B] w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#1A202C]">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-700/40 bg-[#1A202C]">
               <h2 className="text-lg font-bold text-white">Selecione um Pule</h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -242,7 +242,7 @@ export default function LoteriasPage() {
                   key={bet.id}
                   onClick={() => handleSelectBet(bet)}
                   disabled={selectedBetLoading === bet.id}
-                  className="w-full flex items-center gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 p-4 border-b border-zinc-700/40 hover:bg-zinc-700/50 active:bg-zinc-700/50 transition-colors disabled:opacity-50"
                 >
                   {/* Tipo Badge */}
                   <div className={`${getTipoColor(bet.tipo)} px-2 py-1 rounded text-xs font-bold text-white min-w-[70px] text-center`}>
@@ -252,13 +252,13 @@ export default function LoteriasPage() {
                   {/* Info */}
                   <div className="flex-1 text-left">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900">#{bet.pule}</span>
-                      <span className="text-xs text-gray-500">{formatDate(bet.created_at)}</span>
+                      <span className="font-bold text-white">#{bet.pule}</span>
+                      <span className="text-xs text-zinc-500">{formatDate(bet.created_at)}</span>
                     </div>
-                    <div className="text-sm text-gray-600 mt-0.5">
+                    <div className="text-sm text-zinc-400 mt-0.5">
                       {bet.modalidade.toUpperCase()} - {bet.palpites.length} palpite{bet.palpites.length > 1 ? 's' : ''}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[200px]">
+                    <div className="text-xs text-zinc-500 mt-0.5 truncate max-w-[200px]">
                       {bet.palpites.slice(0, 3).join(', ')}{bet.palpites.length > 3 ? '...' : ''}
                     </div>
                   </div>
@@ -267,9 +267,9 @@ export default function LoteriasPage() {
                   <div className="text-right">
                     <div className="font-bold text-green-600">R$ {formatCurrency(bet.valor_total)}</div>
                     {selectedBetLoading === bet.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-auto mt-1" />
+                      <Loader2 className="h-4 w-4 animate-spin text-zinc-500 ml-auto mt-1" />
                     ) : (
-                      <Repeat className="h-4 w-4 text-gray-400 ml-auto mt-1" />
+                      <Repeat className="h-4 w-4 text-zinc-500 ml-auto mt-1" />
                     )}
                   </div>
                 </button>
@@ -277,8 +277,8 @@ export default function LoteriasPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
-              <p className="text-xs text-gray-500 text-center">
+            <div className="p-4 border-t border-zinc-700/40 bg-zinc-800/30">
+              <p className="text-xs text-zinc-500 text-center">
                 Mostrando os últimos {recentBets.length} pules
               </p>
             </div>

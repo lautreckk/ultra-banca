@@ -19,12 +19,12 @@ interface Saque {
 }
 
 const statusColors: Record<string, string> = {
-  PENDING: 'text-amber-600 bg-amber-50',
-  PROCESSING: 'text-blue-600 bg-blue-50',
-  PAID: 'text-green-600 bg-green-50',
-  FAILED: 'text-red-600 bg-red-50',
-  REJECTED: 'text-red-600 bg-red-50',
-  CANCELLED: 'text-gray-600 bg-gray-50',
+  PENDING: 'text-amber-400 bg-amber-500/10',
+  PROCESSING: 'text-blue-400 bg-blue-500/10',
+  PAID: 'text-green-400 bg-green-500/10',
+  FAILED: 'text-red-400 bg-red-500/10',
+  REJECTED: 'text-red-400 bg-red-500/10',
+  CANCELLED: 'text-zinc-400 bg-zinc-800/30',
 };
 
 const statusLabels: Record<string, string> = {
@@ -113,26 +113,26 @@ export default function SaquesPage() {
 
   return (
     <PageLayout title="SAQUES">
-      <div className="bg-white min-h-screen">
+      <div className="bg-[#1A1F2B] min-h-screen">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+            <Loader2 className="h-8 w-8 text-zinc-500 animate-spin" />
           </div>
         ) : saques.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
-            <Inbox className="h-16 w-16 text-gray-300 mb-4" />
-            <p className="text-gray-500 text-center">
+            <Inbox className="h-16 w-16 text-zinc-600 mb-4" />
+            <p className="text-zinc-500 text-center">
               Você ainda não realizou nenhum saque.
             </p>
           </div>
         ) : (
           <div>
             {saques.map((saque) => (
-              <div key={saque.id} className="border-b border-gray-200 px-4 py-4">
+              <div key={saque.id} className="border-b border-zinc-700/40 px-4 py-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-white">
                         {keyTypeLabels[saque.tipo_chave] || saque.tipo_chave}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[saque.status] || 'text-gray-600 bg-gray-50'}`}>

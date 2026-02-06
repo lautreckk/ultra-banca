@@ -17,15 +17,15 @@ export default function ResultadosPage() {
 
   return (
     <PageLayout title="CONSULTAR RESULTADOS">
-      <div className="divide-y divide-gray-200 bg-white">
+      <div className="divide-y divide-zinc-700/30 bg-[#1A1F2B]">
         {dates.map((date) => (
           <Link
             key={date.param}
             href={`/resultados/${date.param}`}
-            className="flex items-center justify-between px-4 py-4 active:bg-gray-50"
+            className="flex items-center justify-between px-4 py-4 active:bg-zinc-700/50"
           >
-            <span className="text-gray-800">{date.display}</span>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <span className="text-white">{date.display}</span>
+            <ChevronRight className="h-5 w-5 text-zinc-500" />
           </Link>
         ))}
       </div>

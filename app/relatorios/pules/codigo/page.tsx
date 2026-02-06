@@ -21,7 +21,7 @@ export default function PuleCodigoPage() {
       <div className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-medium text-zinc-200">
               Codigo da Pule
             </label>
             <div className="relative">
@@ -30,9 +30,9 @@ export default function PuleCodigoPage() {
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value.toUpperCase())}
                 placeholder="Digite o codigo da pule"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-gray-800 placeholder-gray-400 focus:border-[#E5A220] focus:outline-none focus:ring-2 focus:ring-[#E5A220]/20"
+                className="w-full rounded-lg border border-zinc-700/40 bg-[#1A1F2B] px-4 py-3 pr-12 text-white placeholder-zinc-500 focus:border-[#E5A220] focus:outline-none focus:ring-2 focus:ring-[#E5A220]/20"
               />
-              <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
             </div>
           </div>
 

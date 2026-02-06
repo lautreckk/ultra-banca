@@ -37,22 +37,22 @@ export default function NotificacoesPage() {
   return (
     <PageLayout title="NOTIFICACOES">
       <div className="p-4 space-y-6">
-        <div className="bg-white rounded-lg p-4 shadow-sm space-y-4">
+        <div className="bg-[#1A1F2B] rounded-lg p-4 shadow-sm space-y-4">
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-[#E5A220] rounded-full flex items-center justify-center">
               <Bell className="h-8 w-8 text-white" />
             </div>
           </div>
 
-          <h2 className="text-lg font-bold text-gray-800 text-center">
+          <h2 className="text-lg font-bold text-white text-center">
             Ative as Notificacoes
           </h2>
 
-          <p className="text-gray-600 text-center text-sm">
+          <p className="text-zinc-400 text-center text-sm">
             Receba alertas importantes sobre:
           </p>
 
-          <ul className="space-y-2 text-gray-700">
+          <ul className="space-y-2 text-zinc-200">
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
               <span className="text-sm">Premios e resultados das apostas</span>

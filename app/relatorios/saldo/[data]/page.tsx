@@ -142,7 +142,7 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
     return (
       <PageLayout title="SALDO" showBack>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
         </div>
       </PageLayout>
     );
@@ -157,20 +157,20 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* VENDAS Section */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">VENDAS</span>
           </div>
-          <div className="divide-y divide-gray-100 px-4">
+          <div className="divide-y divide-zinc-700/30 px-4">
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Total</span>
-              <span className="font-semibold text-gray-800">
+              <span className="text-zinc-400">Total</span>
+              <span className="font-semibold text-white">
                 {formatCurrency(saldoData?.vendas.total || 0)}
               </span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Quantidade</span>
-              <span className="font-semibold text-gray-800">
+              <span className="text-zinc-400">Quantidade</span>
+              <span className="font-semibold text-white">
                 {saldoData?.vendas.quantidade || 0} apostas
               </span>
             </div>
@@ -178,19 +178,19 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* CREDITO/DEBITO Section */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">CREDITO / DEBITO</span>
           </div>
-          <div className="divide-y divide-gray-100 px-4">
+          <div className="divide-y divide-zinc-700/30 px-4">
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Creditos (depositos)</span>
+              <span className="text-zinc-400">Creditos (depositos)</span>
               <span className="font-semibold text-green-600">
                 +{formatCurrency(saldoData?.creditos || 0)}
               </span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Debitos (apostas)</span>
+              <span className="text-zinc-400">Debitos (apostas)</span>
               <span className="font-semibold text-red-600">
                 -{formatCurrency(saldoData?.debitos || 0)}
               </span>
@@ -199,19 +199,19 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* DETALHES Section */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">DETALHES</span>
           </div>
-          <div className="divide-y divide-gray-100 px-4">
+          <div className="divide-y divide-zinc-700/30 px-4">
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Premios ganhos</span>
+              <span className="text-zinc-400">Premios ganhos</span>
               <span className="font-semibold text-green-600">
                 +{formatCurrency(saldoData?.premios || 0)}
               </span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Saques realizados</span>
+              <span className="text-zinc-400">Saques realizados</span>
               <span className="font-semibold text-red-600">
                 -{formatCurrency(saldoData?.saques || 0)}
               </span>
@@ -220,13 +220,13 @@ Resultado: ${formatCurrency(saldoData.saldoFinal)}
         </div>
 
         {/* MOVIMENTACAO DIA Section */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">MOVIMENTACAO DIA</span>
           </div>
           <div className="px-4 py-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Resultado</span>
+              <span className="text-zinc-400">Resultado</span>
               <span className={`text-xl font-bold ${(saldoData?.saldoFinal || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(saldoData?.saldoFinal || 0)}
               </span>

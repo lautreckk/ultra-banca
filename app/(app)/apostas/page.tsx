@@ -40,8 +40,8 @@ export default function ApostasPage() {
   return (
     <div className="py-6">
       <div className="px-4 mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Suas Apostas</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-xl font-bold text-white">Suas Apostas</h1>
+        <p className="text-sm text-zinc-500 mt-1">
           {items.length} {items.length === 1 ? 'aposta' : 'apostas'} no carrinho
         </p>
       </div>
@@ -60,7 +60,7 @@ export default function ApostasPage() {
       {/* Total */}
       <div className="mt-6 border-t border-dashed border-[var(--color-border)] pt-4 mx-4">
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-gray-900">Total</span>
+          <span className="text-lg font-bold text-white">Total</span>
           <span className="text-xl font-bold text-[var(--color-primary)]">
             {formatCurrency(total)}
           </span>

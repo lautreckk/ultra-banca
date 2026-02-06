@@ -63,13 +63,13 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'premiada':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500/10 text-green-400';
       case 'cancelada':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500/10 text-red-400';
       case 'pendente':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-500/10 text-yellow-400';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-zinc-800/30 text-white';
     }
   };
 
@@ -92,7 +92,7 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
     return (
       <PageLayout title="PULES" showBack>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
         </div>
       </PageLayout>
     );
@@ -108,20 +108,20 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
 
         {/* Resumo */}
         <div className="flex gap-3">
-          <div className="flex-1 rounded-lg bg-green-100 px-4 py-3 text-center">
-            <span className="text-2xl font-bold text-green-800">{resumo.registradas}</span>
-            <p className="text-sm text-green-700">Registradas</p>
+          <div className="flex-1 rounded-lg bg-green-500/10 px-4 py-3 text-center">
+            <span className="text-2xl font-bold text-green-400">{resumo.registradas}</span>
+            <p className="text-sm text-green-400">Registradas</p>
           </div>
-          <div className="flex-1 rounded-lg bg-red-100 px-4 py-3 text-center">
-            <span className="text-2xl font-bold text-red-800">{resumo.canceladas}</span>
-            <p className="text-sm text-red-700">Canceladas</p>
+          <div className="flex-1 rounded-lg bg-red-500/10 px-4 py-3 text-center">
+            <span className="text-2xl font-bold text-red-400">{resumo.canceladas}</span>
+            <p className="text-sm text-red-400">Canceladas</p>
           </div>
         </div>
 
         {/* Lista de Pules */}
         {apostas.length === 0 ? (
-          <div className="rounded-lg bg-white px-4 py-8 text-center">
-            <p className="text-gray-500">Nenhuma pule encontrada nesta data</p>
+          <div className="rounded-lg bg-[#1A1F2B] px-4 py-8 text-center">
+            <p className="text-zinc-500">Nenhuma pule encontrada nesta data</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -129,30 +129,30 @@ export default function PulesDataListPage({ params }: { params: Promise<{ data: 
               <Link
                 key={aposta.id}
                 href={`/relatorios/pules/${aposta.pule || aposta.id}`}
-                className="block overflow-hidden rounded-lg bg-white shadow-sm active:bg-gray-50"
+                className="block overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm active:bg-zinc-700/50"
               >
                 <div className="flex items-center justify-between px-4 py-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-800">
+                      <span className="font-bold text-white">
                         PULE #{aposta.pule || aposta.id.slice(0, 8).toUpperCase()}
                       </span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(aposta.status)}`}>
                         {getStatusLabel(aposta.status)}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-zinc-500">
                       {aposta.tipo.toUpperCase()} - {aposta.modalidade.toUpperCase()}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-zinc-500">
                       {new Date(aposta.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} - {aposta.horarios?.join(', ') || 'N/A'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-800">
+                    <span className="font-bold text-white">
                       {formatCurrency(aposta.valor_total)}
                     </span>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                    <ChevronRight className="h-5 w-5 text-zinc-500" />
                   </div>
                 </div>
               </Link>

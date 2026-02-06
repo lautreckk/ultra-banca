@@ -214,7 +214,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
     return (
       <PageLayout title="PULE" showBack>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
         </div>
       </PageLayout>
     );
@@ -225,7 +225,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
       <PageLayout title="PULE" showBack>
         <div className="flex flex-col items-center justify-center py-20">
           <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
-          <p className="text-gray-500">{error || 'Pule nao encontrada'}</p>
+          <p className="text-zinc-500">{error || 'Pule nao encontrada'}</p>
         </div>
       </PageLayout>
     );
@@ -234,8 +234,8 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
   return (
     <PageLayout title="PULE" showBack>
       <div className="space-y-4 p-4">
-        {/* Header com código e status */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        {/* Header com codigo e status */}
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className={`px-4 py-3 ${getStatusColor(aposta.status)}`}>
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold text-white">
@@ -246,32 +246,32 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               </span>
             </div>
           </div>
-          <div className="px-4 py-3 text-center text-sm text-gray-500">
+          <div className="px-4 py-3 text-center text-sm text-zinc-500">
             Criada em {new Date(aposta.created_at).toLocaleString('pt-BR')}
           </div>
         </div>
 
-        {/* Informações do Jogo */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        {/* Informacoes do Jogo */}
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">INFORMACOES DO JOGO</span>
           </div>
-          <div className="divide-y divide-gray-100 px-4">
+          <div className="divide-y divide-zinc-700/30 px-4">
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Tipo</span>
-              <span className="font-semibold text-gray-800">{aposta.tipo.toUpperCase()}</span>
+              <span className="text-zinc-400">Tipo</span>
+              <span className="font-semibold text-white">{aposta.tipo.toUpperCase()}</span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Modalidade</span>
-              <span className="font-semibold text-gray-800">{aposta.modalidade.toUpperCase()}</span>
+              <span className="text-zinc-400">Modalidade</span>
+              <span className="font-semibold text-white">{aposta.modalidade.toUpperCase()}</span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Colocacao</span>
-              <span className="font-semibold text-gray-800">{aposta.colocacao}</span>
+              <span className="text-zinc-400">Colocacao</span>
+              <span className="font-semibold text-white">{aposta.colocacao}</span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Data do Jogo</span>
-              <span className="font-semibold text-gray-800">
+              <span className="text-zinc-400">Data do Jogo</span>
+              <span className="font-semibold text-white">
                 {new Date(aposta.data_jogo + 'T12:00:00').toLocaleDateString('pt-BR')}
               </span>
             </div>
@@ -279,7 +279,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         </div>
 
         {/* Palpites */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">PALPITES</span>
           </div>
@@ -288,7 +288,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               {aposta.palpites.map((palpite, index) => (
                 <span
                   key={index}
-                  className="rounded-lg bg-zinc-100 px-3 py-2 font-mono font-semibold text-zinc-800"
+                  className="rounded-lg bg-zinc-800/30 px-3 py-2 font-mono font-semibold text-white"
                 >
                   {palpite}
                 </span>
@@ -297,8 +297,8 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
           </div>
         </div>
 
-        {/* Horários */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        {/* Horarios */}
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">HORARIOS</span>
           </div>
@@ -317,24 +317,24 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
         </div>
 
         {/* Valores */}
-        <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg bg-[#1A1F2B] shadow-sm">
           <div className="bg-[#E5A220] px-4 py-2">
             <span className="font-bold text-zinc-900">VALORES</span>
           </div>
-          <div className="divide-y divide-gray-100 px-4">
+          <div className="divide-y divide-zinc-700/30 px-4">
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Valor Unitario</span>
-              <span className="font-semibold text-gray-800">
+              <span className="text-zinc-400">Valor Unitario</span>
+              <span className="font-semibold text-white">
                 {formatCurrency(aposta.valor_unitario)}
               </span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Multiplicador</span>
-              <span className="font-semibold text-gray-800">{aposta.multiplicador}x</span>
+              <span className="text-zinc-400">Multiplicador</span>
+              <span className="font-semibold text-white">{aposta.multiplicador}x</span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-gray-600">Valor Total</span>
-              <span className="text-lg font-bold text-gray-800">
+              <span className="text-zinc-400">Valor Total</span>
+              <span className="text-lg font-bold text-white">
                 {formatCurrency(aposta.valor_total)}
               </span>
             </div>
@@ -367,13 +367,13 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
                   <span className="font-semibold">Cancelar Aposta</span>
                 </button>
               ) : (
-                <div className="rounded-lg bg-zinc-100 p-3">
+                <div className="rounded-lg bg-zinc-800/30 p-3">
                   <div className="flex items-start gap-2">
                     <Clock className="h-5 w-5 text-zinc-500 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-zinc-700">Cancelamento indisponivel</p>
+                      <p className="text-sm font-medium text-zinc-200">Cancelamento indisponivel</p>
                       <p className="text-xs text-zinc-500">{cancelCheck.reason}</p>
-                      <p className="text-xs text-zinc-400 mt-1">Prazo: ate 1 hora antes do sorteio</p>
+                      <p className="text-xs text-zinc-500 mt-1">Prazo: ate 1 hora antes do sorteio</p>
                     </div>
                   </div>
                 </div>
@@ -395,20 +395,20 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
       {/* Cancel Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-sm rounded-xl bg-[#1A1F2B] p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
                 <XCircle className="h-6 w-6 text-red-500" />
               </div>
               <div>
-                <h3 className="font-bold text-zinc-900">Cancelar Aposta?</h3>
+                <h3 className="font-bold text-white">Cancelar Aposta?</h3>
                 <p className="text-sm text-zinc-500">Esta acao nao pode ser desfeita</p>
               </div>
             </div>
 
-            <div className="mb-4 rounded-lg bg-zinc-100 p-3">
-              <p className="text-sm text-zinc-600">
-                O valor de <strong className="text-zinc-900">{formatCurrency(aposta?.valor_total || 0)}</strong> sera
+            <div className="mb-4 rounded-lg bg-zinc-800/30 p-3">
+              <p className="text-sm text-zinc-400">
+                O valor de <strong className="text-white">{formatCurrency(aposta?.valor_total || 0)}</strong> sera
                 estornado para seu saldo.
               </p>
             </div>
@@ -417,7 +417,7 @@ ${aposta.premio_valor ? `Premio: ${formatCurrency(aposta.premio_valor)}` : ''}
               <button
                 onClick={() => setShowCancelConfirm(false)}
                 disabled={cancelling}
-                className="flex-1 rounded-lg bg-zinc-200 py-3 font-semibold text-zinc-700 active:bg-zinc-300 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-zinc-700 py-3 font-semibold text-zinc-200 active:bg-zinc-600 disabled:opacity-50"
               >
                 Voltar
               </button>

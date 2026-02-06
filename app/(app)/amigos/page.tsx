@@ -93,7 +93,7 @@ export default function AmigosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-zinc-800/30">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-black px-4">
         <div className="flex h-12 items-center justify-between">
@@ -108,21 +108,21 @@ export default function AmigosPage() {
       <div className="p-4 space-y-4">
         {/* Título e Descrição */}
         <div className="space-y-2">
-          <h1 className="text-xl font-bold text-gray-800">Rede de Amigos (%)</h1>
-          <p className="text-gray-600">Aqui você indica e ganha também!</p>
-          <p className="text-gray-600">Indique um amigo e ganhe 1% do valor apostado por ele pra sempre!</p>
+          <h1 className="text-xl font-bold text-white">Rede de Amigos (%)</h1>
+          <p className="text-zinc-400">Aqui você indica e ganha também!</p>
+          <p className="text-zinc-400">Indique um amigo e ganhe 1% do valor apostado por ele pra sempre!</p>
         </div>
 
         {/* Link de Convite */}
-        <div className="border-t border-gray-200 pt-4">
+        <div className="border-t border-zinc-700/40 pt-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Convidar:</span>
+            <span className="text-sm text-zinc-500">Convidar:</span>
             <button
               onClick={handleCopyLink}
-              className="flex flex-1 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2"
+              className="flex flex-1 items-center gap-2 rounded-lg border border-zinc-700/40 bg-[#1A1F2B] px-3 py-2"
             >
-              <span className="flex-1 truncate text-left text-sm text-gray-600">{inviteUrl}</span>
-              <Link2 className="h-4 w-4 text-gray-400" />
+              <span className="flex-1 truncate text-left text-sm text-zinc-400">{inviteUrl}</span>
+              <Link2 className="h-4 w-4 text-zinc-500" />
             </button>
           </div>
           {copied && (
@@ -131,20 +131,20 @@ export default function AmigosPage() {
         </div>
 
         {/* Status de Amigos */}
-        <div className="border-t border-gray-200 pt-4">
+        <div className="border-t border-zinc-700/40 pt-4">
           {amigos.length === 0 ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-gray-400" />
-                <span className="font-semibold text-gray-800">Você ainda não indicou amigos!</span>
+                <Users className="h-5 w-5 text-zinc-500" />
+                <span className="font-semibold text-white">Você ainda não indicou amigos!</span>
               </div>
-              <p className="text-gray-600">
+              <p className="text-zinc-400">
                 Quanto mais amigos você indicar, maiores serão os seus ganhos!
               </p>
-              <p className="text-gray-600">
+              <p className="text-zinc-400">
                 Lembre-se, para cada amigo indicado, você ganha 1% sobre as pules deles.
               </p>
-              <p className="font-semibold text-gray-800">
+              <p className="font-semibold text-white">
                 Que tal começar agora? Compartilhe seu link de indicação e veja seus ganhos crescerem!
               </p>
             </div>
@@ -155,7 +155,7 @@ export default function AmigosPage() {
                 <div className="rounded-lg bg-[#1A202C] p-4 text-center">
                   <Users className="mx-auto h-8 w-8 text-white" />
                   <p className="mt-2 text-2xl font-bold text-white">{amigos.length}</p>
-                  <p className="text-sm text-gray-400">Amigos</p>
+                  <p className="text-sm text-zinc-500">Amigos</p>
                 </div>
                 <div className="rounded-lg bg-[#D4A84B] p-4 text-center">
                   <DollarSign className="mx-auto h-8 w-8 text-white" />
@@ -168,13 +168,13 @@ export default function AmigosPage() {
 
               {/* Lista de Amigos */}
               <div>
-                <h3 className="mb-2 font-semibold text-gray-800">Seus amigos indicados:</h3>
+                <h3 className="mb-2 font-semibold text-white">Seus amigos indicados:</h3>
                 <div className="space-y-2">
                   {amigos.map((amigo) => (
-                    <div key={amigo.id} className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm">
+                    <div key={amigo.id} className="flex items-center justify-between rounded-lg bg-[#1A1F2B] p-3 shadow-sm">
                       <div>
-                        <p className="font-medium text-gray-800">{amigo.nome}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="font-medium text-white">{amigo.nome}</p>
+                        <p className="text-xs text-zinc-500">
                           Desde {new Date(amigo.created_at).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
@@ -186,13 +186,13 @@ export default function AmigosPage() {
               {/* Últimas Comissões */}
               {comissoes.length > 0 && (
                 <div>
-                  <h3 className="mb-2 font-semibold text-gray-800">Últimas comissões:</h3>
+                  <h3 className="mb-2 font-semibold text-white">Últimas comissões:</h3>
                   <div className="space-y-2">
                     {comissoes.map((comissao) => (
-                      <div key={comissao.id} className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm">
+                      <div key={comissao.id} className="flex items-center justify-between rounded-lg bg-[#1A1F2B] p-3 shadow-sm">
                         <div>
-                          <p className="font-medium text-gray-800">{comissao.indicado?.nome}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-medium text-white">{comissao.indicado?.nome}</p>
+                          <p className="text-xs text-zinc-500">
                             {new Date(comissao.created_at).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
@@ -209,14 +209,14 @@ export default function AmigosPage() {
         </div>
 
         {/* Link inferior */}
-        <div className="border-t border-gray-200 pt-4">
-          <p className="mb-2 text-sm text-gray-500">Clique para copiar:</p>
+        <div className="border-t border-zinc-700/40 pt-4">
+          <p className="mb-2 text-sm text-zinc-500">Clique para copiar:</p>
           <button
             onClick={handleCopyLink}
-            className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2"
+            className="flex w-full items-center gap-2 rounded-lg border border-zinc-700/40 bg-[#1A1F2B] px-3 py-2"
           >
-            <span className="flex-1 truncate text-left text-sm text-gray-600">{inviteUrl}</span>
-            <Link2 className="h-4 w-4 text-gray-400" />
+            <span className="flex-1 truncate text-left text-sm text-zinc-400">{inviteUrl}</span>
+            <Link2 className="h-4 w-4 text-zinc-500" />
           </button>
         </div>
       </div>

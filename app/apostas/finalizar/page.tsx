@@ -175,8 +175,8 @@ export default function FinalizarApostaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 flex justify-center">
-      <div className="w-full max-w-md bg-zinc-50 min-h-screen shadow-xl flex flex-col">
+    <div className="min-h-screen bg-[#111318] flex justify-center">
+      <div className="w-full max-w-md bg-zinc-800/30 min-h-screen shadow-xl flex flex-col">
         <BetHeader title="FINALIZAR APOSTA" onBack={() => router.back()} />
 
         {/* Success Toast */}
@@ -209,11 +209,11 @@ export default function FinalizarApostaPage() {
           </div>
         )}
 
-        <div className="flex-1 bg-gray-100 p-4">
+        <div className="flex-1 bg-zinc-800/30 p-4">
           {/* Receipt Card */}
-          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4">
+          <div className="bg-[#1A1F2B] rounded-lg border-2 border-dashed border-zinc-700/40 p-4">
             {/* Pule # */}
-            <div className="text-sm font-medium text-gray-700 mb-2">
+            <div className="text-sm font-medium text-zinc-200 mb-2">
               {puleNumbers.length > 0
                 ? `PULE #${puleNumbers.join(', #')}`
                 : `${items.length} ${items.length > 1 ? 'APOSTAS' : 'APOSTA'}`}
@@ -221,7 +221,7 @@ export default function FinalizarApostaPage() {
 
             {/* Banca Name & Logo */}
             <div className="text-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-3">{config.site_name.toUpperCase()}</h2>
+              <h2 className="text-xl font-bold text-white mb-3">{config.site_name.toUpperCase()}</h2>
               <div className="flex justify-center">
                 {config.logo_url ? (
                   <Image
@@ -242,21 +242,21 @@ export default function FinalizarApostaPage() {
 
             {/* Vale Date */}
             <div className="flex items-center my-4">
-              <div className="flex-1 border-t border-gray-300" />
-              <span className="px-3 text-sm font-medium text-gray-700">
+              <div className="flex-1 border-t border-zinc-700/40" />
+              <span className="px-3 text-sm font-medium text-zinc-200">
                 VALE: {formattedDate}
               </span>
-              <div className="flex-1 border-t border-gray-300" />
+              <div className="flex-1 border-t border-zinc-700/40" />
             </div>
 
             {/* Vendedor & Status */}
             <div className="flex justify-between mb-4">
               <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase">Vendedor</div>
-                <div className="text-lg font-bold text-gray-900">979536</div>
+                <div className="text-xs text-zinc-500 uppercase">Vendedor</div>
+                <div className="text-lg font-bold text-white">979536</div>
               </div>
               <div className="text-center">
-                <div className="text-xs text-gray-500 uppercase">Status</div>
+                <div className="text-xs text-zinc-500 uppercase">Status</div>
                 <div className={`text-lg font-bold ${isConfirmed ? 'text-green-600' : 'text-red-500'}`}>
                   {isConfirmed ? 'REGISTRADA' : 'PENDENTE'}
                 </div>
@@ -264,7 +264,7 @@ export default function FinalizarApostaPage() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-300 my-4" />
+            <div className="border-t border-zinc-700/40 my-4" />
 
             {/* Selected Lotteries */}
             <div className="mb-4 space-y-1">
@@ -274,12 +274,12 @@ export default function FinalizarApostaPage() {
                 return (
                   <div key={loteriaId} className="flex items-center justify-between text-sm py-1">
                     <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-gray-700 rounded-full flex-shrink-0" />
-                      <span className={isConfirmed ? 'text-green-600 font-medium' : 'text-gray-700'}>
+                      <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full flex-shrink-0" />
+                      <span className={isConfirmed ? 'text-green-600 font-medium' : 'text-zinc-200'}>
                         {loteria?.nome || loteriaId} {loteria?.horario}
                       </span>
                       {!isConfirmed && custoInfo && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-zinc-500">
                           (R$ {custoInfo.custo.toFixed(2).replace('.', ',')})
                         </span>
                       )}
@@ -291,7 +291,7 @@ export default function FinalizarApostaPage() {
                       {!isConfirmed && todasLoterias.length > 1 && (
                         <button
                           onClick={() => removeLoteriaFromAll(loteriaId)}
-                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-500/100/10 rounded-full transition-colors"
                           title={`Remover ${loteria?.nome || loteriaId}`}
                         >
                           <MinusCircle className="h-4 w-4" />
@@ -302,8 +302,8 @@ export default function FinalizarApostaPage() {
                 );
               })}
               {todasLoterias.length === 0 && (
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="w-1.5 h-1.5 bg-gray-700 rounded-full" />
+                <div className="flex items-center gap-2 text-sm text-zinc-200">
+                  <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full" />
                   <span>Todas as loterias</span>
                 </div>
               )}
@@ -311,9 +311,9 @@ export default function FinalizarApostaPage() {
 
             {/* Modalidades Header */}
             <div className="flex items-center my-4">
-              <div className="flex-1 border-t border-gray-300" />
-              <span className="px-3 text-sm font-medium text-gray-700">MODALIDADES</span>
-              <div className="flex-1 border-t border-gray-300" />
+              <div className="flex-1 border-t border-zinc-700/40" />
+              <span className="px-3 text-sm font-medium text-zinc-200">MODALIDADES</span>
+              <div className="flex-1 border-t border-zinc-700/40" />
             </div>
 
             {/* ALL ITEMS - Loop through each bet */}
@@ -324,16 +324,16 @@ export default function FinalizarApostaPage() {
               const possivelPremio = item.valorUnitario * item.multiplicador;
 
               return (
-                <div key={item.id || index} className={index > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}>
+                <div key={item.id || index} className={index > 0 ? 'mt-4 pt-4 border-t border-zinc-700/40' : ''}>
                   {/* Modalidade & Colocacao */}
                   <div className="mb-3 flex items-center justify-between">
-                    <div className="font-bold text-gray-900">
+                    <div className="font-bold text-white">
                       {modalidadeInfo?.nome || item.modalidade.toUpperCase()} - {colocacaoInfo?.nome || item.colocacao.toUpperCase()}
                     </div>
                     {!isConfirmed && items.length > 1 && (
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-red-500 hover:bg-red-500/100/10 rounded-lg transition-colors"
                         title="Remover aposta"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -346,7 +346,7 @@ export default function FinalizarApostaPage() {
                     {item.palpites.map((palpite) => (
                       <span
                         key={palpite}
-                        className="inline-flex items-center px-2 py-1 border border-gray-400 rounded text-sm font-medium text-gray-900"
+                        className="inline-flex items-center px-2 py-1 border border-zinc-600 rounded text-sm font-medium text-white"
                       >
                         {palpite}
                       </span>
@@ -355,7 +355,7 @@ export default function FinalizarApostaPage() {
 
                   {/* Value & Prize */}
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-zinc-200">
                       R$ {valorTotalItem.toFixed(2).replace('.', ',')} ({item.valorUnitario.toFixed(2).replace('.', ',')} / CADA)
                     </span>
                     <span className="text-sm text-green-600 font-medium">
@@ -367,20 +367,20 @@ export default function FinalizarApostaPage() {
             })}
 
             {/* Dashed Separator */}
-            <div className="border-t-2 border-dashed border-gray-300 my-4" />
+            <div className="border-t-2 border-dashed border-zinc-700/40 my-4" />
 
             {/* Total */}
             <div className="text-center py-2">
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-white">
                 TOTAL: R$ {valorTotalGeral.toFixed(2).replace('.', ',')}
               </span>
               {items.length > 1 && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-zinc-500 mt-1">
                   ({items.length} apostas)
                 </p>
               )}
               {todasLoterias.length > 1 && (
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-zinc-500 mt-1">
                   {todasLoterias.length} loterias selecionadas
                 </p>
               )}
@@ -388,10 +388,10 @@ export default function FinalizarApostaPage() {
 
             {/* Balance Info */}
             {!isConfirmed && !balanceLoading && (
-              <div className={`mx-2 my-3 p-3 rounded-lg border ${saldoInsuficiente ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+              <div className={`mx-2 my-3 p-3 rounded-lg border ${saldoInsuficiente ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <Wallet className={`h-4 w-4 ${saldoInsuficiente ? 'text-red-500' : 'text-green-600'}`} />
-                  <span className={`text-sm font-semibold ${saldoInsuficiente ? 'text-red-700' : 'text-green-700'}`}>
+                  <span className={`text-sm font-semibold ${saldoInsuficiente ? 'text-red-400' : 'text-green-400'}`}>
                     Saldo disponivel: R$ {saldoDisponivel.toFixed(2).replace('.', ',')}
                   </span>
                 </div>
@@ -399,7 +399,7 @@ export default function FinalizarApostaPage() {
                   <div className="mt-2 space-y-1">
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-red-700">
+                      <div className="text-sm text-red-400">
                         <p className="font-semibold">Saldo insuficiente!</p>
                         <p>
                           Voce precisa de <strong>R$ {valorTotalGeral.toFixed(2).replace('.', ',')}</strong> mas tem apenas{' '}
@@ -410,7 +410,7 @@ export default function FinalizarApostaPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="bg-red-100 rounded p-2 mt-2">
+                    <div className="bg-red-500/15 rounded p-2 mt-2">
                       <p className="text-xs text-red-600 font-medium">
                         Para continuar, voce pode:
                       </p>
@@ -431,14 +431,14 @@ export default function FinalizarApostaPage() {
             )}
 
             {/* Dashed Separator */}
-            <div className="border-t-2 border-dashed border-gray-300 my-4" />
+            <div className="border-t-2 border-dashed border-zinc-700/40 my-4" />
 
             {/* Confirmation message (only after confirmed) */}
             {isConfirmed && (
               <div className="text-center py-2">
-                <p className="text-sm text-gray-600">Confira suas apostas.</p>
-                <p className="text-sm text-gray-600">Reclame no maximo em 3 dias.</p>
-                <p className="text-sm font-bold text-gray-900 mt-3">{confirmationTime}</p>
+                <p className="text-sm text-zinc-400">Confira suas apostas.</p>
+                <p className="text-sm text-zinc-400">Reclame no maximo em 3 dias.</p>
+                <p className="text-sm font-bold text-white mt-3">{confirmationTime}</p>
                 {novoSaldo !== null && (
                   <p className="text-sm text-green-600 mt-2">
                     Novo saldo: R$ {novoSaldo.toFixed(2).replace('.', ',')}
@@ -449,7 +449,7 @@ export default function FinalizarApostaPage() {
           </div>
 
           {/* Dashed separator outside card */}
-          <div className="border-t-2 border-dashed border-gray-300 my-6" />
+          <div className="border-t-2 border-dashed border-zinc-700/40 my-6" />
 
           {/* Action Buttons */}
           {!isConfirmed ? (

@@ -375,10 +375,10 @@ export default function ResultadoVerPage() {
   if (loading) {
     return (
       <PageLayout title="RESULTADO" showBack>
-        <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="bg-[#1A1F2B] min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-[#E5A220]" />
-            <p className="text-gray-600">Carregando resultados...</p>
+            <p className="text-zinc-400">Carregando resultados...</p>
           </div>
         </div>
       </PageLayout>
@@ -387,26 +387,26 @@ export default function ResultadoVerPage() {
 
   return (
     <PageLayout title="RESULTADO" showBack>
-      <div className="bg-white min-h-screen">
+      <div className="bg-[#1A1F2B] min-h-screen">
         {/* Header Info */}
-        <div className="px-4 py-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-center text-gray-900 mb-4">{config.site_name.toUpperCase()}</h1>
+        <div className="px-4 py-4 border-b border-zinc-700/40">
+          <h1 className="text-xl font-bold text-center text-white mb-4">{config.site_name.toUpperCase()}</h1>
 
           <div className="flex justify-between text-sm mb-2">
             <div>
-              <p className="text-gray-500 text-xs uppercase">Vendedor</p>
-              <p className="font-medium text-gray-900">{formattedDate}</p>
+              <p className="text-zinc-500 text-xs uppercase">Vendedor</p>
+              <p className="font-medium text-white">{formattedDate}</p>
             </div>
             <div className="text-right">
-              <p className="text-gray-500">979536</p>
-              <p className="font-medium text-gray-900">{currentTime}</p>
+              <p className="text-zinc-500">979536</p>
+              <p className="font-medium text-white">{currentTime}</p>
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-2 mt-2">
+          <div className="border-t border-zinc-700/40 pt-2 mt-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 text-xs uppercase">Resultados</span>
-              <span className="font-medium text-gray-900">{formattedDate}</span>
+              <span className="text-zinc-500 text-xs uppercase">Resultados</span>
+              <span className="font-medium text-white">{formattedDate}</span>
             </div>
           </div>
         </div>
@@ -414,7 +414,7 @@ export default function ResultadoVerPage() {
         {/* Error Message */}
         {error && (
           <div className="px-4 py-8 text-center">
-            <p className="text-gray-600">{error}</p>
+            <p className="text-zinc-400">{error}</p>
           </div>
         )}
 
@@ -426,23 +426,23 @@ export default function ResultadoVerPage() {
 
             if (!results || results.length === 0) {
               return (
-                <div key={loteriaId} className="border-b border-gray-200 pb-4">
+                <div key={loteriaId} className="border-b border-zinc-700/40 pb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-bold text-gray-900">{info.nome}</h2>
+                    <h2 className="font-bold text-white">{info.nome}</h2>
                   </div>
-                  <p className="text-gray-500 text-sm">Resultado nao disponivel para esta data.</p>
+                  <p className="text-zinc-500 text-sm">Resultado nao disponivel para esta data.</p>
                 </div>
               );
             }
 
             return (
-              <div key={loteriaId} className="border-b border-gray-200 pb-4">
+              <div key={loteriaId} className="border-b border-zinc-700/40 pb-4">
                 {/* Loteria Header */}
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-bold text-gray-900">{info.nome}</h2>
+                  <h2 className="font-bold text-white">{info.nome}</h2>
                   <button
                     onClick={handlePrint}
-                    className="p-2 text-gray-500 hover:text-gray-700"
+                    className="p-2 text-zinc-500 hover:text-zinc-200"
                   >
                     <Printer className="h-5 w-5" />
                   </button>
@@ -456,12 +456,12 @@ export default function ResultadoVerPage() {
                       className="flex items-center justify-between text-sm py-1"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-900 w-6">{result.posicao}:</span>
-                        <span className="text-gray-700">
+                        <span className="font-bold text-white w-6">{result.posicao}:</span>
+                        <span className="text-zinc-200">
                           {result.numero} - {result.grupo}
                         </span>
                       </div>
-                      <span className="text-gray-700">{result.bicho}</span>
+                      <span className="text-zinc-200">{result.bicho}</span>
                     </div>
                   ))}
                 </div>
@@ -474,7 +474,7 @@ export default function ResultadoVerPage() {
         <div className="px-4 pb-8">
           <button
             onClick={handleShare}
-            className="w-full py-3 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-gray-700 flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-3 bg-zinc-800/30 hover:bg-zinc-700/50 rounded-lg font-medium text-zinc-200 flex items-center justify-center gap-2 transition-colors"
           >
             <Share2 className="h-5 w-5" />
             Compartilhar
