@@ -60,58 +60,49 @@ function getPageType(pathname: string): string {
   return 'other';
 }
 
-export function usePageTracking() {
+/**
+ * Hook de tracking otimizado.
+ * Recebe userId do layout pai para evitar chamar getUser() repetidamente.
+ */
+export function usePageTracking(userId: string | null) {
   const pathname = usePathname();
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
   const lastPathRef = useRef<string>('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Registra page view
   const trackPageView = useCallback(async () => {
-    // Não rastrear páginas admin
     if (pathname.startsWith('/admin')) return;
 
     const sessionId = getSessionId();
     if (!sessionId) return;
 
-    const deviceType = getDeviceType();
-    const gameType = getGameType(pathname);
-    const pageType = getPageType(pathname);
-
-    // Obter user_id se autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-
     try {
-      await supabase.from('page_views').insert({
+      await supabaseRef.current.from('page_views').insert({
         session_id: sessionId,
-        user_id: user?.id || null,
+        user_id: userId,
         page_path: pathname,
-        page_type: pageType,
-        game_type: gameType,
-        device_type: deviceType,
+        page_type: getPageType(pathname),
+        game_type: getGameType(pathname),
+        device_type: getDeviceType(),
       });
     } catch (error) {
-      // Silently fail - não queremos atrapalhar a UX
       console.debug('Page tracking error:', error);
     }
-  }, [pathname, supabase]);
+  }, [pathname, userId]);
 
-  // Atualiza presença
+  // Atualiza presença (sem chamar getUser - usa userId do pai)
   const updatePresence = useCallback(async () => {
-    // Não rastrear páginas admin
     if (pathname.startsWith('/admin')) return;
 
     const sessionId = getSessionId();
     if (!sessionId) return;
 
-    // Obter user_id se autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-
     try {
-      await supabase.from('visitor_presence').upsert(
+      await supabaseRef.current.from('visitor_presence').upsert(
         {
           session_id: sessionId,
-          user_id: user?.id || null,
+          user_id: userId,
           current_page: pathname,
           last_seen_at: new Date().toISOString(),
         },
@@ -120,17 +111,14 @@ export function usePageTracking() {
         }
       );
     } catch (error) {
-      // Silently fail
       console.debug('Presence update error:', error);
     }
-  }, [pathname, supabase]);
+  }, [pathname, userId]);
 
   // Track page view quando o pathname muda
   useEffect(() => {
-    // Não rastrear páginas admin
     if (pathname.startsWith('/admin')) return;
 
-    // Só rastrear se o pathname realmente mudou
     if (pathname !== lastPathRef.current) {
       lastPathRef.current = pathname;
       trackPageView();
@@ -138,18 +126,13 @@ export function usePageTracking() {
     }
   }, [pathname, trackPageView, updatePresence]);
 
-  // Atualizar presença a cada 30 segundos
+  // Atualizar presença a cada 60 segundos (era 30s - reduzido para menos carga)
   useEffect(() => {
-    // Não rastrear páginas admin
     if (pathname.startsWith('/admin')) return;
 
-    // Atualizar imediatamente
-    updatePresence();
-
-    // Configurar intervalo
     intervalRef.current = setInterval(() => {
       updatePresence();
-    }, 30000); // 30 segundos
+    }, 60000);
 
     return () => {
       if (intervalRef.current) {
@@ -157,5 +140,4 @@ export function usePageTracking() {
       }
     };
   }, [pathname, updatePresence]);
-
 }

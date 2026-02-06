@@ -6,9 +6,6 @@ import { ThemeInjector } from '@/components/theme-injector';
 import { getPlatformConfig } from '@/lib/admin/actions/platform-config';
 import { PaymentWatcherProvider } from '@/components/shared/payment-watcher-provider';
 
-// Força renderização dinâmica - não cacheia o layout
-export const dynamic = 'force-dynamic';
-
 // ============================================================================
 // SECURITY: Sanitização de Scripts para prevenir XSS
 // Implementação sem dependências externas para compatibilidade com Vercel Edge

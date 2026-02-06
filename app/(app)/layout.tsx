@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { usePageTracking } from '@/lib/hooks/use-page-tracking';
 import { LayoutWrapper } from '@/components/layouts/LayoutWrapper';
@@ -22,17 +22,33 @@ export default function AppLayout({
     unidade: '000000',
   });
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const supabase = createClient();
+  const userFetchedRef = useRef(false);
 
-  // Track page views and visitor presence
-  usePageTracking();
+  // Track page views and visitor presence (receives userId to avoid redundant getUser calls)
+  usePageTracking(userId);
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+  // Single getUser() call on mount - feeds everything else
+  useEffect(() => {
+    if (userFetchedRef.current) return;
+    userFetchedRef.current = true;
 
-      if (user) {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const init = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        setUserId(user.id);
+
+        // Fetch profile
         const { data, error } = await supabase
           .from('profiles')
           .select('saldo, saldo_bonus, codigo_convite')
@@ -46,60 +62,68 @@ export default function AppLayout({
             unidade: data.codigo_convite || '000000',
           });
         }
+
+        // Setup realtime (reuses user.id, no second getUser call)
+        channel = supabase
+          .channel('profile-changes')
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${user.id}`,
+            },
+            (payload) => {
+              const newData = payload.new as { saldo?: number; saldo_bonus?: number; codigo_convite?: string };
+              setProfile((prev) => ({
+                ...prev,
+                saldo: Number(newData.saldo) || prev.saldo,
+                saldoBonus: Number(newData.saldo_bonus) || prev.saldoBonus,
+                unidade: newData.codigo_convite || prev.unidade,
+              }));
+            }
+          )
+          .subscribe();
+      } catch (error) {
+        console.error('Error initializing app layout:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase]);
-
-  useEffect(() => {
-    fetchProfile();
-
-    // Subscribe to realtime updates on profile
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    const setupRealtime = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      channel = supabase
-        .channel('profile-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'profiles',
-            filter: `id=eq.${user.id}`,
-          },
-          (payload) => {
-            const newData = payload.new as { saldo?: number; saldo_bonus?: number; codigo_convite?: string };
-            setProfile((prev) => ({
-              ...prev,
-              saldo: Number(newData.saldo) || prev.saldo,
-              saldoBonus: Number(newData.saldo_bonus) || prev.saldoBonus,
-              unidade: newData.codigo_convite || prev.unidade,
-            }));
-          }
-        )
-        .subscribe();
     };
 
-    setupRealtime();
+    init();
 
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
       }
     };
-  }, [fetchProfile, supabase]);
+  }, [supabase]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     setLoading(true);
-    fetchProfile();
-  }, [fetchProfile]);
+    try {
+      const uid = userId;
+      if (!uid) { setLoading(false); return; }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('saldo, saldo_bonus, codigo_convite')
+        .eq('id', uid)
+        .single();
+
+      if (!error && data) {
+        setProfile({
+          saldo: Number(data.saldo) || 0,
+          saldoBonus: Number(data.saldo_bonus) || 0,
+          unidade: data.codigo_convite || '000000',
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, supabase]);
 
   return (
     <LayoutWrapper

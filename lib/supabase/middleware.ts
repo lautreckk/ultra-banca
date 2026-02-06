@@ -172,9 +172,6 @@ async function resolvePlatformByDomain(
   // Normalizar: remover www. e converter para minúsculas
   domain = domain.toLowerCase().replace(/^www\./, '');
 
-  // DEBUG: Log para rastrear resolução de domínio
-  console.log('[MULTI-TENANT] Resolvendo:', { host, domain });
-
   // 1. Tentar pelo domínio completo
   const { data: platform, error } = await supabase
     .from('platforms')
@@ -182,12 +179,6 @@ async function resolvePlatformByDomain(
     .eq('domain', domain)
     .eq('ativo', true)
     .single();
-
-  console.log('[MULTI-TENANT] Query resultado:', {
-    found: !!platform,
-    name: platform?.name,
-    error: error?.message
-  });
 
   if (platform) {
     return { platformId: platform.id, platform };
@@ -287,33 +278,23 @@ export async function updateSession(request: NextRequest) {
   const existingPlatformId = request.cookies.get('platform_id')?.value;
 
   // Para rotas de ADMIN: respeitar o cookie existente (admin pode escolher plataforma)
-  // Para outras rotas: sempre resolver pelo domínio
+  // Para banca: usar cookie existente se já resolvido, senão resolver pelo domínio
   const isAdminPath = pathname.startsWith('/admin');
 
   let platformId: string;
 
-  if (isAdminPath && existingPlatformId) {
-    // Admin já tem uma plataforma escolhida, manter
+  if (existingPlatformId) {
+    // Cookie já existe - reusar sem query ao banco
     platformId = existingPlatformId;
-    console.log('[MULTI-TENANT] Admin: mantendo plataforma escolhida:', platformId);
   } else {
-    // Resolver pelo domínio
+    // Primeiro acesso: resolver pelo domínio
     const platformResult = await resolvePlatformByDomain(supabase, host);
 
-    // Log quando fallback é usado
     if (!platformResult) {
       console.warn('[MULTI-TENANT] ⚠️ FALLBACK PARA DEFAULT:', { host });
     }
 
-    // Se não encontrou plataforma e não é localhost, poderia redirecionar para erro
-    // Por enquanto, usamos fallback para default para não quebrar em desenvolvimento
     platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
-
-    console.log('[MULTI-TENANT] Domínio:', {
-      host,
-      platformId,
-      name: platformResult?.platform?.name || 'DEFAULT'
-    });
 
     // Setar cookies no REQUEST para que server components possam lê-los
     // durante esta mesma requisição (via cookies() do next/headers)
@@ -390,10 +371,37 @@ export async function updateSession(request: NextRequest) {
 
   // ============================================================================
   // CENÁRIO B: USUÁRIO ESTÁ LOGADO
-  // Verificar se é ADMIN, PROMOTOR ou USUÁRIO COMUM
   // ============================================================================
 
-  // Queries performáticas: apenas verificam existência
+  // OTIMIZAÇÃO: Em domínios de banca, o usuário SÓ pode ser jogador comum.
+  // Admins/promotores em domínio de banca já foram bloqueados nas linhas acima.
+  // Economiza 2 queries (admin_roles + promotor_roles) para CADA request de jogador.
+  const isBancaDomain = !adminDomainAccess;
+  const isBancaOrPublicPath = !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && !isPromotorRoute(pathname);
+
+  if (isBancaDomain && isBancaOrPublicPath) {
+    // FAST PATH: Jogador da banca - apenas verificar platform_id (1 query ao invés de 3)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('platform_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile?.platform_id && profile.platform_id !== platformId) {
+      await supabase.auth.signOut();
+      return redirect(request, '/login');
+    }
+
+    // Jogador logado tentando acessar login/cadastro -> home
+    if (isBancaAuthRoute(pathname) || pathname === '/') {
+      return redirect(request, '/home');
+    }
+
+    // Jogador em área da banca -> Permitir
+    return supabaseResponse;
+  }
+
+  // SLOW PATH: Domínio admin ou rotas admin/promotor - precisa de todas as queries
   const [adminRoleResult, promotorRoleResult, profileResult] = await Promise.all([
     supabase
       .from('admin_roles')
@@ -420,11 +428,7 @@ export async function updateSession(request: NextRequest) {
   // ============================================================================
   // VERIFICAÇÃO DE PERTENCIMENTO À PLATAFORMA (Multi-Tenant)
   // ============================================================================
-  // Admins podem administrar múltiplas plataformas, então não verificamos aqui.
-  // Para usuários comuns e promotores, verificamos se pertencem à plataforma atual.
   if (!isAdmin && userPlatformId && userPlatformId !== platformId) {
-    // Usuário não pertence a esta plataforma
-    // Fazer logout e redirecionar para login
     await supabase.auth.signOut();
 
     if (isPromotorRoute(pathname)) {
@@ -437,22 +441,17 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO B0: ROTAS ADMIN-MASTER (requer super_admin)
   // ============================================================================
   if (isAdminMasterRoute(pathname)) {
-    // Apenas super_admin pode acessar admin-master
     if (!isSuperAdmin) {
-      // Se é admin mas não super_admin, redirecionar para dashboard normal
       if (isAdmin) {
         return redirect(request, '/admin/dashboard');
       }
-      // Se não é admin, redirecionar para home
       return redirect(request, '/home');
     }
 
-    // Super admin na página de login do admin-master
     if (isAdminMasterAuthRoute(pathname)) {
       return redirect(request, '/admin-master/dashboard');
     }
 
-    // Super admin em área admin-master protegida -> Permitir
     return supabaseResponse;
   }
 
@@ -460,45 +459,33 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO B1: É ADMIN
   // ============================================================================
   if (isAdmin) {
-    // Se admin está em domínio de BANCA, fazer logout e redirecionar para login
-    // (Admin só pode acessar via domínio admin - gabrielsena.net)
     if (!adminDomainAccess) {
-      console.log('[SECURITY] Admin em domínio de banca - fazendo logout:', { host, pathname });
       await supabase.auth.signOut();
       return redirect(request, '/login');
     }
 
-    // Verificar MFA se necessário
     const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     const mfaPending = aalData?.nextLevel === 'aal2' && aalData?.currentLevel === 'aal1';
     const mfaComplete = aalData?.currentLevel === 'aal2' || aalData?.nextLevel === 'aal1';
 
-    // B1.1: Admin tentando acessar área da BANCA -> PROIBIDO, redirecionar para dashboard
     if (!isAdminRoute(pathname)) {
-      // Se MFA está pendente, redirecionar para login para completar
       if (mfaPending) {
         return redirect(request, '/admin/login');
       }
-      // Admin não pode ver a banca, forçar para dashboard
       return redirect(request, '/admin/dashboard');
     }
 
-    // B1.2: Admin na página de login do admin
     if (isAdminAuthRoute(pathname)) {
-      // Se MFA completo ou não requerido, redirecionar para dashboard
       if (mfaComplete) {
         return redirect(request, '/admin/dashboard');
       }
-      // MFA pendente: permitir ficar na página de login para completar verificação
       return supabaseResponse;
     }
 
-    // B1.3: Admin em rota admin protegida, verificar MFA
     if (mfaPending) {
       return redirect(request, '/admin/login');
     }
 
-    // B1.4: Admin em área admin com MFA ok -> Permitir
     return supabaseResponse;
   }
 
@@ -506,19 +493,15 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO B2: É PROMOTOR
   // ============================================================================
   if (isPromotor) {
-    // B2.1: Promotor tentando acessar área ADMIN -> PROIBIDO
     if (isAdminRoute(pathname)) {
       return redirect(request, '/promotor');
     }
 
-    // B2.2: Promotor na página de login do promotor -> Redirecionar para dashboard
     if (isPromotorAuthRoute(pathname)) {
       return redirect(request, '/promotor');
     }
 
-    // B2.3: Promotor em área do promotor -> Verificar se promotor está ativo
     if (isPromotorRoute(pathname)) {
-      // Verificar se o promotor está ativo
       const { data: promotorData } = await supabase
         .from('promotores')
         .select('ativo')
@@ -526,7 +509,6 @@ export async function updateSession(request: NextRequest) {
         .single();
 
       if (!promotorData?.ativo) {
-        // Promotor inativo -> Deslogar e redirecionar
         await supabase.auth.signOut();
         return redirect(request, '/promotor/login');
       }
@@ -534,12 +516,10 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // B2.4: Promotor tentando acessar área da banca -> Redirecionar para dashboard do promotor
     if (isBancaProtectedRoute(pathname)) {
       return redirect(request, '/promotor');
     }
 
-    // B2.5: Promotor na landing (/) ou em páginas de auth da banca -> Redirecionar para dashboard do promotor
     if (pathname === '/' || isBancaAuthRoute(pathname)) {
       return redirect(request, '/promotor');
     }
@@ -551,26 +531,21 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO B3: É USUÁRIO COMUM (NÃO é admin NEM promotor)
   // ============================================================================
 
-  // B3.1: Usuário comum tentando acessar área ADMIN -> PROIBIDO
   if (isAdminRoute(pathname)) {
     return redirect(request, '/home');
   }
 
-  // B3.2: Usuário comum tentando acessar área PROMOTOR -> PROIBIDO
   if (isPromotorRoute(pathname)) {
     return redirect(request, '/home');
   }
 
-  // B3.3: Usuário comum já logado tentando acessar login/cadastro -> Redirecionar para home
   if (isBancaAuthRoute(pathname)) {
     return redirect(request, '/home');
   }
 
-  // B3.4: Usuário comum logado acessando landing (/) -> Redirecionar para home
   if (pathname === '/') {
     return redirect(request, '/home');
   }
 
-  // B3.4: Usuário comum em área da banca -> Permitir
   return supabaseResponse;
 }
