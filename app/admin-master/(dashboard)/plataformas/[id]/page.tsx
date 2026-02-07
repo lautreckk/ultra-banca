@@ -10,8 +10,12 @@ import {
   linkAdminToPlatform,
   unlinkAdminFromPlatform,
   resetAdminPassword,
+  getGatewayConfigsForPlatform,
+  updateGatewayConfigForPlatform,
+  setPrimaryGatewayForPlatform,
   type PlatformAdmin,
   type UserSearchResult,
+  type MasterGatewayConfig,
 } from '@/lib/admin/actions/master';
 import {
   Building2,
@@ -36,6 +40,11 @@ import {
   Copy,
   Check,
   LayoutGrid,
+  Eye,
+  EyeOff,
+  Star,
+  CheckCircle,
+  Save,
 } from 'lucide-react';
 import { LAYOUTS_INFO, type LayoutId } from '@/lib/layouts/types';
 import Link from 'next/link';
@@ -61,7 +70,6 @@ interface PlatformData {
   social_instagram: string | null;
   social_telegram: string | null;
   active_gateway: string | null;
-  gateway_credentials: Record<string, unknown> | null;
   deposit_min: number | null;
   deposit_max: number | null;
   withdrawal_min: number | null;
@@ -120,6 +128,15 @@ export default function EditarPlataformaPage() {
   const [searching, setSearching] = useState(false);
   const [adminActionLoading, setAdminActionLoading] = useState<string | null>(null);
 
+  // Gateway config state
+  const [gatewayConfigs, setGatewayConfigs] = useState<MasterGatewayConfig[]>([]);
+  const [loadingGateways, setLoadingGateways] = useState(false);
+  const [gatewayForms, setGatewayForms] = useState<Record<string, { ativo: boolean; client_id: string; client_secret: string; webhook_url: string; config: Record<string, unknown> }>>({});
+  const [showGatewaySecrets, setShowGatewaySecrets] = useState<Record<string, boolean>>({});
+  const [savingGateway, setSavingGateway] = useState<string | null>(null);
+  const [gatewaySuccess, setGatewaySuccess] = useState<string | null>(null);
+  const [gatewayError, setGatewayError] = useState<string | null>(null);
+
   // Password reset modal state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordResetAdmin, setPasswordResetAdmin] = useState<PlatformAdmin | null>(null);
@@ -151,7 +168,6 @@ export default function EditarPlataformaPage() {
     social_telegram: '',
     // Gateway
     active_gateway: 'bspay',
-    gateway_credentials: '{}',
     deposit_min: 10,
     deposit_max: 10000,
     withdrawal_min: 20,
@@ -185,6 +201,9 @@ export default function EditarPlataformaPage() {
     if (activeTab === 'admins' && admins.length === 0 && !loadingAdmins) {
       loadAdmins();
     }
+    if (activeTab === 'gateway' && gatewayConfigs.length === 0 && !loadingGateways) {
+      loadGatewayConfigs();
+    }
   }, [activeTab]);
 
   async function loadData() {
@@ -212,7 +231,6 @@ export default function EditarPlataformaPage() {
         social_instagram: (data as PlatformData).social_instagram || '',
         social_telegram: (data as PlatformData).social_telegram || '',
         active_gateway: (data as PlatformData).active_gateway || 'bspay',
-        gateway_credentials: JSON.stringify((data as PlatformData).gateway_credentials || {}, null, 2),
         deposit_min: (data as PlatformData).deposit_min || 10,
         deposit_max: (data as PlatformData).deposit_max || 10000,
         withdrawal_min: (data as PlatformData).withdrawal_min || 20,
@@ -244,6 +262,75 @@ export default function EditarPlataformaPage() {
     setLoadingAdmins(false);
   }
 
+  async function loadGatewayConfigs() {
+    setLoadingGateways(true);
+    const configs = await getGatewayConfigsForPlatform(platformId);
+    setGatewayConfigs(configs);
+
+    // Initialize forms from loaded data
+    const forms: typeof gatewayForms = {};
+    for (const gw of configs) {
+      forms[gw.gateway_name] = {
+        ativo: gw.ativo,
+        client_id: gw.client_id || '',
+        client_secret: gw.client_secret || '',
+        webhook_url: gw.webhook_url || '',
+        config: gw.config || {},
+      };
+    }
+    // Ensure both gateways have form entries even if no DB row exists
+    for (const name of ['bspay', 'washpay']) {
+      if (!forms[name]) {
+        forms[name] = { ativo: false, client_id: '', client_secret: '', webhook_url: '', config: {} };
+      }
+    }
+    setGatewayForms(forms);
+    setLoadingGateways(false);
+  }
+
+  async function handleSaveGateway(gatewayName: string) {
+    const gwForm = gatewayForms[gatewayName];
+    if (!gwForm) return;
+
+    setSavingGateway(gatewayName);
+    setGatewayError(null);
+    setGatewaySuccess(null);
+
+    const result = await updateGatewayConfigForPlatform(platformId, gatewayName, {
+      ativo: gwForm.ativo,
+      client_id: gwForm.client_id,
+      client_secret: gwForm.client_secret,
+      webhook_url: gwForm.webhook_url,
+      config: gwForm.config,
+    });
+
+    if (result.success) {
+      setGatewaySuccess(gatewayName);
+      setTimeout(() => setGatewaySuccess(null), 3000);
+      // Reload to get masked secrets
+      await loadGatewayConfigs();
+    } else {
+      setGatewayError(result.error || 'Erro ao salvar gateway');
+    }
+    setSavingGateway(null);
+  }
+
+  async function handleSetPrimaryGateway(gatewayName: string) {
+    setSavingGateway('primary');
+    setGatewayError(null);
+    setGatewaySuccess(null);
+
+    const result = await setPrimaryGatewayForPlatform(platformId, gatewayName);
+    if (result.success) {
+      setForm((prev) => ({ ...prev, active_gateway: gatewayName }));
+      setGatewaySuccess('primary');
+      setTimeout(() => setGatewaySuccess(null), 3000);
+    } else {
+      setGatewayError(result.error || 'Erro ao definir gateway principal');
+    }
+    setSavingGateway(null);
+  }
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value, type } = e.target;
     const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
@@ -267,15 +354,6 @@ export default function EditarPlataformaPage() {
       return;
     }
 
-    // Validate JSON for gateway credentials
-    let gatewayCredentials = {};
-    try {
-      gatewayCredentials = JSON.parse(form.gateway_credentials);
-    } catch {
-      setError('Credenciais do gateway devem ser um JSON valido');
-      return;
-    }
-
     startTransition(async () => {
       const result = await updatePlatform(platformId, {
         name: form.name,
@@ -296,7 +374,6 @@ export default function EditarPlataformaPage() {
         social_instagram: form.social_instagram || null,
         social_telegram: form.social_telegram || null,
         active_gateway: form.active_gateway,
-        gateway_credentials: gatewayCredentials,
         deposit_min: form.deposit_min,
         deposit_max: form.deposit_max,
         withdrawal_min: form.withdrawal_min,
@@ -841,20 +918,44 @@ export default function EditarPlataformaPage() {
                 Gateway de Pagamento
               </h3>
 
+              {/* Alerts */}
+              {gatewayError && (
+                <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-sm">{gatewayError}</span>
+                </div>
+              )}
+
+              {/* Gateway Principal + Modo de Saque */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">
-                    Gateway Ativo
+                    Gateway Principal
                   </label>
-                  <select
-                    name="active_gateway"
-                    value={form.active_gateway}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="bspay">BSPay</option>
-                    <option value="washpay">WashPay</option>
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={form.active_gateway}
+                      onChange={(e) => setForm((prev) => ({ ...prev, active_gateway: e.target.value }))}
+                      className="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="bspay">BSPay</option>
+                      <option value="washpay">WashPay</option>
+                    </select>
+                    <button
+                      onClick={() => handleSetPrimaryGateway(form.active_gateway)}
+                      disabled={savingGateway === 'primary'}
+                      className="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      {savingGateway === 'primary' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : gatewaySuccess === 'primary' ? (
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                      ) : (
+                        <Star className="h-4 w-4" />
+                      )}
+                      Definir
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -871,25 +972,147 @@ export default function EditarPlataformaPage() {
                     <option value="automatico">Automatico</option>
                   </select>
                 </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">
-                    Credenciais do Gateway (JSON)
-                  </label>
-                  <textarea
-                    name="gateway_credentials"
-                    value={form.gateway_credentials}
-                    onChange={handleChange}
-                    rows={6}
-                    placeholder='{"client_id": "", "client_secret": "", "webhook_url": ""}'
-                    className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 font-mono text-sm resize-none"
-                  />
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Formato: {`{ "client_id": "...", "client_secret": "...", "webhook_url": "..." }`}
-                  </p>
-                </div>
               </div>
 
+              {/* Per-Gateway Config */}
+              {loadingGateways ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+                </div>
+              ) : (
+                ['bspay', 'washpay'].map((gwName) => {
+                  const gwForm = gatewayForms[gwName];
+                  if (!gwForm) return null;
+                  const displayName = gwName === 'bspay' ? 'BSPay' : 'WashPay';
+                  const isPrimary = form.active_gateway === gwName;
+                  const isSaving = savingGateway === gwName;
+                  const isSuccess = gatewaySuccess === gwName;
+
+                  return (
+                    <div key={gwName} className={`border rounded-lg p-4 space-y-4 ${isPrimary ? 'border-purple-500/50 bg-purple-500/5' : 'border-zinc-700 bg-zinc-800/30'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-base font-semibold text-white">{displayName}</h4>
+                          {isPrimary && (
+                            <span className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-400 rounded-full flex items-center gap-1">
+                              <Star className="h-3 w-3" />
+                              Principal
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs ${gwForm.ativo ? 'text-green-400' : 'text-zinc-500'}`}>
+                            {gwForm.ativo ? 'Ativo' : 'Inativo'}
+                          </span>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={gwForm.ativo}
+                            onClick={() =>
+                              setGatewayForms((prev) => ({
+                                ...prev,
+                                [gwName]: { ...prev[gwName], ativo: !prev[gwName].ativo },
+                              }))
+                            }
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gwForm.ativo ? 'bg-green-500' : 'bg-zinc-600'}`}
+                          >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${gwForm.ativo ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-400 mb-1">Client ID</label>
+                          <input
+                            type="text"
+                            value={gwForm.client_id}
+                            onChange={(e) =>
+                              setGatewayForms((prev) => ({
+                                ...prev,
+                                [gwName]: { ...prev[gwName], client_id: e.target.value },
+                              }))
+                            }
+                            placeholder="Digite o Client ID"
+                            className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-400 mb-1">Client Secret</label>
+                          <div className="relative">
+                            <input
+                              type={showGatewaySecrets[gwName] ? 'text' : 'password'}
+                              value={gwForm.client_secret}
+                              onChange={(e) =>
+                                setGatewayForms((prev) => ({
+                                  ...prev,
+                                  [gwName]: { ...prev[gwName], client_secret: e.target.value },
+                                }))
+                              }
+                              placeholder="Digite o Client Secret"
+                              className="w-full px-4 py-2 pr-10 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowGatewaySecrets((prev) => ({ ...prev, [gwName]: !prev[gwName] }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                            >
+                              {showGatewaySecrets[gwName] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* WashPay extra fields */}
+                      {gwName === 'washpay' && (
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-400 mb-1">API Key</label>
+                          <div className="relative">
+                            <input
+                              type={showGatewaySecrets[`${gwName}_api_key`] ? 'text' : 'password'}
+                              value={(gwForm.config?.api_key as string) || ''}
+                              onChange={(e) =>
+                                setGatewayForms((prev) => ({
+                                  ...prev,
+                                  [gwName]: { ...prev[gwName], config: { ...prev[gwName].config, api_key: e.target.value } },
+                                }))
+                              }
+                              placeholder="pk_..."
+                              className="w-full px-4 py-2 pr-10 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowGatewaySecrets((prev) => ({ ...prev, [`${gwName}_api_key`]: !prev[`${gwName}_api_key`] }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                            >
+                              {showGatewaySecrets[`${gwName}_api_key`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => handleSaveGateway(gwName)}
+                          disabled={isSaving}
+                          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : isSuccess ? (
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                          {isSaving ? 'Salvando...' : isSuccess ? 'Salvo!' : `Salvar ${displayName}`}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+
+              {/* Limites (these still save via the main form) */}
               <div className="border-t border-zinc-800 pt-6">
                 <h4 className="text-sm font-medium text-zinc-300 mb-4">Limites de Deposito</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

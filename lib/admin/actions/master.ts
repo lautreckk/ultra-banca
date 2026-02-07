@@ -1,7 +1,8 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 // =============================================
 // SUPER ADMIN CHECK
@@ -628,4 +629,124 @@ export async function getClientsForSelect(): Promise<ClientOption[]> {
   }
 
   return data || [];
+}
+
+// =============================================
+// GATEWAY CONFIG (Super Admin - any platform)
+// =============================================
+
+const MASKED_PREFIX = '••••••••';
+
+function maskSecret(secret: string | null): string | null {
+  if (!secret) return null;
+  return MASKED_PREFIX + secret.slice(-4);
+}
+
+export interface MasterGatewayConfig {
+  id: string;
+  gateway_name: string;
+  ativo: boolean;
+  client_id: string | null;
+  client_secret: string | null;
+  client_secret_masked: boolean;
+  webhook_url: string | null;
+  config: Record<string, unknown>;
+}
+
+export async function getGatewayConfigsForPlatform(platformId: string): Promise<MasterGatewayConfig[]> {
+  await requireSuperAdmin();
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('gateway_config')
+    .select('id, gateway_name, ativo, client_id, client_secret, webhook_url, config')
+    .eq('platform_id', platformId)
+    .order('gateway_name');
+
+  if (error) {
+    console.error('Error fetching gateway configs:', error);
+    return [];
+  }
+
+  return (data || []).map((g) => ({
+    id: g.id,
+    gateway_name: g.gateway_name,
+    ativo: g.ativo ?? false,
+    client_id: g.client_id,
+    client_secret: maskSecret(g.client_secret),
+    client_secret_masked: !!g.client_secret,
+    webhook_url: g.webhook_url,
+    config: (g.config as Record<string, unknown>) || {},
+  }));
+}
+
+export async function updateGatewayConfigForPlatform(
+  platformId: string,
+  gatewayName: string,
+  config: {
+    ativo?: boolean;
+    client_id?: string;
+    client_secret?: string;
+    webhook_url?: string;
+    config?: Record<string, unknown>;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  const adminClient = createAdminClient();
+
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (config.ativo !== undefined) updateData.ativo = config.ativo;
+  if (config.client_id !== undefined) updateData.client_id = config.client_id;
+  if (config.client_secret !== undefined && !config.client_secret.startsWith(MASKED_PREFIX)) {
+    updateData.client_secret = config.client_secret;
+  }
+  if (config.webhook_url !== undefined) updateData.webhook_url = config.webhook_url;
+  if (config.config !== undefined) updateData.config = config.config;
+
+  const { error } = await adminClient
+    .from('gateway_config')
+    .upsert(
+      {
+        ...updateData,
+        gateway_name: gatewayName,
+        platform_id: platformId,
+      },
+      { onConflict: 'gateway_name,platform_id' }
+    );
+
+  if (error) {
+    console.error('Error updating gateway config:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/admin-master/plataformas/${platformId}`);
+  return { success: true };
+}
+
+export async function setPrimaryGatewayForPlatform(
+  platformId: string,
+  gatewayName: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient
+    .from('platforms')
+    .update({
+      active_gateway: gatewayName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', platformId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/admin-master/plataformas/${platformId}`);
+  return { success: true };
 }

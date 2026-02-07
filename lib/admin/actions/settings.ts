@@ -173,16 +173,23 @@ export async function updateGatewayConfig(
 
   const platformId = await getPlatformId();
 
+  // Usar upsert para criar o registro caso ainda não exista (nova plataforma)
   const { error } = await supabase
     .from('gateway_config')
-    .update(updateData)
-    .eq('gateway_name', gatewayName)
-    .eq('platform_id', platformId);
+    .upsert(
+      {
+        ...updateData,
+        gateway_name: gatewayName,
+        platform_id: platformId,
+      },
+      { onConflict: 'gateway_name,platform_id' }
+    );
 
   if (error) {
     return { success: false, error: error.message };
   }
 
+  revalidatePath('/admin/pagamentos');
   return { success: true };
 }
 
