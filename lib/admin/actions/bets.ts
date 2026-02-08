@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 export interface Bet {
@@ -41,6 +42,7 @@ export interface BetsListResult {
 }
 
 export async function getBets(params: BetsListParams = {}): Promise<BetsListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20, status, search, dateFrom, dateTo } = params;
   const offset = (page - 1) * pageSize;
@@ -121,6 +123,7 @@ export async function getBets(params: BetsListParams = {}): Promise<BetsListResu
 }
 
 export async function getBetById(id: string): Promise<Bet | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase

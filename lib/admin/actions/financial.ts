@@ -1,6 +1,7 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { executeTrigger } from './evolution';
@@ -41,6 +42,7 @@ export interface DepositsListResult {
 }
 
 export async function getDeposits(params: DepositsListParams = {}): Promise<DepositsListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20, status, search } = params;
   const offset = (page - 1) * pageSize;
@@ -96,6 +98,7 @@ export async function getDeposits(params: DepositsListParams = {}): Promise<Depo
 }
 
 export async function approveDeposit(depositId: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Get deposit info (including wallet_type)
@@ -113,43 +116,39 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
     return { success: false, error: 'Depósito já foi processado' };
   }
 
-  // Update deposit status
-  const { error: updateError } = await supabase
-    .from('pagamentos')
-    .update({
-      status: 'PAID',
-      paid_at: new Date().toISOString(),
-    })
-    .eq('id', depositId);
+  // SECURITY: Use service_role client for atomic operations
+  const adminClient = createAdminClient();
 
-  if (updateError) {
-    return { success: false, error: updateError.message };
+  // ATOMIC: Transition status PENDING→PAID (prevents double-approve race condition)
+  const { data: transitioned } = await adminClient.rpc('atomic_status_transition', {
+    p_table: 'pagamentos',
+    p_id: depositId,
+    p_from_status: 'PENDING',
+    p_to_status: 'PAID',
+  });
+
+  if (!transitioned) {
+    return { success: false, error: 'Depósito já foi processado por outro operador' };
   }
 
-  // Update user balance - wallet-aware
+  // Update paid_at
+  await adminClient.from('pagamentos').update({ paid_at: new Date().toISOString() }).eq('id', depositId);
+
+  // ATOMIC: Credit balance (no read-modify-write race condition)
   const walletType = deposit.wallet_type || 'tradicional';
   const balanceField = walletType === 'cassino' ? 'saldo_cassino' : 'saldo';
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('saldo, saldo_cassino')
-    .eq('id', deposit.user_id)
-    .single();
-
-  const currentBalance = Number(profile?.[balanceField]) || 0;
-  const newBalance = currentBalance + Number(deposit.valor);
-
-  const { error: balanceError } = await supabase
-    .from('profiles')
-    .update({ [balanceField]: newBalance })
-    .eq('id', deposit.user_id);
+  const { data: newBalance, error: balanceError } = await adminClient.rpc('atomic_credit_balance', {
+    p_user_id: deposit.user_id,
+    p_amount: Number(deposit.valor),
+    p_wallet: balanceField,
+  });
 
   if (balanceError) {
     // Rollback deposit status
-    await supabase
-      .from('pagamentos')
-      .update({ status: 'PENDING', paid_at: null })
-      .eq('id', depositId);
+    await adminClient.rpc('atomic_status_transition', {
+      p_table: 'pagamentos', p_id: depositId, p_from_status: 'PAID', p_to_status: 'PENDING',
+    });
     return { success: false, error: 'Erro ao atualizar saldo do usuário' };
   }
 
@@ -159,7 +158,9 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
     const bonusResult = await applyDepositBonus(
       deposit.user_id,
       depositId,
-      Number(deposit.valor)
+      Number(deposit.valor),
+      undefined,
+      walletType as 'tradicional' | 'cassino'
     );
 
     if (bonusResult.success && bonusResult.bonusApplied > 0) {
@@ -255,6 +256,7 @@ export interface WithdrawalsListResult {
 }
 
 export async function getWithdrawals(params: WithdrawalsListParams = {}): Promise<WithdrawalsListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20, status, search } = params;
   const offset = (page - 1) * pageSize;
@@ -329,6 +331,7 @@ function mapTipoChaveToWashPay(tipoChave: string): WashPayPixKeyType {
 }
 
 export async function approveWithdrawal(withdrawalId: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -356,14 +359,19 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     .eq('id', withdrawal.user_id)
     .single();
 
-  // Marcar como PROCESSING enquanto chama a WashPay
-  const { error: processingError } = await supabase
-    .from('saques')
-    .update({ status: 'PROCESSING' })
-    .eq('id', withdrawalId);
+  // SECURITY: Use service_role client for atomic operations
+  const adminClient = createAdminClient();
 
-  if (processingError) {
-    return { success: false, error: processingError.message };
+  // ATOMIC: Transition status PENDING→PROCESSING (prevents double-approve race condition)
+  const { data: transitioned } = await adminClient.rpc('atomic_status_transition', {
+    p_table: 'saques',
+    p_id: withdrawalId,
+    p_from_status: 'PENDING',
+    p_to_status: 'PROCESSING',
+  });
+
+  if (!transitioned) {
+    return { success: false, error: 'Saque já está sendo processado por outro operador' };
   }
 
   // Buscar API key do WashPay na gateway_config
@@ -376,10 +384,9 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     .single();
 
   if (!gatewayConfig?.client_id) {
-    await supabase
-      .from('saques')
-      .update({ status: 'PENDING' })
-      .eq('id', withdrawalId);
+    await adminClient.rpc('atomic_status_transition', {
+      p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING',
+    });
     return { success: false, error: 'API Key do WashPay não configurada. Vá em Pagamentos > WashPay para configurar.' };
   }
 
@@ -393,34 +400,36 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     });
 
     if (!washpayResponse.success) {
-      // WashPay rejeitou — voltar para PENDING
-      await supabase
-        .from('saques')
-        .update({ status: 'PENDING' })
-        .eq('id', withdrawalId);
+      // WashPay rejeitou — voltar para PENDING (atomic)
+      await adminClient.rpc('atomic_status_transition', {
+        p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING',
+      });
       return { success: false, error: 'WashPay recusou o saque. Tente novamente.' };
     }
 
-    // Salvar o ID da transação WashPay e marcar como PAID
-    const { error: updateError } = await supabase
-      .from('saques')
-      .update({
-        status: 'PAID',
-        paid_at: new Date().toISOString(),
-        bspay_transaction_id: washpayResponse.data.id, // reusa coluna existente para ID da transação
-      })
-      .eq('id', withdrawalId);
+    // ATOMIC: Transition PROCESSING→PAID and save transaction ID
+    const { data: paidTransitioned } = await adminClient.rpc('atomic_status_transition', {
+      p_table: 'saques',
+      p_id: withdrawalId,
+      p_from_status: 'PROCESSING',
+      p_to_status: 'PAID',
+    });
 
-    if (updateError) {
-      return { success: false, error: updateError.message };
+    if (!paidTransitioned) {
+      return { success: false, error: 'Estado do saque mudou inesperadamente' };
     }
+
+    // Update paid_at and transaction ID
+    await adminClient.from('saques').update({
+      paid_at: new Date().toISOString(),
+      bspay_transaction_id: washpayResponse.data.id,
+    }).eq('id', withdrawalId);
   } catch (error) {
-    // Erro na chamada — voltar para PENDING
+    // Erro na chamada — voltar para PENDING (atomic)
     console.error('Erro ao chamar WashPay withdrawal:', error);
-    await supabase
-      .from('saques')
-      .update({ status: 'PENDING' })
-      .eq('id', withdrawalId);
+    await adminClient.rpc('atomic_status_transition', {
+      p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING',
+    });
     return {
       success: false,
       error: `Erro ao processar PIX via WashPay: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
@@ -472,6 +481,7 @@ export async function rejectWithdrawal(
   withdrawalId: string,
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -495,33 +505,39 @@ export async function rejectWithdrawal(
   // Obter dados do usuário
   const { data: userProfile } = await supabase
     .from('profiles')
-    .select('nome, cpf, saldo, saldo_cassino')
+    .select('nome, cpf')
     .eq('id', withdrawal.user_id)
     .single();
 
-  // Update withdrawal status
-  const { error: updateError } = await supabase
-    .from('saques')
-    .update({
-      status: 'REJECTED',
-      error_message: reason || 'Rejeitado pelo administrador',
-    })
-    .eq('id', withdrawalId);
+  // SECURITY: Use service_role client for atomic operations
+  const adminClient = createAdminClient();
 
-  if (updateError) {
-    return { success: false, error: updateError.message };
+  // ATOMIC: Transition status PENDING→REJECTED (prevents double-reject race condition)
+  const { data: transitioned } = await adminClient.rpc('atomic_status_transition', {
+    p_table: 'saques',
+    p_id: withdrawalId,
+    p_from_status: 'PENDING',
+    p_to_status: 'REJECTED',
+  });
+
+  if (!transitioned) {
+    return { success: false, error: 'Saque já foi processado por outro operador' };
   }
 
-  // Return the balance to correct wallet
+  // Update error message
+  await adminClient.from('saques').update({
+    error_message: reason || 'Rejeitado pelo administrador',
+  }).eq('id', withdrawalId);
+
+  // ATOMIC: Return balance to correct wallet (no read-modify-write race condition)
   const saqueWalletType = withdrawal.wallet_type || 'tradicional';
   const saqueBalanceField = saqueWalletType === 'cassino' ? 'saldo_cassino' : 'saldo';
-  const currentSaldo = Number(userProfile?.[saqueBalanceField]) || 0;
-  const newBalance = currentSaldo + Number(withdrawal.valor);
 
-  const { error: balanceError } = await supabase
-    .from('profiles')
-    .update({ [saqueBalanceField]: newBalance })
-    .eq('id', withdrawal.user_id);
+  const { error: balanceError } = await adminClient.rpc('atomic_credit_balance', {
+    p_user_id: withdrawal.user_id,
+    p_amount: Number(withdrawal.valor),
+    p_wallet: saqueBalanceField,
+  });
 
   if (balanceError) {
     console.error('Error returning balance to user:', balanceError);

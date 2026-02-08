@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import crypto from 'crypto';
 
 // =============================================
@@ -113,6 +114,7 @@ function maskSecretKey(secret: string): string {
  * Lista todos os webhooks (secrets mascarados)
  */
 export async function getWebhooks(params: WebhookListParams = {}): Promise<WebhookListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20, ativo } = params;
   const offset = (page - 1) * pageSize;
@@ -146,6 +148,7 @@ export async function getWebhooks(params: WebhookListParams = {}): Promise<Webho
  * Busca webhook especifico (secret mascarado)
  */
 export async function getWebhook(id: string): Promise<{ webhook: WebhookConfig | null; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -177,6 +180,7 @@ export async function createWebhook(input: CreateWebhookInput): Promise<{
   id?: string;
   secret_key?: string;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -221,6 +225,7 @@ export async function updateWebhook(
   id: string,
   input: Partial<Omit<CreateWebhookInput, 'secret_key'>>
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -251,6 +256,7 @@ export async function updateWebhook(
  * Remove webhook
  */
 export async function deleteWebhook(id: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -274,6 +280,7 @@ export async function toggleWebhookStatus(id: string): Promise<{
   error?: string;
   newStatus?: boolean;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data: webhook, error: fetchError } = await supabase
@@ -310,6 +317,7 @@ export async function regenerateWebhookSecret(id: string): Promise<{
   error?: string;
   secret_key?: string;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const newSecretKey = generateSecretKey();
@@ -342,6 +350,7 @@ export async function testWebhook(id: string): Promise<{
   status?: number;
   responseTime?: number;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Buscar configuracao do webhook (com secret)
@@ -505,6 +514,7 @@ export async function testWebhook(id: string): Promise<{
  * Lista logs de webhooks
  */
 export async function getWebhookLogs(params: WebhookLogsParams = {}): Promise<WebhookLogsResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const { webhookId, page = 1, pageSize = 50, status } = params;
   const offset = (page - 1) * pageSize;
@@ -542,6 +552,7 @@ export async function getWebhookStats(webhookId: string): Promise<{
   failed: number;
   avgResponseTime: number;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Total de logs

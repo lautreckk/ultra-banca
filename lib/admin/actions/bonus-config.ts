@@ -1,17 +1,21 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
 // BONUS DEPOSIT CONFIG TYPES
 // =============================================
 
+export type CarteiraType = 'tradicional' | 'cassino' | 'ambas';
+
 export interface BonusTier {
   id: string;
   deposito_minimo: number;
   bonus_percentual: number;
   bonus_maximo: number | null;
+  carteira: CarteiraType;
   ativo: boolean;
   created_by: string | null;
   created_at: string;
@@ -35,6 +39,7 @@ export interface CreateBonusTierInput {
   deposito_minimo: number;
   bonus_percentual: number;
   bonus_maximo?: number | null;
+  carteira?: CarteiraType;
   ativo?: boolean;
 }
 
@@ -57,6 +62,7 @@ export interface BonusAppliedRecord {
  * Lista todas as faixas de bônus de depósito
  */
 export async function getBonusTiers(params: BonusTierListParams = {}): Promise<BonusTierListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
   const { page = 1, pageSize = 50, ativo } = params;
@@ -85,6 +91,7 @@ export async function getBonusTiers(params: BonusTierListParams = {}): Promise<B
     deposito_minimo: Number(t.deposito_minimo),
     bonus_percentual: Number(t.bonus_percentual),
     bonus_maximo: t.bonus_maximo ? Number(t.bonus_maximo) : null,
+    carteira: (t.carteira || 'ambas') as CarteiraType,
     ativo: t.ativo,
     created_by: t.created_by,
     created_at: t.created_at,
@@ -98,6 +105,7 @@ export async function getBonusTiers(params: BonusTierListParams = {}): Promise<B
  * Cria uma nova faixa de bônus
  */
 export async function createBonusTier(input: CreateBonusTierInput): Promise<{ success: boolean; error?: string; id?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -131,6 +139,7 @@ export async function createBonusTier(input: CreateBonusTierInput): Promise<{ su
       deposito_minimo: input.deposito_minimo,
       bonus_percentual: input.bonus_percentual,
       bonus_maximo: input.bonus_maximo || null,
+      carteira: input.carteira || 'ambas',
       ativo: input.ativo ?? true,
       created_by: user?.id || null,
       platform_id: platformId,
@@ -152,6 +161,7 @@ export async function updateBonusTier(
   id: string,
   input: Partial<CreateBonusTierInput>
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Validações
@@ -185,6 +195,7 @@ export async function updateBonusTier(
   if (input.deposito_minimo !== undefined) updateData.deposito_minimo = input.deposito_minimo;
   if (input.bonus_percentual !== undefined) updateData.bonus_percentual = input.bonus_percentual;
   if (input.bonus_maximo !== undefined) updateData.bonus_maximo = input.bonus_maximo;
+  if (input.carteira !== undefined) updateData.carteira = input.carteira;
   if (input.ativo !== undefined) updateData.ativo = input.ativo;
 
   const { error } = await supabase
@@ -203,6 +214,7 @@ export async function updateBonusTier(
  * Deleta uma faixa de bônus
  */
 export async function deleteBonusTier(id: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -221,6 +233,7 @@ export async function deleteBonusTier(id: string): Promise<{ success: boolean; e
  * Alterna o status ativo/inativo de uma faixa de bônus
  */
 export async function toggleBonusTierStatus(id: string): Promise<{ success: boolean; error?: string; newStatus?: boolean }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Buscar status atual
@@ -256,22 +269,25 @@ export async function toggleBonusTierStatus(id: string): Promise<{ success: bool
  * Calcula o bônus para um determinado valor de depósito
  * Retorna a faixa aplicável e o valor do bônus calculado
  */
-export async function calculateBonus(valorDeposito: number, platformIdOverride?: string): Promise<{
+export async function calculateBonus(valorDeposito: number, platformIdOverride?: string, walletType: 'tradicional' | 'cassino' = 'tradicional'): Promise<{
   tierId: string | null;
   percentual: number;
   valorBonus: number;
   bonusMaximo: number | null;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = platformIdOverride || await getPlatformId();
 
   // Buscar a faixa de bônus aplicável (maior deposito_minimo <= valorDeposito) para esta plataforma
+  // Filtra por carteira: aceita tiers que sejam 'ambas' ou que correspondam ao walletType
   const { data: tier } = await supabase
     .from('bonus_deposito_config')
     .select('*')
     .eq('ativo', true)
     .eq('platform_id', platformId)
     .lte('deposito_minimo', valorDeposito)
+    .in('carteira', [walletType, 'ambas'])
     .order('deposito_minimo', { ascending: false })
     .limit(1)
     .single();
@@ -305,13 +321,15 @@ export async function applyDepositBonus(
   userId: string,
   pagamentoId: string,
   valorDeposito: number,
-  platformIdOverride?: string
+  platformIdOverride?: string,
+  walletType: 'tradicional' | 'cassino' = 'tradicional'
 ): Promise<{
   success: boolean;
   error?: string;
   bonusApplied: number;
   percentualApplied: number;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = platformIdOverride || await getPlatformId();
 
@@ -326,8 +344,8 @@ export async function applyDepositBonus(
     return { success: true, bonusApplied: 0, percentualApplied: 0 }; // Já aplicado, não é erro
   }
 
-  // Calcular bônus para esta plataforma
-  const { tierId, percentual, valorBonus } = await calculateBonus(valorDeposito, platformId);
+  // Calcular bônus para esta plataforma (filtra por carteira)
+  const { tierId, percentual, valorBonus } = await calculateBonus(valorDeposito, platformId, walletType);
 
   if (!tierId || valorBonus <= 0) {
     return { success: true, bonusApplied: 0, percentualApplied: 0 }; // Sem bônus aplicável
@@ -351,20 +369,15 @@ export async function applyDepositBonus(
     return { success: false, error: insertError.message, bonusApplied: 0, percentualApplied: 0 };
   }
 
-  // Atualizar saldo_bonus do usuário
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('saldo_bonus')
-    .eq('id', userId)
-    .single();
+  // ATOMIC: Credit bonus balance using service_role (bypasses prevent_balance_tampering trigger)
+  const bonusField = walletType === 'cassino' ? 'saldo_bonus_cassino' : 'saldo_bonus';
+  const adminClient = createAdminClient();
 
-  const currentBonusBalance = Number(profile?.saldo_bonus) || 0;
-  const newBonusBalance = currentBonusBalance + valorBonus;
-
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ saldo_bonus: newBonusBalance })
-    .eq('id', userId);
+  const { error: updateError } = await adminClient.rpc('atomic_credit_balance', {
+    p_user_id: userId,
+    p_amount: valorBonus,
+    p_wallet: bonusField,
+  });
 
   if (updateError) {
     console.error('Error updating bonus balance:', updateError);
@@ -392,6 +405,7 @@ export async function getBonusHistory(params: {
   page: number;
   pageSize: number;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
   const { page = 1, pageSize = 20, userId } = params;

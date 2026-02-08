@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 const PLAYFIVER_API_BASE = 'https://api.playfivers.com/api/v2';
@@ -91,6 +92,7 @@ export interface GGRSummary {
  * Get PlayFivers config for current platform
  */
 export async function getPlayfiverConfig(): Promise<{ success: boolean; config?: PlayfiverConfig; error?: string }> {
+  await requireAdmin();
   try {
     const supabase = await createClient();
     const platformId = await getPlatformId();
@@ -137,6 +139,7 @@ export async function getPlayfiverConfig(): Promise<{ success: boolean; config?:
 export async function savePlayfiverConfig(
   input: SavePlayfiverConfigInput
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   try {
     const supabase = await createClient();
     const platformId = await getPlatformId();
@@ -195,6 +198,7 @@ export async function getCasinoGGR(
   endDate: string,
   provider?: string
 ): Promise<{ success: boolean; summary?: GGRSummary; error?: string }> {
+  await requireAdmin();
   try {
     const supabase = await createClient();
     const platformId = await getPlatformId();
@@ -275,6 +279,7 @@ export async function getCasinoGGR(
 export async function getCasinoTransactions(
   params: CasinoTransactionsParams = {}
 ): Promise<CasinoTransactionsResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
   const { page = 1, pageSize = 20, userId, provider, dateFrom, dateTo } = params;
@@ -354,6 +359,7 @@ export async function getCasinoTransactions(
  * Force refresh games cache (admin version)
  */
 export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; count?: number; error?: string }> {
+  await requireAdmin();
   try {
     const supabase = await createClient();
     const platformId = await getPlatformId();
@@ -422,6 +428,7 @@ export async function refreshGamesCacheAdmin(): Promise<{ success: boolean; coun
  * Test connection to PlayFivers API (via DB RPC for fixed IP)
  */
 export async function testPlayfiverConnection(): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   try {
     const supabase = await createClient();
     const platformId = await getPlatformId();
@@ -447,6 +454,7 @@ export async function testPlayfiverConnection(): Promise<{ success: boolean; err
  * Get the server's outgoing IP address (for PlayFivers IP whitelist)
  */
 export async function getServerIP(): Promise<{ success: boolean; ip?: string; error?: string }> {
+  await requireAdmin();
   try {
     const response = await fetch('https://api.ipify.org?format=json');
     const data = await response.json();

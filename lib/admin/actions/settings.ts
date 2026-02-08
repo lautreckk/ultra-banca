@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { revalidatePath } from 'next/cache';
 import { getPlatformId } from '@/lib/utils/platform';
 
@@ -31,6 +32,7 @@ function maskSecret(secret: string | null): string | null {
 }
 
 export async function getGatewayConfig(gatewayName: string): Promise<GatewayConfig | null> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -60,6 +62,7 @@ export async function getGatewayConfig(gatewayName: string): Promise<GatewayConf
 }
 
 export async function getAllGateways(): Promise<GatewayConfig[]> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -89,6 +92,7 @@ export async function getAllGateways(): Promise<GatewayConfig[]> {
 }
 
 export async function setPrimaryGateway(gatewayName: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -127,6 +131,7 @@ export async function setPrimaryGateway(gatewayName: string): Promise<{ success:
 }
 
 export async function getPrimaryGateway(): Promise<string> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -141,6 +146,7 @@ export async function getPrimaryGateway(): Promise<string> {
 }
 
 export async function getActiveGateway(): Promise<string> {
+  await requireAdmin();
   return getPrimaryGateway();
 }
 
@@ -154,6 +160,7 @@ export async function updateGatewayConfig(
     config?: Record<string, unknown>;
   }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -223,6 +230,7 @@ export interface ModalidadeConfig {
  * Combina estrutura global (modalidades_config) com valores por plataforma (platform_modalidades).
  */
 export async function getModalidades(): Promise<ModalidadeConfig[]> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -310,6 +318,7 @@ export async function updateModalidade(
     ativo?: boolean;
   }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -427,6 +436,7 @@ export interface SystemSetting {
 }
 
 export async function getSystemSettings(category?: string): Promise<SystemSetting[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   let query = supabase.from('system_settings').select('key, value, description, category');
@@ -449,6 +459,7 @@ export async function updateSystemSetting(
   key: string,
   value: string
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -464,6 +475,7 @@ export async function updateSystemSetting(
 }
 
 export async function getSystemSetting(key: string): Promise<string | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase

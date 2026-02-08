@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { getPlatformId } from '@/lib/utils/platform';
@@ -12,6 +13,8 @@ export interface UserProfile {
   telefone: string | null;
   saldo: number;
   saldo_bonus: number;
+  saldo_cassino: number;
+  saldo_bonus_cassino: number;
   codigo_convite: string | null;
   created_at: string;
   total_apostas: number;
@@ -47,6 +50,7 @@ export interface UsersListResult {
  * Redução: ~93% das queries
  */
 export async function getUsers(params: UsersListParams = {}): Promise<UsersListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const {
     page = 1,
@@ -76,7 +80,7 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
   // ============================================================================
   let query = supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login', { count: 'exact' })
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino, codigo_convite, created_at, last_login', { count: 'exact' })
     .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
@@ -99,7 +103,7 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
 
   let allUsersQuery = supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at, last_login')
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino, codigo_convite, created_at, last_login')
     .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
@@ -241,6 +245,8 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
     telefone: user.telefone,
     saldo: Number(user.saldo) || 0,
     saldo_bonus: Number(user.saldo_bonus) || 0,
+    saldo_cassino: Number(user.saldo_cassino) || 0,
+    saldo_bonus_cassino: Number(user.saldo_bonus_cassino) || 0,
     codigo_convite: user.codigo_convite,
     created_at: user.created_at,
     total_apostas: apostasCountMap.get(user.id) || 0,
@@ -262,6 +268,7 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
  * Depois: 1 query + 2 queries paralelas = tempo de 2 queries
  */
 export async function getUserById(id: string): Promise<UserProfile | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
@@ -270,7 +277,7 @@ export async function getUserById(id: string): Promise<UserProfile | null> {
   // Query 1: Buscar usuário (garantindo que pertence à plataforma)
   const { data: user, error } = await supabase
     .from('profiles')
-    .select('id, nome, cpf, telefone, saldo, saldo_bonus, codigo_convite, created_at')
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino, codigo_convite, created_at')
     .eq('id', id)
     .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
     .single();
@@ -307,6 +314,8 @@ export async function getUserById(id: string): Promise<UserProfile | null> {
     telefone: user.telefone,
     saldo: Number(user.saldo) || 0,
     saldo_bonus: Number(user.saldo_bonus) || 0,
+    saldo_cassino: Number(user.saldo_cassino) || 0,
+    saldo_bonus_cassino: Number(user.saldo_bonus_cassino) || 0,
     codigo_convite: user.codigo_convite,
     created_at: user.created_at,
     total_apostas: apostasResult.count || 0,
@@ -317,8 +326,11 @@ export async function getUserById(id: string): Promise<UserProfile | null> {
 export async function updateUserBalance(
   userId: string,
   saldo: number,
-  saldoBonus: number
+  saldoBonus: number,
+  saldoCassino: number,
+  saldoBonusCassino: number
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -327,15 +339,20 @@ export async function updateUserBalance(
   // Buscar saldos anteriores e nome do usuário
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('saldo, saldo_bonus, nome')
+    .select('saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino, nome')
     .eq('id', userId)
     .single();
 
-  const { error } = await supabase
+  // SECURITY: Use service_role client to bypass prevent_balance_tampering trigger
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient
     .from('profiles')
     .update({
       saldo,
       saldo_bonus: saldoBonus,
+      saldo_cassino: saldoCassino,
+      saldo_bonus_cassino: saldoBonusCassino,
     })
     .eq('id', userId);
 
@@ -346,10 +363,14 @@ export async function updateUserBalance(
   // Registrar no log de auditoria
   const saldoAnterior = Number(currentProfile?.saldo) || 0;
   const saldoBonusAnterior = Number(currentProfile?.saldo_bonus) || 0;
+  const saldoCassinoAnterior = Number(currentProfile?.saldo_cassino) || 0;
+  const saldoBonusCassinoAnterior = Number(currentProfile?.saldo_bonus_cassino) || 0;
   const diferencaSaldo = saldo - saldoAnterior;
   const diferencaBonus = saldoBonus - saldoBonusAnterior;
+  const diferencaCassino = saldoCassino - saldoCassinoAnterior;
+  const diferencaBonusCassino = saldoBonusCassino - saldoBonusCassinoAnterior;
 
-  if (diferencaSaldo !== 0 || diferencaBonus !== 0) {
+  if (diferencaSaldo !== 0 || diferencaBonus !== 0 || diferencaCassino !== 0 || diferencaBonusCassino !== 0) {
     await logAudit({
       actorId: admin?.id || null,
       action: AuditActions.BALANCE_ADJUSTED,
@@ -363,6 +384,12 @@ export async function updateUserBalance(
         saldo_bonus_anterior: saldoBonusAnterior,
         saldo_bonus_novo: saldoBonus,
         diferenca_bonus: diferencaBonus,
+        saldo_cassino_anterior: saldoCassinoAnterior,
+        saldo_cassino_novo: saldoCassino,
+        diferenca_cassino: diferencaCassino,
+        saldo_bonus_cassino_anterior: saldoBonusCassinoAnterior,
+        saldo_bonus_cassino_novo: saldoBonusCassino,
+        diferenca_bonus_cassino: diferencaBonusCassino,
         timestamp: new Date().toISOString(),
       },
     });
@@ -375,6 +402,8 @@ export interface UpdateUserProfileData {
   cpf?: string;
   saldo?: number;
   saldoBonus?: number;
+  saldoCassino?: number;
+  saldoBonusCassino?: number;
   newPassword?: string;
 }
 
@@ -382,6 +411,7 @@ export async function updateUserProfile(
   userId: string,
   data: UpdateUserProfileData
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -390,7 +420,7 @@ export async function updateUserProfile(
   // Buscar dados anteriores do usuário
   const { data: currentProfile } = await supabase
     .from('profiles')
-    .select('cpf, saldo, saldo_bonus, nome')
+    .select('cpf, saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino, nome')
     .eq('id', userId)
     .single();
 
@@ -406,26 +436,69 @@ export async function updateUserProfile(
   if (data.saldoBonus !== undefined) {
     profileUpdates.saldo_bonus = data.saldoBonus;
   }
+  if (data.saldoCassino !== undefined) {
+    profileUpdates.saldo_cassino = data.saldoCassino;
+  }
+  if (data.saldoBonusCassino !== undefined) {
+    profileUpdates.saldo_bonus_cassino = data.saldoBonusCassino;
+  }
 
   if (Object.keys(profileUpdates).length > 0) {
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update(profileUpdates)
-      .eq('id', userId);
+    // SECURITY: Separate balance updates (need service_role to bypass trigger) from other updates
+    const balanceKeys = ['saldo', 'saldo_bonus', 'saldo_cassino', 'saldo_bonus_cassino'];
+    const balanceUpdates: Record<string, unknown> = {};
+    const otherUpdates: Record<string, unknown> = {};
 
-    if (profileError) {
-      return { success: false, error: `Erro ao atualizar perfil: ${profileError.message}` };
+    for (const [key, value] of Object.entries(profileUpdates)) {
+      if (balanceKeys.includes(key)) {
+        balanceUpdates[key] = value;
+      } else {
+        otherUpdates[key] = value;
+      }
     }
+
+    // Update non-balance fields with regular client
+    if (Object.keys(otherUpdates).length > 0) {
+      const { error: otherError } = await supabase
+        .from('profiles')
+        .update(otherUpdates)
+        .eq('id', userId);
+
+      if (otherError) {
+        return { success: false, error: `Erro ao atualizar perfil: ${otherError.message}` };
+      }
+    }
+
+    // Update balance fields with admin client (bypasses prevent_balance_tampering trigger)
+    if (Object.keys(balanceUpdates).length > 0) {
+      const adminClient = createAdminClient();
+      const { error: balanceError } = await adminClient
+        .from('profiles')
+        .update(balanceUpdates)
+        .eq('id', userId);
+
+      if (balanceError) {
+        return { success: false, error: `Erro ao atualizar saldo: ${balanceError.message}` };
+      }
+    }
+
+    // Combined error check removed - handled above per operation
 
     // Verificar se houve alteração de saldo para logar BALANCE_ADJUSTED
     const saldoAnterior = Number(currentProfile?.saldo) || 0;
     const saldoBonusAnterior = Number(currentProfile?.saldo_bonus) || 0;
+    const saldoCassinoAnterior = Number(currentProfile?.saldo_cassino) || 0;
+    const saldoBonusCassinoAnterior = Number(currentProfile?.saldo_bonus_cassino) || 0;
     const novoSaldo = data.saldo !== undefined ? data.saldo : saldoAnterior;
     const novoSaldoBonus = data.saldoBonus !== undefined ? data.saldoBonus : saldoBonusAnterior;
+    const novoSaldoCassino = data.saldoCassino !== undefined ? data.saldoCassino : saldoCassinoAnterior;
+    const novoSaldoBonusCassino = data.saldoBonusCassino !== undefined ? data.saldoBonusCassino : saldoBonusCassinoAnterior;
     const diferencaSaldo = novoSaldo - saldoAnterior;
     const diferencaBonus = novoSaldoBonus - saldoBonusAnterior;
+    const diferencaCassino = novoSaldoCassino - saldoCassinoAnterior;
+    const diferencaBonusCassino = novoSaldoBonusCassino - saldoBonusCassinoAnterior;
 
-    if (diferencaSaldo !== 0 || diferencaBonus !== 0) {
+    if (diferencaSaldo !== 0 || diferencaBonus !== 0 || diferencaCassino !== 0 || diferencaBonusCassino !== 0) {
       await logAudit({
         actorId: admin?.id || null,
         action: AuditActions.BALANCE_ADJUSTED,
@@ -439,6 +512,12 @@ export async function updateUserProfile(
           saldo_bonus_anterior: saldoBonusAnterior,
           saldo_bonus_novo: novoSaldoBonus,
           diferenca_bonus: diferencaBonus,
+          saldo_cassino_anterior: saldoCassinoAnterior,
+          saldo_cassino_novo: novoSaldoCassino,
+          diferenca_cassino: diferencaCassino,
+          saldo_bonus_cassino_anterior: saldoBonusCassinoAnterior,
+          saldo_bonus_cassino_novo: novoSaldoBonusCassino,
+          diferenca_bonus_cassino: diferencaBonusCassino,
           timestamp: new Date().toISOString(),
         },
       });

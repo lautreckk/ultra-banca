@@ -165,7 +165,11 @@ export default async function RootLayout({
   // ============================================================================
   const safePixelId = sanitizeTrackingId(config.facebook_pixel_id);
   const safeAnalyticsId = sanitizeTrackingId(config.google_analytics_id);
+  const safeUtmifyPixelId = sanitizeTrackingId(config.utmify_pixel_id);
   const safeCustomScripts = sanitizeCustomScripts(config.custom_head_scripts);
+
+  // SECURITY: Strip sensitive fields before passing to client context
+  const safeConfig = { ...config, facebook_access_token: null };
 
   return (
     <html lang="pt-BR">
@@ -217,7 +221,7 @@ export default async function RootLayout({
           <div dangerouslySetInnerHTML={{ __html: safeCustomScripts }} />
         )}
         {/* UTMify - Configuravel por plataforma */}
-        {config.utmify_pixel_id && (
+        {safeUtmifyPixelId && (
           <>
             <Script
               src="https://cdn.utmify.com.br/scripts/utms/latest.js"
@@ -226,7 +230,7 @@ export default async function RootLayout({
               strategy="afterInteractive"
             />
             <Script id="utmify-pixel" strategy="afterInteractive">
-              {`window.pixelId = "${config.utmify_pixel_id}";`}
+              {`window.pixelId = "${safeUtmifyPixelId}";`}
             </Script>
             <Script
               src="https://cdn.utmify.com.br/scripts/pixel/pixel.js"
@@ -238,7 +242,7 @@ export default async function RootLayout({
         )}
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
-        <ConfigProvider config={config}>
+        <ConfigProvider config={safeConfig}>
           <ThemeInjector />
           <PaymentWatcherProvider>
             {children}

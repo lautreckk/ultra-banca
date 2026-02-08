@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 // =============================================
@@ -55,6 +56,7 @@ export interface InactivityConfig {
 // =============================================
 
 export async function getInactiveLeadsStats(): Promise<InactiveLeadsStats> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -140,6 +142,7 @@ export async function getInactiveLeadsStats(): Promise<InactiveLeadsStats> {
 export async function getInactiveLeads(
   params: InactiveLeadsParams = {}
 ): Promise<InactiveLeadsResult> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const {
@@ -328,6 +331,7 @@ export async function getInactiveLeads(
 // =============================================
 
 export async function getInactivityConfig(): Promise<InactivityConfig> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -349,6 +353,7 @@ export async function getInactivityConfig(): Promise<InactivityConfig> {
 export async function updateInactivityConfig(
   config: Partial<InactivityConfig>
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const updates: { key: string; value: string; category: string; description: string }[] = [];

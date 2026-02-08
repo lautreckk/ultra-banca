@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { getPlatformId } from '@/lib/utils/platform';
@@ -88,6 +89,7 @@ export interface UpdatePromotorData {
 // =============================================
 
 export async function getPromotores(params: PromotoresListParams = {}): Promise<PromotoresListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20, search, status = 'todos' } = params;
   const offset = (page - 1) * pageSize;
@@ -166,6 +168,7 @@ export async function getPromotores(params: PromotoresListParams = {}): Promise<
 }
 
 export async function getPromotorById(id: string): Promise<Promotor | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data: promotor, error } = await supabase
@@ -225,6 +228,7 @@ function generateCodigoAfiliado(nome: string): string {
 }
 
 export async function createPromotor(data: CreatePromotorData): Promise<{ success: boolean; error?: string; promotor?: Promotor }> {
+  await requireAdmin();
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
@@ -336,6 +340,7 @@ export async function createPromotor(data: CreatePromotorData): Promise<{ succes
 }
 
 export async function updatePromotor(id: string, data: UpdatePromotorData): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -392,6 +397,7 @@ export async function updatePromotor(id: string, data: UpdatePromotorData): Prom
 }
 
 export async function deletePromotor(id: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
@@ -442,6 +448,7 @@ export async function addBonusToPromotor(
   valor: number,
   motivo?: string
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -511,6 +518,7 @@ export async function resetPromotorPassword(
   promotorId: string,
   newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
@@ -563,6 +571,7 @@ export async function getPromotorReferidos(
   promotorId: string,
   params: { page?: number; pageSize?: number } = {}
 ): Promise<{ referidos: PromotorReferido[]; total: number }> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20 } = params;
   const offset = (page - 1) * pageSize;
@@ -633,6 +642,7 @@ export async function getPromotorComissoes(
   promotorId: string,
   params: { page?: number; pageSize?: number; tipo?: string } = {}
 ): Promise<{ comissoes: PromotorComissao[]; total: number }> {
+  await requireAdmin();
   const supabase = await createClient();
   const { page = 1, pageSize = 20, tipo } = params;
   const offset = (page - 1) * pageSize;
@@ -698,6 +708,7 @@ export interface PromotorStats {
 }
 
 export async function getPromotorStats(promotorId: string): Promise<PromotorStats | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Buscar promotor
@@ -779,6 +790,7 @@ export async function getPromotorStats(promotorId: string): Promise<PromotorStat
 // =============================================
 
 export async function getComissaoAutomaticaSetting(): Promise<boolean> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Buscar da tabela platforms
@@ -794,6 +806,7 @@ export async function getComissaoAutomaticaSetting(): Promise<boolean> {
 }
 
 export async function updateComissaoAutomaticaSetting(value: boolean): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Obter admin atual
@@ -835,6 +848,7 @@ export async function processarComissaoDeposito(
   depositoId: string,
   valorDeposito: number
 ): Promise<{ success: boolean; comissao?: number }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Verificar se usuário foi indicado por promotor

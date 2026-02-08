@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 
 // =============================================
 // TYPES
@@ -171,6 +172,7 @@ async function callEvolutionApi(
 // =============================================
 
 export async function getEvolutionConfig(): Promise<EvolutionConfig | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -195,6 +197,7 @@ export async function saveEvolutionConfig(
   baseUrl: string,
   globalApikey: string
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Verificar se já existe config
@@ -234,6 +237,7 @@ export async function saveEvolutionConfig(
 }
 
 export async function testEvolutionConnection(): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const result = await callEvolutionApi('/instance/fetchInstances');
   return result;
 }
@@ -243,6 +247,7 @@ export async function testEvolutionConnection(): Promise<{ success: boolean; err
 // =============================================
 
 export async function getInstances(): Promise<EvolutionInstance[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -267,6 +272,7 @@ export async function createInstance(
     syncFullHistory?: boolean;
   }
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Criar na Evolution API
@@ -307,6 +313,7 @@ export async function createInstance(
 }
 
 export async function connectInstance(instanceName: string): Promise<{ success: boolean; qrcode?: string; error?: string }> {
+  await requireAdmin();
   const result = await callEvolutionApi(`/instance/connect/${instanceName}`);
 
   if (!result.success) {
@@ -329,6 +336,7 @@ export async function connectInstance(instanceName: string): Promise<{ success: 
 }
 
 export async function getConnectionState(instanceName: string): Promise<{ success: boolean; state?: string; error?: string }> {
+  await requireAdmin();
   const result = await callEvolutionApi(`/instance/connectionState/${instanceName}`);
 
   if (!result.success) {
@@ -349,11 +357,13 @@ export async function getConnectionState(instanceName: string): Promise<{ succes
 }
 
 export async function restartInstance(instanceName: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const result = await callEvolutionApi(`/instance/restart/${instanceName}`, 'PUT');
   return result;
 }
 
 export async function logoutInstance(instanceName: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const result = await callEvolutionApi(`/instance/logout/${instanceName}`, 'DELETE');
 
   if (result.success) {
@@ -368,6 +378,7 @@ export async function logoutInstance(instanceName: string): Promise<{ success: b
 }
 
 export async function deleteInstance(instanceName: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   // Deletar da Evolution API
   const result = await callEvolutionApi(`/instance/delete/${instanceName}`, 'DELETE');
 
@@ -393,10 +404,12 @@ export async function setInstanceSettings(
     syncFullHistory?: boolean;
   }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   return await callEvolutionApi(`/settings/set/${instanceName}`, 'POST', settings);
 }
 
 export async function getInstanceSettings(instanceName: string): Promise<{ success: boolean; data?: unknown; error?: string }> {
+  await requireAdmin();
   return await callEvolutionApi(`/settings/find/${instanceName}`);
 }
 
@@ -410,6 +423,7 @@ export async function sendTextMessage(
   text: string,
   options?: { delay?: number; linkPreview?: boolean }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   // Formatar número (remover caracteres especiais, adicionar código do país se necessário)
   const formattedNumber = formatPhoneNumber(number);
 
@@ -447,6 +461,7 @@ export async function sendMediaMessage(
   caption?: string,
   options?: { delay?: number; fileName?: string }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const formattedNumber = formatPhoneNumber(number);
 
   const result = await callEvolutionApi(`/message/sendMedia/${instanceName}`, 'POST', {
@@ -483,6 +498,7 @@ export async function sendAudioMessage(
   audioUrl: string,
   options?: { delay?: number }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const formattedNumber = formatPhoneNumber(number);
 
   const result = await callEvolutionApi(`/message/sendWhatsAppAudio/${instanceName}`, 'POST', {
@@ -532,6 +548,7 @@ function formatPhoneNumber(phone: string): string {
 // =============================================
 
 export async function getTriggers(): Promise<EvolutionTrigger[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -552,6 +569,7 @@ export async function getTriggers(): Promise<EvolutionTrigger[]> {
 }
 
 export async function getTrigger(triggerId: string): Promise<EvolutionTrigger | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -573,6 +591,7 @@ export async function getTrigger(triggerId: string): Promise<EvolutionTrigger | 
 }
 
 export async function getTriggerByType(triggerType: string): Promise<EvolutionTrigger | null> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -597,6 +616,7 @@ export async function createTrigger(
   triggerType: string,
   instanceId: string | null
 ): Promise<{ success: boolean; data?: EvolutionTrigger; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -620,6 +640,7 @@ export async function updateTrigger(
   triggerId: string,
   updates: { enabled?: boolean; instance_id?: string | null }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -635,6 +656,7 @@ export async function updateTrigger(
 }
 
 export async function deleteTrigger(triggerId: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -661,6 +683,7 @@ export async function addTriggerMessage(
   delaySeconds?: number,
   orderIndex?: number
 ): Promise<{ success: boolean; data?: EvolutionTriggerMessage; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Se não especificado, pega o próximo índice
@@ -705,6 +728,7 @@ export async function updateTriggerMessage(
     order_index?: number;
   }
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -720,6 +744,7 @@ export async function updateTriggerMessage(
 }
 
 export async function deleteTriggerMessage(messageId: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -738,6 +763,7 @@ export async function reorderTriggerMessages(
   triggerId: string,
   messageIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Atualizar order_index de cada mensagem
@@ -798,6 +824,7 @@ export async function executeTrigger(
   triggerType: string,
   userData: UserData
 ): Promise<{ success: boolean; sentCount?: number; error?: string }> {
+  await requireAdmin();
   // Buscar trigger ativo
   const trigger = await getTriggerByType(triggerType);
 
@@ -876,6 +903,7 @@ export async function getMessageLogs(options?: {
   status?: 'pending' | 'sent' | 'failed';
   triggerType?: string;
 }): Promise<{ logs: EvolutionMessageLog[]; total: number }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   let query = supabase
@@ -913,6 +941,7 @@ export async function getEvolutionStats(): Promise<{
   messagesSentToday: number;
   failedMessages: number;
 }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Instâncias

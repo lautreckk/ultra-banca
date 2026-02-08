@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 export interface Propaganda {
@@ -34,6 +35,7 @@ export interface AdsListResult {
 }
 
 export async function getAds(params: AdsListParams = {}): Promise<AdsListResult> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
   const { page = 1, pageSize = 20, ativo } = params;
@@ -94,6 +96,7 @@ export interface CreateAdInput {
 }
 
 export async function createAd(input: CreateAdInput): Promise<{ success: boolean; error?: string; id?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
@@ -128,6 +131,7 @@ export async function updateAd(
   id: string,
   input: Partial<CreateAdInput>
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -155,6 +159,7 @@ export async function updateAd(
 }
 
 export async function deleteAd(id: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -170,6 +175,7 @@ export async function deleteAd(id: string): Promise<{ success: boolean; error?: 
 }
 
 export async function toggleAdStatus(id: string): Promise<{ success: boolean; error?: string; newStatus?: boolean }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // Get current status
@@ -199,6 +205,7 @@ export async function toggleAdStatus(id: string): Promise<{ success: boolean; er
 
 // Function for user-facing: get active ads by trigger
 export async function getActiveAdsByTrigger(trigger: 'login' | 'saque' | 'deposito'): Promise<Propaganda[]> {
+  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 

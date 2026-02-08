@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 export interface VisitorStats {
@@ -48,6 +49,7 @@ const gameTypeNames: Record<string, string> = {
 };
 
 export async function getVisitorStats(days: number = 30): Promise<VisitorStats> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const now = new Date();
@@ -130,6 +132,7 @@ export async function getVisitorStats(days: number = 30): Promise<VisitorStats> 
 }
 
 export async function getGameAccessStats(days: number = 30): Promise<GameAccessStat[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const daysAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -175,6 +178,7 @@ export async function getGameAccessStats(days: number = 30): Promise<GameAccessS
 }
 
 export async function getHouseProfitData(): Promise<HouseProfitData> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const now = new Date();
@@ -241,6 +245,7 @@ export async function getHouseProfitData(): Promise<HouseProfitData> {
 }
 
 export async function getRealtimeVisitorCount(): Promise<number> {
+  await requireAdmin();
   const supabase = await createClient();
 
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);

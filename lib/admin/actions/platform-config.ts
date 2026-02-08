@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache';
 import { PlatformConfig, defaultConfig } from '@/contexts/platform-config-context';
 import { getPlatformId } from '@/lib/utils/platform';
@@ -12,6 +13,7 @@ import { getPlatformId } from '@/lib/utils/platform';
  * Se nao encontrar, tenta buscar da tabela legada platform_config.
  */
 export async function getPlatformConfig(): Promise<PlatformConfig> {
+  await requireAdmin();
   // Evita cache do Next.js - sempre busca dados frescos
   noStore();
 
@@ -130,6 +132,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
 export async function updatePlatformConfig(
   updates: Partial<PlatformConfig>
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual

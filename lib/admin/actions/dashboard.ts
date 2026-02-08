@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 
 export interface DashboardStats {
@@ -25,6 +26,7 @@ export interface DashboardStats {
  * Redução estimada: 90% do tempo de resposta
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
@@ -172,6 +174,7 @@ export interface RecentBet {
 }
 
 export async function getRecentBets(limit = 7): Promise<RecentBet[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
@@ -219,6 +222,7 @@ export interface RecentDeposit {
 }
 
 export async function getRecentDeposits(limit = 7): Promise<RecentDeposit[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
@@ -263,6 +267,7 @@ export interface RecentWithdrawal {
 }
 
 export async function getPendingWithdrawals(limit = 7): Promise<RecentWithdrawal[]> {
+  await requireAdmin();
   const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
