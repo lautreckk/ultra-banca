@@ -208,7 +208,7 @@ export default function DashboardPage() {
                 src="/images/loterias-banner.webp"
                 alt="Loterias"
                 fill
-                className="object-cover"
+                className="object-cover object-top scale-105"
                 priority
               />
             </div>
