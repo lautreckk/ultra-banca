@@ -11,6 +11,7 @@ export function ModernLayout({
   children,
   saldo,
   saldoBonus,
+  saldoCassino,
   unidade,
   onRefresh,
   loading,
@@ -63,6 +64,7 @@ export function ModernLayout({
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         saldo={saldo}
         saldoBonus={saldoBonus}
+        saldoCassino={saldoCassino}
       />
 
       {/* Container principal com margem para sidebar */}
@@ -77,6 +79,7 @@ export function ModernLayout({
         <ModernHeader
           saldo={saldo}
           saldoBonus={saldoBonus}
+          saldoCassino={saldoCassino}
           onRefresh={onRefresh}
           loading={loading}
           onMenuClick={() => setDrawerOpen(true)}

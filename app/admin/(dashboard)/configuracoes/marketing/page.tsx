@@ -46,20 +46,37 @@ function MarketingContent() {
             />
           </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-zinc-300 mb-1">
-            Facebook Access Token (CAPI)
-          </label>
-          <Input
-            type="password"
-            value={config.facebook_access_token || ''}
-            onChange={(e) => updateField('facebook_access_token', e.target.value || null)}
-            className="bg-zinc-900 border-zinc-700 text-white"
-            placeholder="EAAxxxxxxx..."
-          />
-          <p className="text-xs text-zinc-500 mt-1">
-            Token para Conversions API - obtenha no Meta Business Manager
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
+              Facebook Access Token (CAPI)
+            </label>
+            <Input
+              type="password"
+              value={config.facebook_access_token || ''}
+              onChange={(e) => updateField('facebook_access_token', e.target.value || null)}
+              className="bg-zinc-900 border-zinc-700 text-white"
+              placeholder="EAAxxxxxxx..."
+            />
+            <p className="text-xs text-zinc-500 mt-1">
+              Token para Conversions API - obtenha no Meta Business Manager
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-1">
+              UTMify Pixel ID
+            </label>
+            <Input
+              type="text"
+              value={config.utmify_pixel_id || ''}
+              onChange={(e) => updateField('utmify_pixel_id', e.target.value || null)}
+              className="bg-zinc-900 border-zinc-700 text-white"
+              placeholder="69865d89fe4bfd2ffcc2d9c6"
+            />
+            <p className="text-xs text-zinc-500 mt-1">
+              ID do pixel UTMify para rastreamento de conversões
+            </p>
+          </div>
         </div>
       </div>
 

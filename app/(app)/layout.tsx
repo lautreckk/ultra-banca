@@ -8,6 +8,7 @@ import { LayoutWrapper } from '@/components/layouts/LayoutWrapper';
 interface UserProfile {
   saldo: number;
   saldoBonus: number;
+  saldoCassino: number;
   unidade: string;
 }
 
@@ -19,6 +20,7 @@ export default function AppLayout({
   const [profile, setProfile] = useState<UserProfile>({
     saldo: 0,
     saldoBonus: 0,
+    saldoCassino: 0,
     unidade: '000000',
   });
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ export default function AppLayout({
         // Fetch profile
         const { data, error } = await supabase
           .from('profiles')
-          .select('saldo, saldo_bonus, codigo_convite')
+          .select('saldo, saldo_bonus, saldo_cassino, codigo_convite')
           .eq('id', user.id)
           .single();
 
@@ -59,6 +61,7 @@ export default function AppLayout({
           setProfile({
             saldo: Number(data.saldo) || 0,
             saldoBonus: Number(data.saldo_bonus) || 0,
+            saldoCassino: Number(data.saldo_cassino) || 0,
             unidade: data.codigo_convite || '000000',
           });
         }
@@ -75,11 +78,12 @@ export default function AppLayout({
               filter: `id=eq.${user.id}`,
             },
             (payload) => {
-              const newData = payload.new as { saldo?: number; saldo_bonus?: number; codigo_convite?: string };
+              const newData = payload.new as { saldo?: number; saldo_bonus?: number; saldo_cassino?: number; codigo_convite?: string };
               setProfile((prev) => ({
                 ...prev,
                 saldo: Number(newData.saldo) || prev.saldo,
                 saldoBonus: Number(newData.saldo_bonus) || prev.saldoBonus,
+                saldoCassino: Number(newData.saldo_cassino) || prev.saldoCassino,
                 unidade: newData.codigo_convite || prev.unidade,
               }));
             }
@@ -109,7 +113,7 @@ export default function AppLayout({
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('saldo, saldo_bonus, codigo_convite')
+        .select('saldo, saldo_bonus, saldo_cassino, codigo_convite')
         .eq('id', uid)
         .single();
 
@@ -117,6 +121,7 @@ export default function AppLayout({
         setProfile({
           saldo: Number(data.saldo) || 0,
           saldoBonus: Number(data.saldo_bonus) || 0,
+          saldoCassino: Number(data.saldo_cassino) || 0,
           unidade: data.codigo_convite || '000000',
         });
       }
@@ -129,6 +134,7 @@ export default function AppLayout({
     <LayoutWrapper
       saldo={profile.saldo}
       saldoBonus={profile.saldoBonus}
+      saldoCassino={profile.saldoCassino}
       unidade={profile.unidade}
       onRefresh={handleRefresh}
       loading={loading}

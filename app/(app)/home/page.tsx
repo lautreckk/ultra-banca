@@ -7,7 +7,6 @@ import {
   Trophy,
   FileText,
   Droplets,
-  Gamepad2,
   DollarSign,
   Copy,
   Check,
@@ -242,15 +241,12 @@ export default function DashboardPage() {
 
       {/* Cassino Online - Full width */}
       <Link href="/cassino" className="block">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-7 shadow-lg active:scale-[0.98] transition-transform">
-          <div className="absolute inset-0 opacity-[0.07]" style={{
-            backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)',
-            backgroundSize: '30px 30px',
-          }} />
-          <div className="relative flex items-center justify-center gap-3">
-            <Gamepad2 className="h-8 w-8 text-white" />
-            <span className="text-xl font-bold text-white">Cassino Online</span>
-          </div>
+        <div className="relative overflow-hidden rounded-xl shadow-lg active:scale-[0.98] transition-transform">
+          <img
+            src="/images/cassino-banner.png"
+            alt="Cassino Online"
+            className="w-full h-auto object-cover rounded-xl"
+          />
         </div>
       </Link>
 

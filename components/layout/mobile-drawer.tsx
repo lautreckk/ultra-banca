@@ -15,6 +15,7 @@ import {
   FileText,
   HelpCircle,
   Gamepad2,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { Drawer, DrawerItem } from '@/components/ui/drawer';
 import { createClient } from '@/lib/supabase/client';
@@ -68,6 +69,12 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             label="Solicitar Saque"
             highlighted
             onClick={() => handleNavigate('/saques')}
+          />
+          <DrawerItem
+            icon={<ArrowRightLeft className="h-5 w-5" />}
+            label="Transferir Saldo"
+            highlighted
+            onClick={() => handleNavigate('/transferencia')}
           />
         </div>
 

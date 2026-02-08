@@ -161,6 +161,7 @@ export type Database = {
           id: string
           pagamento_id: string
           percentual_aplicado: number
+          platform_id: string | null
           user_id: string
           valor_bonus: number
           valor_deposito: number
@@ -171,6 +172,7 @@ export type Database = {
           id?: string
           pagamento_id: string
           percentual_aplicado: number
+          platform_id?: string | null
           user_id: string
           valor_bonus: number
           valor_deposito: number
@@ -181,6 +183,7 @@ export type Database = {
           id?: string
           pagamento_id?: string
           percentual_aplicado?: number
+          platform_id?: string | null
           user_id?: string
           valor_bonus?: number
           valor_deposito?: number
@@ -201,6 +204,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bonus_deposito_aplicados_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bonus_deposito_aplicados_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -218,6 +228,7 @@ export type Database = {
           created_by: string | null
           deposito_minimo: number
           id: string
+          platform_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -228,6 +239,7 @@ export type Database = {
           created_by?: string | null
           deposito_minimo: number
           id?: string
+          platform_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -238,6 +250,51 @@ export type Database = {
           created_by?: string | null
           deposito_minimo?: number
           id?: string
+          platform_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_deposito_config_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          slug?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -250,6 +307,7 @@ export type Database = {
           indicado_id: string
           indicador_id: string
           percentual: number
+          platform_id: string | null
           status: string | null
           valor_aposta: number
           valor_comissao: number
@@ -261,6 +319,7 @@ export type Database = {
           indicado_id: string
           indicador_id: string
           percentual?: number
+          platform_id?: string | null
           status?: string | null
           valor_aposta: number
           valor_comissao: number
@@ -272,6 +331,7 @@ export type Database = {
           indicado_id?: string
           indicador_id?: string
           percentual?: number
+          platform_id?: string | null
           status?: string | null
           valor_aposta?: number
           valor_comissao?: number
@@ -296,6 +356,13 @@ export type Database = {
             columns: ["indicador_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_indicacao_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
             referencedColumns: ["id"]
           },
         ]
@@ -334,6 +401,7 @@ export type Database = {
           instance_apikey: string | null
           instance_name: string
           phone_number: string | null
+          platform_id: string | null
           qrcode_base64: string | null
           status: string | null
           updated_at: string | null
@@ -344,6 +412,7 @@ export type Database = {
           instance_apikey?: string | null
           instance_name: string
           phone_number?: string | null
+          platform_id?: string | null
           qrcode_base64?: string | null
           status?: string | null
           updated_at?: string | null
@@ -354,11 +423,20 @@ export type Database = {
           instance_apikey?: string | null
           instance_name?: string
           phone_number?: string | null
+          platform_id?: string | null
           qrcode_base64?: string | null
           status?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "evolution_instances_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       evolution_messages_log: {
         Row: {
@@ -448,6 +526,7 @@ export type Database = {
           enabled: boolean | null
           id: string
           instance_id: string | null
+          platform_id: string | null
           trigger_type: string
           updated_at: string | null
         }
@@ -456,6 +535,7 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           instance_id?: string | null
+          platform_id?: string | null
           trigger_type: string
           updated_at?: string | null
         }
@@ -464,6 +544,7 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           instance_id?: string | null
+          platform_id?: string | null
           trigger_type?: string
           updated_at?: string | null
         }
@@ -473,6 +554,13 @@ export type Database = {
             columns: ["instance_id"]
             isOneToOne: false
             referencedRelation: "evolution_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_triggers_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
             referencedColumns: ["id"]
           },
         ]
@@ -486,6 +574,7 @@ export type Database = {
           created_at: string | null
           gateway_name: string
           id: string
+          platform_id: string | null
           updated_at: string | null
           webhook_url: string | null
         }
@@ -497,6 +586,7 @@ export type Database = {
           created_at?: string | null
           gateway_name: string
           id?: string
+          platform_id?: string | null
           updated_at?: string | null
           webhook_url?: string | null
         }
@@ -508,10 +598,19 @@ export type Database = {
           created_at?: string | null
           gateway_name?: string
           id?: string
+          platform_id?: string | null
           updated_at?: string | null
           webhook_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gateway_config_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       modalidades_config: {
         Row: {
@@ -586,6 +685,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           valor: number
+          wallet_type: string | null
           washpay_order_id: string | null
           washpay_order_number: string | null
           washpay_payment_link_id: string | null
@@ -605,6 +705,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           valor: number
+          wallet_type?: string | null
           washpay_order_id?: string | null
           washpay_order_number?: string | null
           washpay_payment_link_id?: string | null
@@ -624,6 +725,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           valor?: number
+          wallet_type?: string | null
           washpay_order_id?: string | null
           washpay_order_number?: string | null
           washpay_payment_link_id?: string | null
@@ -842,12 +944,60 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_modalidades: {
+        Row: {
+          ativo: boolean | null
+          codigo: string
+          created_at: string | null
+          id: string
+          multiplicador: number
+          ordem: number | null
+          platform_id: string
+          updated_at: string | null
+          valor_maximo: number | null
+          valor_minimo: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          codigo: string
+          created_at?: string | null
+          id?: string
+          multiplicador?: number
+          ordem?: number | null
+          platform_id: string
+          updated_at?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          codigo?: string
+          created_at?: string | null
+          id?: string
+          multiplicador?: number
+          ordem?: number | null
+          platform_id?: string
+          updated_at?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_modalidades_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platforms: {
         Row: {
           active_gateway: string | null
           ativo: boolean | null
           bet_max: number | null
           bet_min: number | null
+          client_id: string | null
           color_accent_green: string | null
           color_accent_teal: string | null
           color_background: string | null
@@ -867,6 +1017,8 @@ export type Database = {
           gateway_credentials: Json | null
           google_analytics_id: string | null
           id: string
+          layout_id: number | null
+          login_bg_url: string | null
           logo_url: string | null
           max_payout_daily: number | null
           max_payout_per_bet: number | null
@@ -879,6 +1031,7 @@ export type Database = {
           social_telegram: string | null
           social_whatsapp: string | null
           updated_at: string | null
+          utmify_pixel_id: string | null
           withdrawal_fee_percent: number | null
           withdrawal_max: number | null
           withdrawal_min: number | null
@@ -889,6 +1042,7 @@ export type Database = {
           ativo?: boolean | null
           bet_max?: number | null
           bet_min?: number | null
+          client_id?: string | null
           color_accent_green?: string | null
           color_accent_teal?: string | null
           color_background?: string | null
@@ -908,6 +1062,8 @@ export type Database = {
           gateway_credentials?: Json | null
           google_analytics_id?: string | null
           id?: string
+          layout_id?: number | null
+          login_bg_url?: string | null
           logo_url?: string | null
           max_payout_daily?: number | null
           max_payout_per_bet?: number | null
@@ -920,6 +1076,7 @@ export type Database = {
           social_telegram?: string | null
           social_whatsapp?: string | null
           updated_at?: string | null
+          utmify_pixel_id?: string | null
           withdrawal_fee_percent?: number | null
           withdrawal_max?: number | null
           withdrawal_min?: number | null
@@ -930,6 +1087,7 @@ export type Database = {
           ativo?: boolean | null
           bet_max?: number | null
           bet_min?: number | null
+          client_id?: string | null
           color_accent_green?: string | null
           color_accent_teal?: string | null
           color_background?: string | null
@@ -949,6 +1107,8 @@ export type Database = {
           gateway_credentials?: Json | null
           google_analytics_id?: string | null
           id?: string
+          layout_id?: number | null
+          login_bg_url?: string | null
           logo_url?: string | null
           max_payout_daily?: number | null
           max_payout_per_bet?: number | null
@@ -961,12 +1121,172 @@ export type Database = {
           social_telegram?: string | null
           social_whatsapp?: string | null
           updated_at?: string | null
+          utmify_pixel_id?: string | null
           withdrawal_fee_percent?: number | null
           withdrawal_max?: number | null
           withdrawal_min?: number | null
           withdrawal_mode?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "platforms_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playfiver_config: {
+        Row: {
+          agent_token: string
+          ativo: boolean
+          bonus_enable: boolean
+          callback_url: string
+          created_at: string
+          default_rtp: number
+          id: string
+          limit_amount: number | null
+          limit_enable: boolean
+          limit_hours: number | null
+          platform_id: string
+          secret_key: string
+          updated_at: string
+        }
+        Insert: {
+          agent_token: string
+          ativo?: boolean
+          bonus_enable?: boolean
+          callback_url: string
+          created_at?: string
+          default_rtp?: number
+          id?: string
+          limit_amount?: number | null
+          limit_enable?: boolean
+          limit_hours?: number | null
+          platform_id: string
+          secret_key: string
+          updated_at?: string
+        }
+        Update: {
+          agent_token?: string
+          ativo?: boolean
+          bonus_enable?: boolean
+          callback_url?: string
+          created_at?: string
+          default_rtp?: number
+          id?: string
+          limit_amount?: number | null
+          limit_enable?: boolean
+          limit_hours?: number | null
+          platform_id?: string
+          secret_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playfiver_config_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: true
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playfiver_games_cache: {
+        Row: {
+          cached_at: string
+          featured: boolean | null
+          game_code: string
+          game_name: string
+          id: string
+          image_url: string | null
+          original: boolean
+          provider: string
+        }
+        Insert: {
+          cached_at?: string
+          featured?: boolean | null
+          game_code: string
+          game_name: string
+          id?: string
+          image_url?: string | null
+          original?: boolean
+          provider: string
+        }
+        Update: {
+          cached_at?: string
+          featured?: boolean | null
+          game_code?: string
+          game_name?: string
+          id?: string
+          image_url?: string | null
+          original?: boolean
+          provider?: string
+        }
         Relationships: []
+      }
+      playfiver_transactions: {
+        Row: {
+          balance_after: number
+          balance_before: number
+          bet: number
+          created_at: string
+          game_code: string | null
+          game_type: string | null
+          id: string
+          platform_id: string
+          provider_code: string | null
+          raw_payload: Json | null
+          round_id: string | null
+          txn_id: string
+          txn_type: string
+          user_id: string
+          win: number
+        }
+        Insert: {
+          balance_after: number
+          balance_before: number
+          bet?: number
+          created_at?: string
+          game_code?: string | null
+          game_type?: string | null
+          id?: string
+          platform_id: string
+          provider_code?: string | null
+          raw_payload?: Json | null
+          round_id?: string | null
+          txn_id: string
+          txn_type: string
+          user_id: string
+          win?: number
+        }
+        Update: {
+          balance_after?: number
+          balance_before?: number
+          bet?: number
+          created_at?: string
+          game_code?: string | null
+          game_type?: string | null
+          id?: string
+          platform_id?: string
+          provider_code?: string | null
+          raw_payload?: Json | null
+          round_id?: string | null
+          txn_id?: string
+          txn_type?: string
+          user_id?: string
+          win?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playfiver_transactions_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -982,6 +1302,7 @@ export type Database = {
           platform_id: string
           saldo: number | null
           saldo_bonus: number | null
+          saldo_cassino: number | null
           signup_ip: string | null
           telefone: string | null
         }
@@ -998,6 +1319,7 @@ export type Database = {
           platform_id: string
           saldo?: number | null
           saldo_bonus?: number | null
+          saldo_cassino?: number | null
           signup_ip?: string | null
           telefone?: string | null
         }
@@ -1014,6 +1336,7 @@ export type Database = {
           platform_id?: string
           saldo?: number | null
           saldo_bonus?: number | null
+          saldo_cassino?: number | null
           signup_ip?: string | null
           telefone?: string | null
         }
@@ -1044,6 +1367,7 @@ export type Database = {
           descricao: string | null
           id: string
           percentual: number | null
+          platform_id: string | null
           tipo: string
           titulo: string
           updated_at: string | null
@@ -1060,6 +1384,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           percentual?: number | null
+          platform_id?: string | null
           tipo: string
           titulo: string
           updated_at?: string | null
@@ -1076,6 +1401,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           percentual?: number | null
+          platform_id?: string | null
           tipo?: string
           titulo?: string
           updated_at?: string | null
@@ -1089,6 +1415,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promocoes_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
             referencedColumns: ["id"]
           },
         ]
@@ -1280,6 +1613,7 @@ export type Database = {
           id: string
           imagem_url: string
           link_url: string | null
+          platform_id: string | null
           prioridade: number | null
           titulo: string
           updated_at: string | null
@@ -1295,6 +1629,7 @@ export type Database = {
           id?: string
           imagem_url: string
           link_url?: string | null
+          platform_id?: string | null
           prioridade?: number | null
           titulo: string
           updated_at?: string | null
@@ -1310,6 +1645,7 @@ export type Database = {
           id?: string
           imagem_url?: string
           link_url?: string | null
+          platform_id?: string | null
           prioridade?: number | null
           titulo?: string
           updated_at?: string | null
@@ -1320,6 +1656,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "propagandas_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
             referencedColumns: ["id"]
           },
         ]
@@ -1410,6 +1753,7 @@ export type Database = {
           user_id: string
           valor: number
           valor_liquido: number
+          wallet_type: string | null
         }
         Insert: {
           bspay_transaction_id?: string | null
@@ -1427,6 +1771,7 @@ export type Database = {
           user_id: string
           valor: number
           valor_liquido: number
+          wallet_type?: string | null
         }
         Update: {
           bspay_transaction_id?: string | null
@@ -1444,6 +1789,7 @@ export type Database = {
           user_id?: string
           valor?: number
           valor_liquido?: number
+          wallet_type?: string | null
         }
         Relationships: [
           {
@@ -1455,6 +1801,60 @@ export type Database = {
           },
           {
             foreignKeyName: "saques_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suspeitos: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          detalhes: Json | null
+          id: string
+          motivo: string
+          nivel: string
+          platform_id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          detalhes?: Json | null
+          id?: string
+          motivo: string
+          nivel: string
+          platform_id: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          detalhes?: Json | null
+          id?: string
+          motivo?: string
+          nivel?: string
+          platform_id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suspeitos_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suspeitos_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1559,22 +1959,33 @@ export type Database = {
         Row: {
           data_hora: string
           id: string
+          platform_id: string | null
           unidade: string
           valor: number
         }
         Insert: {
           data_hora?: string
           id?: string
+          platform_id?: string | null
           unidade: string
           valor: number
         }
         Update: {
           data_hora?: string
           id?: string
+          platform_id?: string | null
           unidade?: string
           valor?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ultimo_ganhador_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: true
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       verificacao_apostas: {
         Row: {
@@ -1742,6 +2153,7 @@ export type Database = {
           max_retries: number | null
           method: string
           name: string
+          platform_id: string | null
           retry_delay_seconds: number | null
           secret_key: string
           timeout_seconds: number | null
@@ -1762,6 +2174,7 @@ export type Database = {
           max_retries?: number | null
           method?: string
           name?: string
+          platform_id?: string | null
           retry_delay_seconds?: number | null
           secret_key: string
           timeout_seconds?: number | null
@@ -1782,13 +2195,22 @@ export type Database = {
           max_retries?: number | null
           method?: string
           name?: string
+          platform_id?: string | null
           retry_delay_seconds?: number | null
           secret_key?: string
           timeout_seconds?: number | null
           updated_at?: string | null
           url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_config_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1799,12 +2221,74 @@ export type Database = {
         Args: { p_amount: number; p_tipo?: string; p_user_id: string }
         Returns: Json
       }
-      debit_balance: {
-        Args: { p_amount: number; p_user_id: string }
+      cancel_bet: { Args: { p_aposta_id: string }; Returns: undefined }
+      debit_balance:
+        | { Args: { p_amount: number; p_user_id: string }; Returns: Json }
+        | {
+            Args: {
+              p_amount: number
+              p_user_id: string
+              p_wallet_type?: string
+            }
+            Returns: Json
+          }
+      fn_generate_daily_winner: {
+        Args: { p_platform_id: string }
+        Returns: {
+          data_hora: string
+          id: string
+          platform_id: string | null
+          unidade: string
+          valor: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ultimo_ganhador"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      fn_get_multiplicador: {
+        Args: { p_codigo: string; p_platform_id: string }
+        Returns: number
+      }
+      fn_get_ultimo_ganhador: {
+        Args: { p_platform_id: string }
+        Returns: {
+          data_hora: string
+          is_fake: boolean
+          unidade: string
+          valor: number
+        }[]
+      }
+      fn_mark_bets_lost: { Args: { p_bet_ids: string[] }; Returns: Json }
+      fn_playfiver_game_launch: {
+        Args: {
+          p_game_code: string
+          p_game_original: boolean
+          p_provider: string
+          p_user_id: string
+        }
         Returns: Json
       }
+      fn_playfiver_test_connection: {
+        Args: { p_platform_id: string }
+        Returns: Json
+      }
+      fn_process_payout: {
+        Args: { p_amount: number; p_bet_id: string; p_metadata?: Json }
+        Returns: Json
+      }
+      fn_process_refund: {
+        Args: { p_bet_id: string; p_reason?: string }
+        Returns: Json
+      }
+      fn_seed_platform_modalidades: {
+        Args: { p_platform_id: string }
+        Returns: number
+      }
       get_platform_config: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
           active_gateway: string | null
           bet_max: number | null
@@ -1842,47 +2326,46 @@ export type Database = {
           withdrawal_min: number | null
           withdrawal_mode: string | null
         }
+        SetofOptions: {
+          from: "*"
+          to: "platform_config"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_promotor_id: { Args: { checking_user_id: string }; Returns: string }
-      get_user_admin_platforms: { Args: Record<string, never>; Returns: string[] }
-      get_user_platform_id: { Args: Record<string, never>; Returns: string }
-      invoke_scrape_resultados: { Args: Record<string, never>; Returns: undefined }
+      get_user_admin_platforms: { Args: never; Returns: string[] }
+      get_user_platform_id: { Args: never; Returns: string }
+      invoke_scrape_resultados: { Args: never; Returns: undefined }
       is_admin:
-        | { Args: Record<string, never>; Returns: boolean }
+        | { Args: never; Returns: boolean }
         | { Args: { checking_user_id: string }; Returns: boolean }
       is_platform_admin: { Args: { p_platform_id: string }; Returns: boolean }
       is_promotor: { Args: { checking_user_id: string }; Returns: boolean }
-      is_super_admin: { Args: Record<string, never>; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
+      map_subloteria_to_banca: {
+        Args: { subloteria_id: string }
+        Returns: string
+      }
+      map_subloteria_to_loteria: {
+        Args: { subloteria_id: string }
+        Returns: string
+      }
       numero_to_grupo: { Args: { numero: string }; Returns: number }
-      place_bet:
-        | {
-            Args: {
-              p_colocacao: string
-              p_data_jogo: string
-              p_horarios: string[]
-              p_loterias: string[]
-              p_modalidade: string
-              p_multiplicador: number
-              p_palpites: string[]
-              p_tipo: string
-              p_valor_unitario: number
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_colocacao: string
-              p_data_jogo: string
-              p_horarios: string[]
-              p_loterias: string[]
-              p_modalidade: string
-              p_multiplicador?: number
-              p_palpites: string[]
-              p_tipo: string
-              p_valor_unitario: number
-            }
-            Returns: Json
-          }
+      place_bet: {
+        Args: {
+          p_colocacao: string
+          p_data_jogo: string
+          p_horarios: string[]
+          p_loterias: string[]
+          p_modalidade: string
+          p_multiplicador?: number
+          p_palpites: string[]
+          p_tipo: string
+          p_valor_unitario: number
+        }
+        Returns: Json
+      }
       process_pix_deposit:
         | {
             Args: {
@@ -1902,6 +2385,15 @@ export type Database = {
             }
             Returns: Json
           }
+      transfer_balance: {
+        Args: {
+          p_amount: number
+          p_from_wallet: string
+          p_to_wallet: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       verificar_apostas: {
         Args: { p_data?: string; p_horario?: string }
         Returns: Json

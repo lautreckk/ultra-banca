@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2, Gift } from 'lucide-react';
+import { Copy, Check, AlertCircle, Clock, CheckCircle, RefreshCw, Gamepad2, Gift, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
 import { formatCurrency } from '@/lib/utils/format-currency';
@@ -43,6 +43,7 @@ export default function RecargaPixPage() {
   const config = usePlatformConfig();
   const { addPayment, confirmedPayment, removePayment } = usePaymentContext();
   const [bonusTiers, setBonusTiers] = useState<BonusTier[]>([]);
+  const [walletType, setWalletType] = useState<'tradicional' | 'cassino'>('tradicional');
 
   // Valores de depósito do config
   const depositMin = config.deposit_min || 10;
@@ -158,6 +159,7 @@ export default function RecargaPixPage() {
         body: {
           valor: valorNum,
           tipo: 'deposito',
+          wallet_type: walletType,
         },
       });
 
@@ -391,6 +393,37 @@ export default function RecargaPixPage() {
                 <span className="text-sm">{error}</span>
               </div>
             )}
+
+            {/* Wallet Selector */}
+            <div>
+              <label className="block text-sm font-medium text-zinc-200 mb-2">
+                Depositar para
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setWalletType('tradicional')}
+                  className={`flex items-center justify-center gap-2 h-12 rounded-xl font-semibold transition-all active:scale-[0.98] ${
+                    walletType === 'tradicional'
+                      ? 'bg-amber-500 text-zinc-900 font-bold'
+                      : 'bg-zinc-900 border border-zinc-700/40 text-white'
+                  }`}
+                >
+                  <Wallet className="h-4 w-4" />
+                  Loterias
+                </button>
+                <button
+                  onClick={() => setWalletType('cassino')}
+                  className={`flex items-center justify-center gap-2 h-12 rounded-xl font-semibold transition-all active:scale-[0.98] ${
+                    walletType === 'cassino'
+                      ? 'bg-purple-500 text-white font-bold'
+                      : 'bg-zinc-900 border border-zinc-700/40 text-white'
+                  }`}
+                >
+                  <Gamepad2 className="h-4 w-4" />
+                  Cassino
+                </button>
+              </div>
+            </div>
 
             {/* Bonus Banner */}
             {bonusTiers.length > 0 && (

@@ -216,23 +216,26 @@ export default async function RootLayout({
         {safeCustomScripts && (
           <div dangerouslySetInnerHTML={{ __html: safeCustomScripts }} />
         )}
-        {/* UTMify - Tracking de UTMs para todas as bancas */}
-        <Script
-          src="https://cdn.utmify.com.br/scripts/utms/latest.js"
-          data-utmify-prevent-xcod-sck=""
-          data-utmify-prevent-subids=""
-          strategy="afterInteractive"
-        />
-        {/* UTMify Pixel */}
-        <Script id="utmify-pixel" strategy="afterInteractive">
-          {`window.pixelId = "69865d89fe4bfd2ffcc2d9c6";`}
-        </Script>
-        <Script
-          src="https://cdn.utmify.com.br/scripts/pixel/pixel.js"
-          strategy="afterInteractive"
-          async
-          defer
-        />
+        {/* UTMify - Configuravel por plataforma */}
+        {config.utmify_pixel_id && (
+          <>
+            <Script
+              src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+              data-utmify-prevent-xcod-sck=""
+              data-utmify-prevent-subids=""
+              strategy="afterInteractive"
+            />
+            <Script id="utmify-pixel" strategy="afterInteractive">
+              {`window.pixelId = "${config.utmify_pixel_id}";`}
+            </Script>
+            <Script
+              src="https://cdn.utmify.com.br/scripts/pixel/pixel.js"
+              strategy="afterInteractive"
+              async
+              defer
+            />
+          </>
+        )}
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         <ConfigProvider config={config}>

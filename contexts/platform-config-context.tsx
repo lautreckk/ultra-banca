@@ -48,6 +48,7 @@ export interface PlatformConfig {
   facebook_access_token: string | null;
   google_analytics_id: string | null;
   custom_head_scripts: string | null;
+  utmify_pixel_id: string | null;
 
   // Segurança
   production_mode: boolean;
@@ -90,6 +91,7 @@ export const defaultConfig: PlatformConfig = {
   facebook_access_token: null,
   google_analytics_id: null,
   custom_head_scripts: null,
+  utmify_pixel_id: null,
   production_mode: false,
   layout_id: 1,
 };

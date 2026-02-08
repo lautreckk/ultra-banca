@@ -8,6 +8,7 @@ export function DefaultLayout({
   children,
   saldo,
   saldoBonus,
+  saldoCassino,
   unidade,
   onRefresh,
 }: LayoutProps) {
@@ -20,6 +21,7 @@ export function DefaultLayout({
         <BalanceDisplay
           saldo={saldo}
           saldoBonus={saldoBonus}
+          saldoCassino={saldoCassino}
           unidade={unidade}
           onRefresh={onRefresh}
         />

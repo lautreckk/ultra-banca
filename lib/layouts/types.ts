@@ -43,6 +43,7 @@ export interface LayoutProps {
   children: React.ReactNode;
   saldo: number;
   saldoBonus: number;
+  saldoCassino: number;
   unidade: string;
   onRefresh: () => void;
   loading: boolean;

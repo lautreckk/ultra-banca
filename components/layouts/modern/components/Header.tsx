@@ -7,12 +7,13 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 interface HeaderProps {
   saldo: number;
   saldoBonus: number;
+  saldoCassino: number;
   onRefresh: () => void;
   loading: boolean;
   onMenuClick: () => void;
 }
 
-export function ModernHeader({ saldo, saldoBonus, onRefresh, loading, onMenuClick }: HeaderProps) {
+export function ModernHeader({ saldo, saldoBonus, saldoCassino, onRefresh, loading, onMenuClick }: HeaderProps) {
   const config = usePlatformConfig();
 
   return (

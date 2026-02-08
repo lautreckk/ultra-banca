@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 interface UserBalance {
   saldo: number;
   saldoBonus: number;
+  saldoCassino: number;
   loading: boolean;
 }
 
@@ -13,6 +14,7 @@ export function useUserBalance() {
   const [balance, setBalance] = useState<UserBalance>({
     saldo: 0,
     saldoBonus: 0,
+    saldoCassino: 0,
     loading: true,
   });
 
@@ -25,7 +27,7 @@ export function useUserBalance() {
       if (user) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('saldo, saldo_bonus')
+          .select('saldo, saldo_bonus, saldo_cassino')
           .eq('id', user.id)
           .single();
 
@@ -33,6 +35,7 @@ export function useUserBalance() {
           setBalance({
             saldo: Number(data.saldo) || 0,
             saldoBonus: Number(data.saldo_bonus) || 0,
+            saldoCassino: Number(data.saldo_cassino) || 0,
             loading: false,
           });
         } else {
@@ -73,11 +76,12 @@ export function useUserBalance() {
             filter: `id=eq.${user.id}`,
           },
           (payload) => {
-            const newData = payload.new as { saldo?: number; saldo_bonus?: number };
+            const newData = payload.new as { saldo?: number; saldo_bonus?: number; saldo_cassino?: number };
             setBalance(prev => ({
               ...prev,
               saldo: Number(newData.saldo) ?? prev.saldo,
               saldoBonus: Number(newData.saldo_bonus) ?? prev.saldoBonus,
+              saldoCassino: Number(newData.saldo_cassino) ?? prev.saldoCassino,
             }));
           }
         )

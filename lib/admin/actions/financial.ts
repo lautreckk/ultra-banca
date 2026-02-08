@@ -98,10 +98,10 @@ export async function getDeposits(params: DepositsListParams = {}): Promise<Depo
 export async function approveDeposit(depositId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  // Get deposit info
+  // Get deposit info (including wallet_type)
   const { data: deposit, error: fetchError } = await supabase
     .from('pagamentos')
-    .select('user_id, valor, status')
+    .select('user_id, valor, status, wallet_type')
     .eq('id', depositId)
     .single();
 
@@ -126,18 +126,22 @@ export async function approveDeposit(depositId: string): Promise<{ success: bool
     return { success: false, error: updateError.message };
   }
 
-  // Update user balance
+  // Update user balance - wallet-aware
+  const walletType = deposit.wallet_type || 'tradicional';
+  const balanceField = walletType === 'cassino' ? 'saldo_cassino' : 'saldo';
+
   const { data: profile } = await supabase
     .from('profiles')
-    .select('saldo')
+    .select('saldo, saldo_cassino')
     .eq('id', deposit.user_id)
     .single();
 
-  const newBalance = (Number(profile?.saldo) || 0) + Number(deposit.valor);
+  const currentBalance = Number(profile?.[balanceField]) || 0;
+  const newBalance = currentBalance + Number(deposit.valor);
 
   const { error: balanceError } = await supabase
     .from('profiles')
-    .update({ saldo: newBalance })
+    .update({ [balanceField]: newBalance })
     .eq('id', deposit.user_id);
 
   if (balanceError) {
@@ -473,10 +477,10 @@ export async function rejectWithdrawal(
   // Obter admin atual
   const { data: { user: admin } } = await supabase.auth.getUser();
 
-  // Get withdrawal info
+  // Get withdrawal info (including wallet_type)
   const { data: withdrawal, error: fetchError } = await supabase
     .from('saques')
-    .select('user_id, valor, chave_pix, tipo_chave, status')
+    .select('user_id, valor, chave_pix, tipo_chave, status, wallet_type')
     .eq('id', withdrawalId)
     .single();
 
@@ -491,7 +495,7 @@ export async function rejectWithdrawal(
   // Obter dados do usuário
   const { data: userProfile } = await supabase
     .from('profiles')
-    .select('nome, cpf, saldo')
+    .select('nome, cpf, saldo, saldo_cassino')
     .eq('id', withdrawal.user_id)
     .single();
 
@@ -508,12 +512,15 @@ export async function rejectWithdrawal(
     return { success: false, error: updateError.message };
   }
 
-  // Return the balance to user
-  const newBalance = (Number(userProfile?.saldo) || 0) + Number(withdrawal.valor);
+  // Return the balance to correct wallet
+  const saqueWalletType = withdrawal.wallet_type || 'tradicional';
+  const saqueBalanceField = saqueWalletType === 'cassino' ? 'saldo_cassino' : 'saldo';
+  const currentSaldo = Number(userProfile?.[saqueBalanceField]) || 0;
+  const newBalance = currentSaldo + Number(withdrawal.valor);
 
   const { error: balanceError } = await supabase
     .from('profiles')
-    .update({ saldo: newBalance })
+    .update({ [saqueBalanceField]: newBalance })
     .eq('id', withdrawal.user_id);
 
   if (balanceError) {

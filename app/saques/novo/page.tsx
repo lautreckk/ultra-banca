@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
-import { Check, ChevronDown, AlertCircle, Loader2, CheckCircle, Smartphone, Mail, Key, CreditCard } from 'lucide-react';
+import { Check, ChevronDown, AlertCircle, Loader2, CheckCircle, Smartphone, Mail, Key, CreditCard, Wallet, Gamepad2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
 import { trackWithdrawalRequest } from '@/lib/actions/auth';
@@ -29,6 +29,8 @@ export default function NovoSaquePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [saldo, setSaldo] = useState(0);
+  const [saldoCassino, setSaldoCassino] = useState(0);
+  const [walletType, setWalletType] = useState<'tradicional' | 'cassino'>('tradicional');
   const [result, setResult] = useState<{
     valor: number;
     valorLiquido: number;
@@ -53,11 +55,12 @@ export default function NovoSaquePage() {
       if (user) {
         const { data } = await supabase
           .from('profiles')
-          .select('saldo')
+          .select('saldo, saldo_cassino')
           .eq('id', user.id)
           .single();
         if (data) {
           setSaldo(Number(data.saldo) || 0);
+          setSaldoCassino(Number(data.saldo_cassino) || 0);
         }
       }
 
@@ -137,7 +140,8 @@ export default function NovoSaquePage() {
       return;
     }
 
-    if (valorNum > saldo) {
+    const activeSaldo = walletType === 'cassino' ? saldoCassino : saldo;
+    if (valorNum > activeSaldo) {
       setError('Saldo insuficiente');
       return;
     }
@@ -155,6 +159,7 @@ export default function NovoSaquePage() {
           valor: parseInt(amount),
           chavePix: chavePix.trim(),
           tipoChave: selectedKeyType?.value,
+          wallet_type: walletType,
         },
       });
 
@@ -399,10 +404,41 @@ export default function NovoSaquePage() {
           </div>
         </div>
 
+        {/* Wallet Selector */}
+        <div>
+          <label className="block text-sm font-medium text-zinc-200 mb-2">
+            Sacar de
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setWalletType('tradicional')}
+              className={`flex items-center justify-center gap-2 h-12 rounded-xl font-semibold transition-all active:scale-[0.98] ${
+                walletType === 'tradicional'
+                  ? 'bg-amber-500 text-zinc-900 font-bold'
+                  : 'bg-zinc-900 border border-zinc-700/40 text-white'
+              }`}
+            >
+              <Wallet className="h-4 w-4" />
+              Loterias
+            </button>
+            <button
+              onClick={() => setWalletType('cassino')}
+              className={`flex items-center justify-center gap-2 h-12 rounded-xl font-semibold transition-all active:scale-[0.98] ${
+                walletType === 'cassino'
+                  ? 'bg-purple-500 text-white font-bold'
+                  : 'bg-zinc-900 border border-zinc-700/40 text-white'
+              }`}
+            >
+              <Gamepad2 className="h-4 w-4" />
+              Cassino
+            </button>
+          </div>
+        </div>
+
         {/* Balance Display */}
         <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-3 flex justify-between items-center">
           <span className="text-zinc-400">Saldo disponível:</span>
-          <span className="font-bold text-lg">{formatCurrency(saldo)}</span>
+          <span className="font-bold text-lg">{formatCurrency(walletType === 'cassino' ? saldoCassino : saldo)}</span>
         </div>
 
         {error && (
@@ -497,11 +533,11 @@ export default function NovoSaquePage() {
                 key={value}
                 type="button"
                 onClick={() => handleQuickAmount(value)}
-                disabled={value > saldo}
+                disabled={value > (walletType === 'cassino' ? saldoCassino : saldo)}
                 className={`h-11 rounded-xl font-medium text-sm transition-all active:scale-[0.98] ${
                   amount === value.toString()
                     ? 'bg-[#E5A220] text-zinc-900 font-bold'
-                    : value > saldo
+                    : value > (walletType === 'cassino' ? saldoCassino : saldo)
                     ? 'bg-zinc-900 border border-zinc-700/40 text-zinc-500 cursor-not-allowed'
                     : 'bg-zinc-900 border border-zinc-700/40 text-zinc-300 hover:bg-zinc-700/30'
                 }`}
