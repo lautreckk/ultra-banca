@@ -115,7 +115,7 @@ export default function LoteriasPage() {
           <div className="aspect-square overflow-hidden rounded-xl border-2 border-[#E5A220]">
             <div className="relative h-full w-full">
               <Image
-                src="/images/LOTERIAS.webp"
+                src="/images/loterias-banner.webp"
                 alt="Loterias"
                 fill
                 className="object-cover"

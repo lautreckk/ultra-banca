@@ -205,16 +205,12 @@ export default function DashboardPage() {
           >
             <div className="relative aspect-[4/3]">
               <Image
-                src="/images/LOTERIAS.webp"
-                alt="Jogo do Bicho"
+                src="/images/loterias-banner.webp"
+                alt="Loterias"
                 fill
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <span className="absolute bottom-2 left-0 right-0 text-center text-sm font-bold text-white drop-shadow-lg">
-                JOGO DO BICHO
-              </span>
             </div>
           </Link>
 
@@ -224,16 +220,12 @@ export default function DashboardPage() {
           >
             <div className="relative aspect-[4/3]">
               <Image
-                src="/images/FAZENDINHA2.webp"
+                src="/images/fazendinha-banner.webp"
                 alt="Fazendinha"
                 fill
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <span className="absolute bottom-2 left-0 right-0 text-center text-sm font-bold text-white drop-shadow-lg">
-                FAZENDINHA
-              </span>
             </div>
           </Link>
         </div>
@@ -242,10 +234,13 @@ export default function DashboardPage() {
       {/* Cassino Online - Full width */}
       <Link href="/cassino" className="block">
         <div className="relative overflow-hidden rounded-xl shadow-lg active:scale-[0.98] transition-transform">
-          <img
-            src="/images/cassino-banner.png"
+          <Image
+            src="/images/cassino-banner.webp"
             alt="Cassino Online"
+            width={2700}
+            height={910}
             className="w-full h-auto object-cover rounded-xl"
+            priority
           />
         </div>
       </Link>
