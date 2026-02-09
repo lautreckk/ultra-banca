@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff, Loader2, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { MobileDrawer } from '@/components/layout';
+import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
@@ -17,22 +17,6 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSaldo, setShowSaldo] = useState(false);
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
-
-  const [horaBrasilia, setHoraBrasilia] = useState('');
-  useEffect(() => {
-    const update = () => {
-      setHoraBrasilia(
-        new Date().toLocaleTimeString('pt-BR', {
-          timeZone: 'America/Sao_Paulo',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      );
-    };
-    update();
-    const id = setInterval(update, 30_000);
-    return () => clearInterval(id);
-  }, []);
 
   const handleBack = () => {
     if (onBack) {
@@ -107,15 +91,7 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
         </div>
       </div>
 
-      {/* Horário de Brasília */}
-      {horaBrasilia && (
-        <div className="flex items-center justify-center gap-1.5 bg-zinc-900/80 py-1">
-          <Clock className="h-3 w-3 text-zinc-500" />
-          <span className="text-xs font-medium text-zinc-400">
-            {horaBrasilia} Brasilia
-          </span>
-        </div>
-      )}
+      <BrasiliaClock />
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </>

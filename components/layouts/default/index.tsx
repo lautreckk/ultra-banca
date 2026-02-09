@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Header, BalanceDisplay, MobileDrawer } from '@/components/layout';
+import { Header, BalanceDisplay, MobileDrawer, BrasiliaClock } from '@/components/layout';
 import type { LayoutProps } from '@/lib/layouts/types';
 
 export function DefaultLayout({
@@ -27,6 +27,7 @@ export function DefaultLayout({
           unidade={unidade}
           onRefresh={onRefresh}
         />
+        <BrasiliaClock />
         <main className="pb-safe">{children}</main>
         <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </div>

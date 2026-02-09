@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Home, Menu, RefreshCw, Eye, EyeOff, ChevronLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { MobileDrawer } from '@/components/layout';
+import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
@@ -118,6 +118,8 @@ export function PageLayout({
           </button>
         </div>
       </div>
+
+      <BrasiliaClock />
 
       {/* Content */}
       <div className="flex-1">{children}</div>

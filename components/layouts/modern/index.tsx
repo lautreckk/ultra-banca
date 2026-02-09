@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { ModernHeader } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { MobileDrawer } from '@/components/layout/mobile-drawer';
+import { BrasiliaClock } from '@/components/layout/brasilia-clock';
 import type { LayoutProps } from '@/lib/layouts/types';
 
 export function ModernLayout({
@@ -87,6 +88,8 @@ export function ModernLayout({
           loading={loading}
           onMenuClick={() => setDrawerOpen(true)}
         />
+
+        <BrasiliaClock />
 
         {/* Main content */}
         <main

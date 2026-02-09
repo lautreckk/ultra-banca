@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
-import { MobileDrawer } from '@/components/layout';
+import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
@@ -102,6 +102,8 @@ export default function LoteriasLayout({
             </button>
           </div>
         </div>
+
+        <BrasiliaClock />
 
         {/* Content */}
         <div className="flex-1 bg-[#111318]">

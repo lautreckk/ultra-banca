@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+import { BrasiliaClock } from '@/components/layout';
 
 // Generate next 6 days
 function getNextDays(): { date: Date; dayNum: number; dayName: string }[] {
@@ -63,6 +64,8 @@ export default function QuininhaPage() {
           </button>
         </div>
       </div>
+
+      <BrasiliaClock />
 
       {/* Content */}
       <div className="p-4">

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Menu, RefreshCw, EyeOff, Search, ChevronRight } from 'lucide-react';
+import { BrasiliaClock } from '@/components/layout';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface SeninhaClientProps {
@@ -63,6 +64,8 @@ export function SeninhaClient({ modalidades }: SeninhaClientProps) {
           </button>
         </div>
       </div>
+
+      <BrasiliaClock />
 
       {/* Content */}
       <div className="bg-[#1A1F2B] min-h-screen">

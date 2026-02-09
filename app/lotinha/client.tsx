@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Menu, RefreshCw, EyeOff, Search, ChevronRight } from 'lucide-react';
+import { BrasiliaClock } from '@/components/layout';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface LotinhaClientProps {
@@ -61,6 +62,8 @@ export function LotinhaClient({ modalidades }: LotinhaClientProps) {
           </button>
         </div>
       </div>
+
+      <BrasiliaClock />
 
       <div className="bg-[#1A1F2B] min-h-screen">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-700/40">
