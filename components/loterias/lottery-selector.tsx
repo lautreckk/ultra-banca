@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Check, Clock, BadgeCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BANCAS } from '@/lib/constants';
 
@@ -105,6 +105,7 @@ export function LotterySelector({
   };
 
   // Filtra bancas: Federal só aparece em Quarta (3) e Sábado (6)
+  // Oculta bancas onde TODAS as subLoterias já passaram
   const bancasVisiveis = useMemo(() => {
     const dataRef = dataJogo ? new Date(dataJogo + 'T12:00:00') : new Date();
     const diaSemana = dataRef.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
@@ -112,9 +113,11 @@ export function LotterySelector({
 
     return BANCAS.filter((banca) => {
       if (banca.id === 'federal') return isFederalDay;
-      return true;
+      // Ocultar banca se não tem nenhuma subLoteria disponível
+      const temDisponivel = banca.subLoterias.some((sub) => !isHorarioPassado(sub.horario));
+      return temDisponivel;
     });
-  }, [dataJogo]);
+  }, [dataJogo, isHorarioPassado]);
 
   const totalValue = total.toFixed(2).replace('.', ',');
 
@@ -182,34 +185,11 @@ export function LotterySelector({
               {/* Sub-Loterias - Vertical List */}
               {isExpanded && (
                 <div className="divide-y divide-zinc-700/40">
-                  {banca.subLoterias.map((sub) => {
+                  {banca.subLoterias
+                  .filter((sub) => !isHorarioPassado(sub.horario))
+                  .map((sub) => {
                     const isSelected = selectedLotteries.includes(sub.id);
                     const isMaluca = sub.nome.toLowerCase().includes('maluca');
-                    const passado = isHorarioPassado(sub.horario);
-
-                    // Se horário já passou, mostra desabilitado
-                    if (passado) {
-                      return (
-                        <div
-                          key={sub.id}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left bg-zinc-800/50 opacity-50 cursor-not-allowed"
-                        >
-                          <div className="w-5 h-5 rounded border-2 border-zinc-700/40 flex items-center justify-center flex-shrink-0">
-                            <Clock className="h-3 w-3 text-zinc-500" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-zinc-500 line-through">
-                                {sub.nome} {sub.horario.replace(':', 'H').replace(':00', 'HS').replace(':20', 'HS').replace(':15', 'HS')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-red-500 font-medium">ENCERRADO</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
 
                     return (
                       <button
