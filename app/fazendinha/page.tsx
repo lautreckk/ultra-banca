@@ -46,7 +46,7 @@ function generateNext7Days(): { value: string; day: string; weekday: string }[] 
     const date = new Date(today);
     date.setDate(today.getDate() + i);
 
-    const value = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const value = date.toLocaleDateString('en-CA'); // YYYY-MM-DD em timezone local
     const day = date.getDate().toString().padStart(2, '0');
     const weekday = weekdays[date.getDay()];
 

@@ -11,7 +11,7 @@ export default function ResultadosPage() {
     date.setDate(date.getDate() - i);
     return {
       display: date.toLocaleDateString('pt-BR'),
-      param: date.toISOString().split('T')[0],
+      param: date.toLocaleDateString('en-CA'),
     };
   });
 

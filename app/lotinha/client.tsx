@@ -18,7 +18,7 @@ export function LotinhaClient({ modalidades }: LotinhaClientProps) {
   );
 
   const handleSelectModalidade = (codigo: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     router.push(`/lotinha/${today}/${codigo}`);
   };
 

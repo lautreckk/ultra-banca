@@ -25,7 +25,7 @@ export default function QuininhaPage() {
   const days = getNextDays();
 
   const handleSelectDay = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toLocaleDateString('en-CA');
     router.push(`/quininha/${dateStr}`);
   };
 

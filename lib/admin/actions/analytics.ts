@@ -103,13 +103,14 @@ export async function getVisitorStats(days: number = 30): Promise<VisitorStats> 
   const trendMap = new Map<string, { visitors: Set<string>; pageViews: number }>();
 
   for (let i = 0; i < days; i++) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const dateStr = date.toISOString().split('T')[0];
+    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000 - BRT_OFFSET_MS);
+    const dateStr = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
     trendMap.set(dateStr, { visitors: new Set(), pageViews: 0 });
   }
 
   trendData?.forEach(item => {
-    const dateStr = new Date(item.created_at).toISOString().split('T')[0];
+    const brt = new Date(new Date(item.created_at).getTime() - BRT_OFFSET_MS);
+    const dateStr = `${brt.getUTCFullYear()}-${String(brt.getUTCMonth() + 1).padStart(2, '0')}-${String(brt.getUTCDate()).padStart(2, '0')}`;
     const entry = trendMap.get(dateStr);
     if (entry) {
       entry.visitors.add(item.session_id);

@@ -52,7 +52,7 @@ export default function MovimentoPage() {
       }
 
       // Get today's date
-      const todayStr = today.toISOString().split('T')[0];
+      const todayStr = today.toLocaleDateString('en-CA');
       const startOfDay = `${todayStr}T00:00:00`;
       const endOfDay = `${todayStr}T23:59:59`;
 

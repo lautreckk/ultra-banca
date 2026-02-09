@@ -4,7 +4,7 @@ export function formatDate(date: Date | string): string {
 }
 
 export function formatDateISO(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toLocaleDateString('en-CA'); // YYYY-MM-DD em timezone local
 }
 
 export function getDayName(date: Date): string {

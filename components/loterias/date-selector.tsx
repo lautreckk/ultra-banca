@@ -20,7 +20,7 @@ export function DateSelector({
   return (
     <div className={cn('grid grid-cols-2 gap-4 px-4', className)}>
       {dates.map((date) => {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = date.toLocaleDateString('en-CA'); // YYYY-MM-DD em timezone local
         const dayNumber = date.getDate();
         const dayName = getDayName(date);
 

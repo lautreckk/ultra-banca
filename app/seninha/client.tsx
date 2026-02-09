@@ -18,7 +18,7 @@ export function SeninhaClient({ modalidades }: SeninhaClientProps) {
   );
 
   const handleSelectModalidade = (codigo: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     router.push(`/seninha/${today}/${codigo}`);
   };
 
