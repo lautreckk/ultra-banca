@@ -27,6 +27,7 @@ interface SidebarProps {
   saldo: number;
   saldoBonus: number;
   saldoCassino: number;
+  saldoBonusCassino: number;
 }
 
 const NAVIGATION_ITEMS = [
@@ -42,7 +43,7 @@ const NAVIGATION_ITEMS = [
   { icon: FileText, label: 'Relatorios', href: '/relatorios' },
 ];
 
-export function Sidebar({ isCollapsed, onToggleCollapse, saldo, saldoBonus, saldoCassino }: SidebarProps) {
+export function Sidebar({ isCollapsed, onToggleCollapse, saldo, saldoBonus, saldoCassino, saldoBonusCassino }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const config = usePlatformConfig();

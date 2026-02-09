@@ -9,6 +9,7 @@ export function DefaultLayout({
   saldo,
   saldoBonus,
   saldoCassino,
+  saldoBonusCassino,
   unidade,
   onRefresh,
 }: LayoutProps) {
@@ -22,6 +23,7 @@ export function DefaultLayout({
           saldo={saldo}
           saldoBonus={saldoBonus}
           saldoCassino={saldoCassino}
+          saldoBonusCassino={saldoBonusCassino}
           unidade={unidade}
           onRefresh={onRefresh}
         />

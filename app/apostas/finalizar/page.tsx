@@ -88,14 +88,13 @@ export default function FinalizarApostaPage() {
       const pules: string[] = [];
       let ultimoSaldo: number | null = null;
       const now = new Date();
+      // Use local timezone date (YYYY-MM-DD) — must match lottery-selector.tsx
+      const todayLocal = now.toLocaleDateString('en-CA');
 
       // Process each bet item
       for (const item of items) {
-        // Validate date and time
-        const betTime = new Date(`${item.data}T23:59:59`); // End of day check first
-
         // If bet is for today, check specific lottery times
-        const isToday = item.data === now.toISOString().split('T')[0];
+        const isToday = item.data === todayLocal;
 
         if (isToday && item.horarios) {
           for (const horario of item.horarios) {
@@ -103,13 +102,12 @@ export default function FinalizarApostaPage() {
             const drawTime = new Date(now);
             drawTime.setHours(hora, minuto, 0, 0);
 
-            // Add 5 min tolerance or strict? Usually strict.
-            // If current time > draw time, throw error.
+            // Block if current time >= draw time (5min margin handled by backend)
             if (now > drawTime) {
               throw new Error(`O horário ${horario} já passou para a data de hoje.`);
             }
           }
-        } else if (new Date(item.data) < new Date(now.toISOString().split('T')[0])) {
+        } else if (item.data < todayLocal) {
           throw new Error(`A data ${item.data.split('-').reverse().join('/')} já passou.`);
         }
 

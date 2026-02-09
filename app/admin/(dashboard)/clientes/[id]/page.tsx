@@ -6,7 +6,7 @@ import { getUserById, updateUserBalance, type UserProfile } from '@/lib/admin/ac
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, User, Wallet, Receipt, Calendar, Save, X } from 'lucide-react';
+import { ArrowLeft, User, Wallet, Receipt, Calendar, Save, X, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminClienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +20,8 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
   const [isSaving, setIsSaving] = useState(false);
   const [editedSaldo, setEditedSaldo] = useState('');
   const [editedSaldoBonus, setEditedSaldoBonus] = useState('');
+  const [editedSaldoCassino, setEditedSaldoCassino] = useState('');
+  const [editedSaldoBonusCassino, setEditedSaldoBonusCassino] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -31,6 +33,8 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         if (data) {
           setEditedSaldo(data.saldo.toString());
           setEditedSaldoBonus(data.saldo_bonus.toString());
+          setEditedSaldoCassino(data.saldo_cassino.toString());
+          setEditedSaldoBonusCassino(data.saldo_bonus_cassino.toString());
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -52,7 +56,9 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
       const result = await updateUserBalance(
         user.id,
         parseFloat(editedSaldo) || 0,
-        parseFloat(editedSaldoBonus) || 0
+        parseFloat(editedSaldoBonus) || 0,
+        parseFloat(editedSaldoCassino) || 0,
+        parseFloat(editedSaldoBonusCassino) || 0
       );
 
       if (result.error) {
@@ -170,7 +176,7 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
             <div className="p-2 bg-zinc-700 rounded-lg">
               <Wallet className="h-5 w-5 text-green-400" />
             </div>
-            <h2 className="text-lg font-semibold text-white">Saldo</h2>
+            <h2 className="text-lg font-semibold text-white">Carteiras</h2>
           </div>
           <div className="space-y-3">
             {isEditMode ? (
@@ -195,6 +201,26 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
                     className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
                   />
                 </div>
+                <div>
+                  <label className="text-sm text-zinc-500">Saldo Cassino (R$)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editedSaldoCassino}
+                    onChange={(e) => setEditedSaldoCassino(e.target.value)}
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-zinc-500">Bônus Cassino (R$)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editedSaldoBonusCassino}
+                    onChange={(e) => setEditedSaldoBonusCassino(e.target.value)}
+                    className="mt-1 bg-zinc-800 border-zinc-700/40 text-white"
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -205,9 +231,21 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm text-zinc-500">Saldo Bônus</label>
+                  <label className="text-sm text-zinc-500">Bônus Apostas</label>
                   <p className="text-xl font-semibold text-cyan-400">
                     {formatCurrency(user.saldo_bonus)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-zinc-500">Saldo Cassino</label>
+                  <p className="text-xl font-semibold text-purple-400">
+                    {formatCurrency(user.saldo_cassino)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-zinc-500">Bônus Cassino</label>
+                  <p className="text-xl font-semibold text-purple-300">
+                    {formatCurrency(user.saldo_bonus_cassino)}
                   </p>
                 </div>
               </>

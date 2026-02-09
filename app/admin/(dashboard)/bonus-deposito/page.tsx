@@ -10,15 +10,17 @@ import {
   deleteBonusTier,
   toggleBonusTierStatus,
   type BonusTier,
+  type CarteiraType,
 } from '@/lib/admin/actions/bonus-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, X, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Info, Wallet, Gamepad2 } from 'lucide-react';
 
 interface BonusTierFormData {
   deposito_minimo: string;
   bonus_percentual: string;
   bonus_maximo: string;
+  carteira: CarteiraType;
   ativo: boolean;
 }
 
@@ -26,7 +28,14 @@ const initialFormData: BonusTierFormData = {
   deposito_minimo: '',
   bonus_percentual: '',
   bonus_maximo: '',
+  carteira: 'ambas',
   ativo: true,
+};
+
+const CARTEIRA_LABELS: Record<CarteiraType, string> = {
+  tradicional: 'Loterias',
+  cassino: 'Cassino',
+  ambas: 'Ambas',
 };
 
 export default function AdminBonusDepositoPage() {
@@ -68,6 +77,7 @@ export default function AdminBonusDepositoPage() {
       deposito_minimo: tier.deposito_minimo.toString(),
       bonus_percentual: tier.bonus_percentual.toString(),
       bonus_maximo: tier.bonus_maximo?.toString() || '',
+      carteira: tier.carteira,
       ativo: tier.ativo,
     });
     setShowForm(true);
@@ -81,6 +91,7 @@ export default function AdminBonusDepositoPage() {
       deposito_minimo: parseFloat(formData.deposito_minimo),
       bonus_percentual: parseFloat(formData.bonus_percentual),
       bonus_maximo: formData.bonus_maximo ? parseFloat(formData.bonus_maximo) : null,
+      carteira: formData.carteira,
       ativo: formData.ativo,
     };
 
@@ -160,6 +171,23 @@ export default function AdminBonusDepositoPage() {
       },
     },
     {
+      key: 'carteira',
+      header: 'Carteira',
+      render: (value) => {
+        const carteira = (value as CarteiraType) || 'ambas';
+        const colors: Record<CarteiraType, string> = {
+          tradicional: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/30',
+          cassino: 'text-purple-400 bg-purple-400/10 border-purple-400/30',
+          ambas: 'text-amber-400 bg-amber-400/10 border-amber-400/30',
+        };
+        return (
+          <span className={`text-xs px-2 py-1 rounded-full border ${colors[carteira]}`}>
+            {CARTEIRA_LABELS[carteira]}
+          </span>
+        );
+      },
+    },
+    {
       key: 'ativo',
       header: 'Status',
       render: (value, row) => (
@@ -218,9 +246,11 @@ export default function AdminBonusDepositoPage() {
         <div className="text-sm text-zinc-300">
           <p className="font-medium text-cyan-400 mb-1">Como funciona:</p>
           <ul className="space-y-1 text-zinc-500">
-            <li>• O bônus é creditado automaticamente em <code className="text-cyan-300 bg-zinc-800 px-1 rounded">saldo_bonus</code> quando o depósito é aprovado.</li>
+            <li>• O bônus é creditado automaticamente na carteira configurada quando o depósito é aprovado.</li>
+            <li>• <span className="text-cyan-400">Loterias</span>: credita em <code className="text-cyan-300 bg-zinc-800 px-1 rounded">saldo_bonus</code> (só para depósitos de loterias).</li>
+            <li>• <span className="text-purple-400">Cassino</span>: credita em <code className="text-purple-300 bg-zinc-800 px-1 rounded">saldo_bonus_cassino</code> (só para depósitos de cassino).</li>
+            <li>• <span className="text-amber-400">Ambas</span>: aplica para depósitos de qualquer carteira, creditando no bônus correspondente.</li>
             <li>• É aplicada a maior faixa em que o valor do depósito se encaixa (ex: depósito de R$80 usa a faixa de R$50).</li>
-            <li>• O saldo de bônus só pode ser usado para apostas, não para saques.</li>
           </ul>
         </div>
       </div>
@@ -307,6 +337,40 @@ export default function AdminBonusDepositoPage() {
                 />
                 <p className="text-xs text-zinc-500 mt-1">
                   Teto máximo do bônus (opcional)
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-zinc-300 mb-2 block">Carteira de Destino *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['tradicional', 'cassino', 'ambas'] as CarteiraType[]).map((tipo) => {
+                    const isSelected = formData.carteira === tipo;
+                    const icons: Record<CarteiraType, typeof Wallet> = {
+                      tradicional: Wallet,
+                      cassino: Gamepad2,
+                      ambas: Wallet,
+                    };
+                    const Icon = icons[tipo];
+                    const colors: Record<CarteiraType, string> = {
+                      tradicional: isSelected ? 'border-cyan-500 bg-cyan-500/20 text-cyan-400' : 'border-zinc-700 bg-zinc-800 text-zinc-400',
+                      cassino: isSelected ? 'border-purple-500 bg-purple-500/20 text-purple-400' : 'border-zinc-700 bg-zinc-800 text-zinc-400',
+                      ambas: isSelected ? 'border-amber-500 bg-amber-500/20 text-amber-400' : 'border-zinc-700 bg-zinc-800 text-zinc-400',
+                    };
+                    return (
+                      <button
+                        key={tipo}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, carteira: tipo })}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${colors[tipo]}`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-xs font-medium">{CARTEIRA_LABELS[tipo]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Em qual carteira o bônus será creditado ao depositar
                 </p>
               </div>
 

@@ -44,6 +44,7 @@ export interface LayoutProps {
   saldo: number;
   saldoBonus: number;
   saldoCassino: number;
+  saldoBonusCassino: number;
   unidade: string;
   onRefresh: () => void;
   loading: boolean;

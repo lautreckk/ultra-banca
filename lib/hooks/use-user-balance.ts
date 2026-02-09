@@ -7,6 +7,7 @@ interface UserBalance {
   saldo: number;
   saldoBonus: number;
   saldoCassino: number;
+  saldoBonusCassino: number;
   loading: boolean;
 }
 
@@ -15,6 +16,7 @@ export function useUserBalance() {
     saldo: 0,
     saldoBonus: 0,
     saldoCassino: 0,
+    saldoBonusCassino: 0,
     loading: true,
   });
 
@@ -27,7 +29,7 @@ export function useUserBalance() {
       if (user) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('saldo, saldo_bonus, saldo_cassino')
+          .select('saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino')
           .eq('id', user.id)
           .single();
 
@@ -36,6 +38,7 @@ export function useUserBalance() {
             saldo: Number(data.saldo) || 0,
             saldoBonus: Number(data.saldo_bonus) || 0,
             saldoCassino: Number(data.saldo_cassino) || 0,
+            saldoBonusCassino: Number(data.saldo_bonus_cassino) || 0,
             loading: false,
           });
         } else {
@@ -76,12 +79,13 @@ export function useUserBalance() {
             filter: `id=eq.${user.id}`,
           },
           (payload) => {
-            const newData = payload.new as { saldo?: number; saldo_bonus?: number; saldo_cassino?: number };
+            const newData = payload.new as { saldo?: number; saldo_bonus?: number; saldo_cassino?: number; saldo_bonus_cassino?: number };
             setBalance(prev => ({
               ...prev,
               saldo: Number(newData.saldo) ?? prev.saldo,
               saldoBonus: Number(newData.saldo_bonus) ?? prev.saldoBonus,
               saldoCassino: Number(newData.saldo_cassino) ?? prev.saldoCassino,
+              saldoBonusCassino: Number(newData.saldo_bonus_cassino) ?? prev.saldoBonusCassino,
             }));
           }
         )

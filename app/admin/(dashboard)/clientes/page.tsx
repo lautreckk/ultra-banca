@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { getUsers, getUserById, updateUserProfile, type UserProfile, type UpdateUserProfileData, type UsersListParams } from '@/lib/admin/actions/users';
-import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown } from 'lucide-react';
+import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -18,6 +18,8 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
   const [cpf, setCpf] = useState('');
   const [saldo, setSaldo] = useState('');
   const [saldoBonus, setSaldoBonus] = useState('');
+  const [saldoCassino, setSaldoCassino] = useState('');
+  const [saldoBonusCassino, setSaldoBonusCassino] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -28,6 +30,8 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
       setCpf(user.cpf);
       setSaldo(user.saldo.toFixed(2));
       setSaldoBonus(user.saldo_bonus.toFixed(2));
+      setSaldoCassino(user.saldo_cassino.toFixed(2));
+      setSaldoBonusCassino(user.saldo_bonus_cassino.toFixed(2));
       setNewPassword('');
       setConfirmPassword('');
       setError('');
@@ -84,6 +88,8 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
         cpf: cpfNumbers,
         saldo: parseFloat(saldo) || 0,
         saldoBonus: parseFloat(saldoBonus) || 0,
+        saldoCassino: parseFloat(saldoCassino) || 0,
+        saldoBonusCassino: parseFloat(saldoBonusCassino) || 0,
       };
 
       if (newPassword) {
@@ -189,6 +195,36 @@ function EditUserModal({ user, isOpen, onClose, onSave }: EditModalProps) {
                 step="0.01"
                 value={saldoBonus}
                 onChange={(e) => setSaldoBonus(e.target.value)}
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
+              />
+            </div>
+          </div>
+
+          {/* Saldo Cassino */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">Saldo Cassino (R$)</label>
+            <div className="relative">
+              <Gamepad2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                type="number"
+                step="0.01"
+                value={saldoCassino}
+                onChange={(e) => setSaldoCassino(e.target.value)}
+                className="pl-10 bg-zinc-800 border-zinc-800 text-white"
+              />
+            </div>
+          </div>
+
+          {/* Bônus Cassino */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">Bônus Cassino (R$)</label>
+            <div className="relative">
+              <Gamepad2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                type="number"
+                step="0.01"
+                value={saldoBonusCassino}
+                onChange={(e) => setSaldoBonusCassino(e.target.value)}
                 className="pl-10 bg-zinc-800 border-zinc-800 text-white"
               />
             </div>
@@ -305,10 +341,14 @@ function UserCard({ user, index, onView, onEdit }: UserCardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-sm">
+      <div className="grid grid-cols-3 gap-2 text-sm">
         <div className="bg-zinc-800/50 rounded-xl p-2">
           <p className="text-zinc-400 text-xs">Saldo</p>
           <p className="text-white font-medium">{formatCurrency(user.saldo)}</p>
+        </div>
+        <div className="bg-zinc-800/50 rounded-xl p-2">
+          <p className="text-zinc-400 text-xs">Cassino</p>
+          <p className="text-purple-400 font-medium">{formatCurrency(user.saldo_cassino)}</p>
         </div>
         <div className="bg-zinc-800/50 rounded-xl p-2">
           <p className="text-zinc-400 text-xs">Apostas</p>
@@ -318,7 +358,7 @@ function UserCard({ user, index, onView, onEdit }: UserCardProps) {
           <p className="text-zinc-400 text-xs">Ganhos</p>
           <p className="text-green-400 font-medium">{formatCurrency(user.total_ganhos)}</p>
         </div>
-        <div className="bg-zinc-800/50 rounded-xl p-2">
+        <div className="col-span-2 bg-zinc-800/50 rounded-xl p-2">
           <p className="text-zinc-400 text-xs">Cód. Afiliado</p>
           <p className="text-white font-medium truncate">{user.codigo_convite || '-'}</p>
         </div>
@@ -551,7 +591,8 @@ export default function AdminClientesPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-12">#</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Nome</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">CPF</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Saldo</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Saldo Principal</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Saldo Cassino</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Nº Apostas</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Ganhos</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Cód. Afiliado</th>
@@ -572,6 +613,9 @@ export default function AdminClientesPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-zinc-300">
                         {formatCurrency(user.saldo)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-purple-400">
+                        {formatCurrency(user.saldo_cassino)}
                       </td>
                       <td className="px-4 py-3 text-sm text-zinc-300">
                         {user.total_apostas.toLocaleString('pt-BR')}

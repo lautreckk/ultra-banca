@@ -12,6 +12,7 @@ export function ModernLayout({
   saldo,
   saldoBonus,
   saldoCassino,
+  saldoBonusCassino,
   unidade,
   onRefresh,
   loading,
@@ -65,6 +66,7 @@ export function ModernLayout({
         saldo={saldo}
         saldoBonus={saldoBonus}
         saldoCassino={saldoCassino}
+        saldoBonusCassino={saldoBonusCassino}
       />
 
       {/* Container principal com margem para sidebar */}
@@ -80,6 +82,7 @@ export function ModernLayout({
           saldo={saldo}
           saldoBonus={saldoBonus}
           saldoCassino={saldoCassino}
+          saldoBonusCassino={saldoBonusCassino}
           onRefresh={onRefresh}
           loading={loading}
           onMenuClick={() => setDrawerOpen(true)}

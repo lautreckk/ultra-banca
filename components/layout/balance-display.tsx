@@ -9,6 +9,7 @@ interface BalanceDisplayProps {
   saldo: number;
   saldoBonus: number;
   saldoCassino: number;
+  saldoBonusCassino: number;
   unidade?: string;
   onRefresh?: () => void;
   className?: string;
@@ -18,6 +19,7 @@ export function BalanceDisplay({
   saldo,
   saldoBonus,
   saldoCassino,
+  saldoBonusCassino,
   unidade = '979536',
   onRefresh,
   className,
@@ -86,6 +88,11 @@ export function BalanceDisplay({
               R$ {showBalance ? formatCurrencyCompact(saldo) : maskedValue}
             </span>
           </div>
+          {saldoBonus > 0 && (
+            <p className="text-[11px] text-zinc-500">
+              Bonus: R$ {showBalance ? formatCurrencyCompact(saldoBonus) : maskedValue}
+            </p>
+          )}
           <div className="flex items-center justify-end gap-1.5">
             <Gamepad2 className="h-3.5 w-3.5 text-purple-400" />
             <span className="text-[11px] text-zinc-500">Cassino</span>
@@ -93,9 +100,9 @@ export function BalanceDisplay({
               R$ {showBalance ? formatCurrencyCompact(saldoCassino) : maskedValue}
             </span>
           </div>
-          {saldoBonus > 0 && (
+          {saldoBonusCassino > 0 && (
             <p className="text-[11px] text-zinc-500">
-              Bonus: R$ {showBalance ? formatCurrencyCompact(saldoBonus) : maskedValue}
+              Bonus: R$ {showBalance ? formatCurrencyCompact(saldoBonusCassino) : maskedValue}
             </p>
           )}
         </div>
