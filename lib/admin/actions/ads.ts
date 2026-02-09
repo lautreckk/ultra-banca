@@ -204,8 +204,9 @@ export async function toggleAdStatus(id: string): Promise<{ success: boolean; er
 }
 
 // Function for user-facing: get active ads by trigger
+// NOTE: NÃO usar requireAdmin() aqui! Esta função é chamada por usuários comuns
+// via useAdPopup() nas páginas /home e /recarga-pix.
 export async function getActiveAdsByTrigger(trigger: 'login' | 'saque' | 'deposito'): Promise<Propaganda[]> {
-  await requireAdmin();
   const supabase = await createClient();
   const platformId = await getPlatformId();
 
