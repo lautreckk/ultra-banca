@@ -2,8 +2,10 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff, ChevronUp, Clock } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, ChevronUp, Clock } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 interface QuininhaDiasClientProps {
   data: string;
@@ -32,6 +34,7 @@ function getNextSorteioDays(): { date: Date; dateStr: string; dayName: string; i
 function QuininhaDiasContent({ data, modalidade }: QuininhaDiasClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { saldo, saldoBonus } = useUserBalance();
 
   const modalidadeId = modalidade.codigo;
   const palpitesStr = searchParams.get('palpites') || '';
@@ -102,10 +105,7 @@ function QuininhaDiasContent({ data, modalidade }: QuininhaDiasClientProps) {
             <RefreshCw className="h-5 w-5 text-white" />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-white font-medium">R$ ******* | *******</span>
-            <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-              <EyeOff className="h-5 w-5 text-white" />
-            </button>
+            <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
           </div>
         </div>
 

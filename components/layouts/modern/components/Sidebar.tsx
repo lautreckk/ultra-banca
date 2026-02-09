@@ -140,20 +140,42 @@ export function Sidebar({ isCollapsed, onToggleCollapse, saldo, saldoBonus, sald
         {!isCollapsed ? (
           <div className="space-y-3">
             <div
-              className="p-3 rounded-lg"
+              className="p-3 rounded-lg space-y-2"
               style={{ backgroundColor: 'var(--color-background)' }}
             >
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                Saldo Disponivel
-              </p>
-              <p className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>
-                {formatCurrency(saldo)}
-              </p>
-              {saldoBonus > 0 && (
-                <p className="text-xs" style={{ color: 'var(--color-accent-green)' }}>
-                  + {formatCurrency(saldoBonus)} bonus
-                </p>
-              )}
+              {/* Loterias */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Wallet className="h-3 w-3 text-amber-400" />
+                  <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-muted)' }}>Loterias</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Real:</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>{formatCurrency(saldo)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Bonus:</span>
+                  <span className="text-xs" style={{ color: 'var(--color-accent-green)' }}>{formatCurrency(saldoBonus)}</span>
+                </div>
+              </div>
+
+              <div className="border-t" style={{ borderColor: 'var(--color-border)' }} />
+
+              {/* Cassino */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <Gamepad2 className="h-3 w-3 text-purple-400" />
+                  <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-muted)' }}>Cassino</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Real:</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>{formatCurrency(saldoCassino)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Bonus:</span>
+                  <span className="text-xs" style={{ color: 'var(--color-accent-green)' }}>{formatCurrency(saldoBonusCassino)}</span>
+                </div>
+              </div>
             </div>
             <button
               onClick={handleLogout}

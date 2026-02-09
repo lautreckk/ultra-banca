@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Home, Menu, RefreshCw, Eye, EyeOff, ChevronLeft, Loader2 } from 'lucide-react';
+import { Home, Menu, RefreshCw, ChevronLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
@@ -22,21 +22,7 @@ export function PageLayout({
 }: PageLayoutProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showSaldo, setShowSaldo] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('show-balance') === '1';
-    }
-    return false;
-  });
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
-
-  const toggleSaldo = () => {
-    setShowSaldo((prev) => {
-      const next = !prev;
-      localStorage.setItem('show-balance', next ? '1' : '0');
-      return next;
-    });
-  };
 
   return (
     <div className="min-h-screen bg-[#111318] flex justify-center">
@@ -101,21 +87,12 @@ export function PageLayout({
             <RefreshCw className="h-5 w-5 text-zinc-400" />
           )}
         </button>
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-white">
-            R$ {showSaldo ? formatCurrencyCompact(saldo) : '*******'} | {showSaldo ? formatCurrencyCompact(saldoBonus) : '*******'}
-          </span>
-          <button
-            onClick={toggleSaldo}
-            className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
-            aria-label={showSaldo ? 'Ocultar saldo' : 'Mostrar saldo'}
-          >
-            {showSaldo ? (
-              <Eye className="h-5 w-5 text-zinc-400" />
-            ) : (
-              <EyeOff className="h-5 w-5 text-zinc-400" />
-            )}
-          </button>
+        <div className="text-right">
+          <span className="text-xs text-zinc-500">Real: </span>
+          <span className="font-bold text-white">R$ {formatCurrencyCompact(saldo)}</span>
+          <span className="text-zinc-600 mx-1">|</span>
+          <span className="text-xs text-zinc-500">Bonus: </span>
+          <span className="font-bold text-emerald-400">R$ {formatCurrencyCompact(saldoBonus)}</span>
         </div>
       </div>
 

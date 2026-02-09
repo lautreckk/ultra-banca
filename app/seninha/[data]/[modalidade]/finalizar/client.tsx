@@ -3,9 +3,11 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Menu, RefreshCw, EyeOff, Home, Share2, Printer, Loader2, X } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, Home, Share2, Printer, Loader2, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface SeninhaFinalizarClientProps {
@@ -18,6 +20,7 @@ function SeninhaFinalizarContent({ data: dataJogo, modalidade }: SeninhaFinaliza
   const searchParams = useSearchParams();
   const supabase = createClient();
   const config = usePlatformConfig();
+  const { saldo, saldoBonus, refresh } = useUserBalance();
 
   const modalidadeId = modalidade.codigo;
   const palpitesStr = searchParams.get('palpites') || '';
@@ -114,17 +117,12 @@ function SeninhaFinalizarContent({ data: dataJogo, modalidade }: SeninhaFinaliza
         </header>
 
         <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
+          <button onClick={refresh} className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
             <RefreshCw className="h-5 w-5 text-white" />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-white font-medium">
-              {novoSaldo !== null ? `R$ ${formatCurrency(novoSaldo)}` : 'R$ *******'}
-            </span>
-            <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-              <EyeOff className="h-5 w-5 text-white" />
-            </button>
-          </div>
+          <span className="text-white font-medium">
+            {novoSaldo !== null ? `R$ ${formatCurrency(novoSaldo)}` : `R$ ${formatCurrencyCompact(saldo)} | ${formatCurrencyCompact(saldoBonus)}`}
+          </span>
         </div>
 
         {error && (

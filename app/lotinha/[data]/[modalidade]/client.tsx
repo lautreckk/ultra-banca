@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface LotinhaNumbersClientProps {
@@ -12,6 +14,7 @@ interface LotinhaNumbersClientProps {
 
 export function LotinhaNumbersClient({ data, modalidade }: LotinhaNumbersClientProps) {
   const router = useRouter();
+  const { saldo, saldoBonus } = useUserBalance();
   const modalidadeId = modalidade.codigo;
   const requiredNumbers = 16; // Lotinha sempre usa 16 números base
 
@@ -80,12 +83,7 @@ export function LotinhaNumbersClient({ data, modalidade }: LotinhaNumbersClientP
         <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
           <RefreshCw className="h-5 w-5 text-white" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-            <EyeOff className="h-5 w-5 text-white" />
-          </button>
-        </div>
+        <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
       </div>
 
       <div className="bg-[#1A1F2B] min-h-screen">

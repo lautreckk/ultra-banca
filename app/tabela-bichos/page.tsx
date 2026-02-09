@@ -1,13 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
 import { BICHOS } from '@/lib/constants/bichos';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 export default function TabelaBichosPage() {
   const router = useRouter();
   const config = usePlatformConfig();
+  const { saldo, saldoBonus } = useUserBalance();
 
   const formatDezena = (num: number): string => {
     return num.toString().padStart(2, '0');
@@ -36,8 +39,7 @@ export default function TabelaBichosPage() {
         <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
           <RefreshCw className="h-5 w-5 text-white" />
           <div className="flex items-center gap-2">
-            <span className="text-white font-medium">R$ ******* | *******</span>
-            <EyeOff className="h-5 w-5 text-white" />
+            <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
           </div>
         </div>
 

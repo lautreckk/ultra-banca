@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface SeninhaNumbersClientProps {
@@ -12,6 +14,7 @@ interface SeninhaNumbersClientProps {
 
 export function SeninhaNumbersClient({ data, modalidade }: SeninhaNumbersClientProps) {
   const router = useRouter();
+  const { saldo, saldoBonus, refresh } = useUserBalance();
   const modalidadeId = modalidade.codigo;
   const requiredNumbers = 14; // Seninha sempre usa 14 numeros base
 
@@ -79,15 +82,10 @@ export function SeninhaNumbersClient({ data, modalidade }: SeninhaNumbersClientP
 
       {/* Balance Bar */}
       <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
-        <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
+        <button onClick={refresh} className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
           <RefreshCw className="h-5 w-5 text-white" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-            <EyeOff className="h-5 w-5 text-white" />
-          </button>
-        </div>
+        <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
       </div>
 
       {/* Content */}

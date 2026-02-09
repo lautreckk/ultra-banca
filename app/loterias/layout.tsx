@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, Loader2 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
@@ -15,7 +15,6 @@ export default function LoteriasLayout({
   const router = useRouter();
   const params = useParams();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showSaldo, setShowSaldo] = useState(false);
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
 
   // Check if we're in colocacao step - if so, let the page render its own header
@@ -85,22 +84,9 @@ export default function LoteriasLayout({
               <RefreshCw className="h-5 w-5 text-zinc-900" />
             )}
           </button>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-zinc-900">
-              R$ {showSaldo ? formatCurrencyCompact(saldo) : '*******'} | {showSaldo ? formatCurrencyCompact(saldoBonus) : '*******'}
-            </span>
-            <button
-              onClick={() => setShowSaldo(!showSaldo)}
-              className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10"
-              aria-label={showSaldo ? 'Ocultar saldo' : 'Mostrar saldo'}
-            >
-              {showSaldo ? (
-                <Eye className="h-5 w-5 text-zinc-900" />
-              ) : (
-                <EyeOff className="h-5 w-5 text-zinc-900" />
-              )}
-            </button>
-          </div>
+          <span className="font-bold text-zinc-900">
+            R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}
+          </span>
         </div>
 
         <BrasiliaClock />

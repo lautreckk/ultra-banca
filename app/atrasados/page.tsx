@@ -3,10 +3,12 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Menu, ChevronDown, RefreshCw, EyeOff, Share2 } from 'lucide-react';
+import { ChevronLeft, Menu, ChevronDown, RefreshCw, Share2 } from 'lucide-react';
 import { BANCAS } from '@/lib/constants/bancas';
 import { BICHOS } from '@/lib/constants/bichos';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 interface LoteriaOption {
   id: string;
@@ -62,6 +64,7 @@ function generateAtrasados(loteriaId: string, colocacaoId: string): AtrasadoItem
 export default function AtrasadosPage() {
   const router = useRouter();
   const config = usePlatformConfig();
+  const { saldo, saldoBonus } = useUserBalance();
   const [selectedLoteria, setSelectedLoteria] = useState<LoteriaOption | null>(null);
   const [selectedColocacao, setSelectedColocacao] = useState<{ id: string; nome: string } | null>(null);
   const [showLoteriaDropdown, setShowLoteriaDropdown] = useState(false);
@@ -120,8 +123,7 @@ export default function AtrasadosPage() {
         <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
           <RefreshCw className="h-5 w-5 text-white" />
           <div className="flex items-center gap-2">
-            <span className="text-white font-medium">R$ ******* | *******</span>
-            <EyeOff className="h-5 w-5 text-white" />
+            <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
           </div>
         </div>
 

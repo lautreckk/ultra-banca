@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff, Search, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, Search, ChevronRight } from 'lucide-react';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import { BrasiliaClock } from '@/components/layout';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
@@ -13,6 +15,7 @@ interface LotinhaClientProps {
 export function LotinhaClient({ modalidades }: LotinhaClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const { saldo, saldoBonus } = useUserBalance();
 
   const filteredModalidades = modalidades.filter((m) =>
     m.nome.toLowerCase().includes(searchQuery.toLowerCase())
@@ -55,12 +58,7 @@ export function LotinhaClient({ modalidades }: LotinhaClientProps) {
         <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
           <RefreshCw className="h-5 w-5 text-white" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-            <EyeOff className="h-5 w-5 text-white" />
-          </button>
-        </div>
+        <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
       </div>
 
       <BrasiliaClock />

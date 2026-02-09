@@ -2,7 +2,9 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff, ChevronUp, Clock } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, ChevronUp, Clock } from 'lucide-react';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 function getNextSorteioDays(): { dateStr: string; dayName: string }[] {
   const days = [];
@@ -24,6 +26,7 @@ function LotinhaDiasContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+  const { saldo, saldoBonus } = useUserBalance();
 
   const data = params.data as string;
   const modalidadeId = params.modalidade as string;
@@ -68,12 +71,7 @@ function LotinhaDiasContent() {
           <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
             <RefreshCw className="h-5 w-5 text-white" />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-white font-medium">R$ ******* | *******</span>
-            <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-              <EyeOff className="h-5 w-5 text-white" />
-            </button>
-          </div>
+          <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
         </div>
 
         <div className="bg-[#1A1F2B] flex-1">

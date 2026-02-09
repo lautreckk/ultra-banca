@@ -2,8 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 interface QuininhaNumbersClientProps {
   data: string;
@@ -12,6 +14,7 @@ interface QuininhaNumbersClientProps {
 
 export function QuininhaNumbersClient({ data, modalidade }: QuininhaNumbersClientProps) {
   const router = useRouter();
+  const { saldo, saldoBonus } = useUserBalance();
   const modalidadeId = modalidade.codigo;
   const requiredNumbers = 13; // Quininha sempre usa 13 numeros base
 
@@ -87,10 +90,7 @@ export function QuininhaNumbersClient({ data, modalidade }: QuininhaNumbersClien
           <RefreshCw className="h-5 w-5 text-white" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-            <EyeOff className="h-5 w-5 text-white" />
-          </button>
+          <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
         </div>
       </div>
 

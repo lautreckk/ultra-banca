@@ -1,8 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 interface QuininhaModalidadesClientProps {
   data: string;
@@ -11,6 +13,7 @@ interface QuininhaModalidadesClientProps {
 
 export function QuininhaModalidadesClient({ data, modalidades }: QuininhaModalidadesClientProps) {
   const router = useRouter();
+  const { saldo, saldoBonus } = useUserBalance();
 
   const handleSelectModalidade = (codigo: string) => {
     router.push(`/quininha/${data}/${codigo}`);
@@ -44,10 +47,7 @@ export function QuininhaModalidadesClient({ data, modalidades }: QuininhaModalid
           <RefreshCw className="h-5 w-5 text-white" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-            <EyeOff className="h-5 w-5 text-white" />
-          </button>
+          <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
         </div>
       </div>
 

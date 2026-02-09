@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, RefreshCw, Menu } from 'lucide-react';
+import { Bell, RefreshCw, Menu, Wallet, Gamepad2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 
@@ -56,34 +56,40 @@ export function ModernHeader({ saldo, saldoBonus, saldoCassino, saldoBonusCassin
 
           {/* Balance Display */}
           <div
-            className="px-4 py-2 rounded-lg modern-glass hidden sm:block"
+            className="px-4 py-2 rounded-lg modern-glass hidden sm:flex gap-4"
             style={{
               background: 'rgba(255, 255, 255, 0.1)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
             }}
           >
-            <p className="text-xs mb-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              Saldo Disponivel
-            </p>
-            <div className="flex items-center gap-2">
-              <p className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>
-                {loading ? (
-                  <span className="animate-pulse">...</span>
-                ) : (
-                  formatCurrency(saldo)
-                )}
+            {/* Loterias */}
+            <div>
+              <div className="flex items-center gap-1 mb-0.5">
+                <Wallet className="h-3 w-3 text-amber-400" />
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Loterias</p>
+              </div>
+              <p className="text-base font-bold" style={{ color: 'var(--color-primary)' }}>
+                {loading ? <span className="animate-pulse">...</span> : formatCurrency(saldo)}
               </p>
-              {saldoBonus > 0 && (
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: 'var(--color-accent-green)',
-                    color: 'white',
-                  }}
-                >
-                  +{formatCurrency(saldoBonus)}
-                </span>
-              )}
+              <p className="text-[10px]" style={{ color: 'var(--color-accent-green)' }}>
+                Bonus: {formatCurrency(saldoBonus)}
+              </p>
+            </div>
+
+            <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+
+            {/* Cassino */}
+            <div>
+              <div className="flex items-center gap-1 mb-0.5">
+                <Gamepad2 className="h-3 w-3 text-purple-400" />
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Cassino</p>
+              </div>
+              <p className="text-base font-bold" style={{ color: 'var(--color-primary)' }}>
+                {loading ? <span className="animate-pulse">...</span> : formatCurrency(saldoCassino)}
+              </p>
+              <p className="text-[10px]" style={{ color: 'var(--color-accent-green)' }}>
+                Bonus: {formatCurrency(saldoBonusCassino)}
+              </p>
             </div>
           </div>
         </div>
@@ -92,9 +98,18 @@ export function ModernHeader({ saldo, saldoBonus, saldoCassino, saldoBonusCassin
         <div className="flex items-center gap-2">
           {/* Mobile Balance (simplified) */}
           <div className="sm:hidden text-right mr-2">
-            <p className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>
-              {loading ? '...' : formatCurrency(saldo)}
-            </p>
+            <div className="flex items-center gap-1 justify-end">
+              <Wallet className="h-3 w-3 text-amber-400" />
+              <p className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>
+                {loading ? '...' : formatCurrency(saldo)}
+              </p>
+            </div>
+            <div className="flex items-center gap-1 justify-end">
+              <Gamepad2 className="h-3 w-3 text-purple-400" />
+              <p className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>
+                {loading ? '...' : formatCurrency(saldoCassino)}
+              </p>
+            </div>
           </div>
 
           {/* Refresh Button */}

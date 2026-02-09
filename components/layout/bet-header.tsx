@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, Menu, RefreshCw, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
@@ -15,7 +15,6 @@ interface BetHeaderProps {
 export function BetHeader({ title, onBack }: BetHeaderProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showSaldo, setShowSaldo] = useState(false);
   const { saldo, saldoBonus, loading, refresh } = useUserBalance();
 
   const handleBack = () => {
@@ -73,21 +72,12 @@ export function BetHeader({ title, onBack }: BetHeaderProps) {
             <RefreshCw className="h-5 w-5 text-zinc-900" />
           )}
         </button>
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-zinc-900">
-            R$ {showSaldo ? formatCurrencyCompact(saldo) : '*******'} | {showSaldo ? formatCurrencyCompact(saldoBonus) : '*******'}
-          </span>
-          <button
-            onClick={() => setShowSaldo(!showSaldo)}
-            className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10"
-            aria-label={showSaldo ? 'Ocultar saldo' : 'Mostrar saldo'}
-          >
-            {showSaldo ? (
-              <Eye className="h-5 w-5 text-zinc-900" />
-            ) : (
-              <EyeOff className="h-5 w-5 text-zinc-900" />
-            )}
-          </button>
+        <div className="text-right">
+          <span className="text-xs text-zinc-800/70">Real: </span>
+          <span className="font-bold text-zinc-900">R$ {formatCurrencyCompact(saldo)}</span>
+          <span className="text-zinc-800/50 mx-1">|</span>
+          <span className="text-xs text-zinc-800/70">Bonus: </span>
+          <span className="font-bold text-zinc-900">R$ {formatCurrencyCompact(saldoBonus)}</span>
         </div>
       </div>
 

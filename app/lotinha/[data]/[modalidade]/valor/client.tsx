@@ -2,7 +2,9 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Menu, RefreshCw, EyeOff, Info } from 'lucide-react';
+import { ChevronLeft, Menu, RefreshCw, Info } from 'lucide-react';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 
 interface LotinhaValorClientProps {
@@ -13,6 +15,7 @@ interface LotinhaValorClientProps {
 function LotinhaValorContent({ data, modalidade }: LotinhaValorClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { saldo, saldoBonus } = useUserBalance();
 
   const modalidadeId = modalidade.codigo;
   const palpitesStr = searchParams.get('palpites') || '';
@@ -59,12 +62,7 @@ function LotinhaValorContent({ data, modalidade }: LotinhaValorClientProps) {
         <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Atualizar saldo">
           <RefreshCw className="h-5 w-5 text-white" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium">R$ ******* | *******</span>
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-black/10" aria-label="Mostrar saldo">
-            <EyeOff className="h-5 w-5 text-white" />
-          </button>
-        </div>
+        <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
       </div>
 
       <div className="bg-[#1A1F2B] min-h-screen">

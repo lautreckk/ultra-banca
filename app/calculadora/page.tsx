@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Menu, ChevronDown, RefreshCw, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronLeft, Menu, ChevronDown, RefreshCw, Loader2 } from 'lucide-react';
 import { getModalidadesAtivas, type ModalidadeDB } from '@/lib/actions/modalidades';
 import { type Colocacao } from '@/lib/constants/colocacoes';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 
 // Colocações ordenadas como no site
 const COLOCACOES_CALCULADORA: Colocacao[] = [
@@ -98,6 +100,7 @@ const CATEGORIA_ORDEM: Record<string, number> = {
 export default function CalculadoraPage() {
   const router = useRouter();
   const config = usePlatformConfig();
+  const { saldo, saldoBonus } = useUserBalance();
   const [modalidades, setModalidades] = useState<ModalidadeDB[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModalidade, setSelectedModalidade] = useState<ModalidadeDB | null>(null);
@@ -181,8 +184,7 @@ export default function CalculadoraPage() {
         <div className="bg-[#E5A220] px-4 py-2 flex items-center justify-between">
           <RefreshCw className="h-5 w-5 text-white" />
           <div className="flex items-center gap-2">
-            <span className="text-white font-medium">R$ ******* | *******</span>
-            <EyeOff className="h-5 w-5 text-white" />
+            <span className="text-white font-medium">R$ {formatCurrencyCompact(saldo)} | {formatCurrencyCompact(saldoBonus)}</span>
           </div>
         </div>
 
