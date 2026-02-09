@@ -54,7 +54,10 @@ export async function getVisitorStats(days: number = 30): Promise<VisitorStats> 
 
   const now = new Date();
   const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Horário de Brasília (UTC-3)
+  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowBRT = new Date(now.getTime() - BRT_OFFSET_MS);
+  const todayStart = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 3));
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const daysAgo = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
@@ -182,7 +185,10 @@ export async function getHouseProfitData(): Promise<HouseProfitData> {
   const supabase = await createClient();
 
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Horário de Brasília (UTC-3)
+  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowBRT = new Date(now.getTime() - BRT_OFFSET_MS);
+  const todayStart = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 3));
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 

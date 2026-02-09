@@ -69,8 +69,10 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
   // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
 
-  // Calcular datas de referência
-  const hoje = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  // Calcular datas em horário de Brasília (UTC-3)
+  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowBRT = new Date(now.getTime() - BRT_OFFSET_MS);
+  const hoje = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 3)).toISOString();
   const seteDiasAtras = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const trintaDiasAtras = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const sessentaDiasAtras = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();

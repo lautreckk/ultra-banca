@@ -32,11 +32,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
 
-  // Calcular datas uma única vez
+  // Calcular datas em horário de Brasília (UTC-3)
+  // Brasil não usa horário de verão desde 2019
   const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toISOString();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowBRT = new Date(now.getTime() - BRT_OFFSET_MS);
+
+  // Meia-noite BRT = 03:00 UTC
+  const startOfDay = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 3)).toISOString();
+  const startOfWeek = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate() - nowBRT.getUTCDay(), 3)).toISOString();
+  const startOfMonth = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), 1, 3)).toISOString();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // ============================================================================
