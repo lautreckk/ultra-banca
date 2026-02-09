@@ -82,10 +82,10 @@ export function useUserBalance() {
             const newData = payload.new as { saldo?: number; saldo_bonus?: number; saldo_cassino?: number; saldo_bonus_cassino?: number };
             setBalance(prev => ({
               ...prev,
-              saldo: Number(newData.saldo) ?? prev.saldo,
-              saldoBonus: Number(newData.saldo_bonus) ?? prev.saldoBonus,
-              saldoCassino: Number(newData.saldo_cassino) ?? prev.saldoCassino,
-              saldoBonusCassino: Number(newData.saldo_bonus_cassino) ?? prev.saldoBonusCassino,
+              saldo: newData.saldo != null ? Number(newData.saldo) : prev.saldo,
+              saldoBonus: newData.saldo_bonus != null ? Number(newData.saldo_bonus) : prev.saldoBonus,
+              saldoCassino: newData.saldo_cassino != null ? Number(newData.saldo_cassino) : prev.saldoCassino,
+              saldoBonusCassino: newData.saldo_bonus_cassino != null ? Number(newData.saldo_bonus_cassino) : prev.saldoBonusCassino,
             }));
           }
         )
