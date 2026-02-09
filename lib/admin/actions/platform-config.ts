@@ -13,8 +13,9 @@ import { getPlatformId } from '@/lib/utils/platform';
  * Se nao encontrar, tenta buscar da tabela legada platform_config.
  */
 export async function getPlatformConfig(): Promise<PlatformConfig> {
-  await requireAdmin();
-  // Evita cache do Next.js - sempre busca dados frescos
+  // NOTE: NÃO usar requireAdmin() aqui!
+  // Esta função é chamada pelo root layout (app/layout.tsx) para TODAS as páginas,
+  // incluindo /login e /cadastro. Ela só lê configurações públicas (nome, logo, cores).
   noStore();
 
   const supabase = await createClient();
