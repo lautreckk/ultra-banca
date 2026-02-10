@@ -258,7 +258,9 @@ export async function updateSession(request: NextRequest) {
 
   // SEGURANÇA: No domínio admin, bloquear acesso à banca (opcional - redireciona para admin)
   // Permitir rotas de promotor no domínio admin (promotores acessam pelo mesmo domínio)
-  if (adminDomainAccess && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && !isPromotorRoute(pathname) && pathname !== '/') {
+  // EXCEÇÃO: localhost/127.0.0.1 funciona como domínio dual (admin + banca) para desenvolvimento
+  const devDomain = host.split(':')[0] === 'localhost' || host.split(':')[0] === '127.0.0.1';
+  if (adminDomainAccess && !devDomain && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && !isPromotorRoute(pathname) && pathname !== '/') {
     // Se está no domínio admin mas tentando acessar área da banca
     // Redirecionar para o login do admin
     if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
@@ -267,8 +269,8 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Raiz do domínio admin -> redirecionar para admin login
-  if (adminDomainAccess && pathname === '/') {
+  // Raiz do domínio admin -> redirecionar para admin login (exceto dev)
+  if (adminDomainAccess && !devDomain && pathname === '/') {
     return redirect(request, '/admin/login');
   }
 
