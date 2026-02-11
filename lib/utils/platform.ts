@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { DEFAULT_PLATFORM_ID } from './platform-constants';
+import { DEFAULT_PLATFORM_ID, ALL_PLATFORMS_ID } from './platform-constants';
 
 /**
  * Obtém o platform_id do contexto atual.
@@ -104,6 +104,24 @@ export async function isCurrentUserPlatformAdmin(): Promise<boolean> {
 }
 
 /**
+ * Verifica se o usuário atual é super_admin.
+ */
+export async function isSuperAdmin(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const { data: adminRole } = await supabase
+    .from('admin_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  return adminRole?.role === 'super_admin';
+}
+
+/**
  * Obtém todas as plataformas que o usuário atual pode administrar.
  * Super admins podem ver todas as plataformas ativas.
  * Admins comuns veem apenas as plataformas vinculadas.
@@ -164,9 +182,25 @@ export async function switchPlatform(platformId: string): Promise<{ success: boo
     .eq('user_id', user.id)
     .single();
 
-  const isSuperAdmin = adminRole?.role === 'super_admin';
+  const isSuperAdminUser = adminRole?.role === 'super_admin';
 
-  if (!isSuperAdmin) {
+  // Handle "all platforms" mode (super_admin only)
+  if (platformId === ALL_PLATFORMS_ID) {
+    if (!isSuperAdminUser) {
+      return { success: false, error: 'Acesso restrito a super administradores' };
+    }
+    const cookieStore = await cookies();
+    cookieStore.set('platform_id', platformId, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return { success: true };
+  }
+
+  if (!isSuperAdminUser) {
     // Verificar se está vinculado à plataforma
     const { data: platformAdmin } = await supabase
       .from('platform_admins')
@@ -191,7 +225,7 @@ export async function switchPlatform(platformId: string): Promise<{ success: boo
     return { success: false, error: 'Plataforma não encontrada' };
   }
 
-  if (!platform.ativo && !isSuperAdmin) {
+  if (!platform.ativo && !isSuperAdminUser) {
     return { success: false, error: 'Plataforma inativa' };
   }
 

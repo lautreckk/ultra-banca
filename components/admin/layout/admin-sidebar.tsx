@@ -41,10 +41,11 @@ import {
   Building2,
   Check,
   Gamepad2,
+  Globe,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
-import { getUserAdminPlatforms, switchPlatform, getPlatformId } from '@/lib/utils/platform';
-import type { Platform } from '@/lib/utils/platform-constants';
+import { getUserAdminPlatforms, switchPlatform, getPlatformId, isSuperAdmin } from '@/lib/utils/platform';
+import { ALL_PLATFORMS_ID, type Platform } from '@/lib/utils/platform-constants';
 
 interface NavItem {
   label: string;
@@ -187,8 +188,10 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   const [currentPlatformId, setCurrentPlatformId] = useState<string | null>(null);
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
+  const [isSuperAdminUser, setIsSuperAdminUser] = useState(false);
 
   const hasMultiplePlatforms = platforms.length > 1;
+  const isAllSelected = currentPlatformId === ALL_PLATFORMS_ID;
   const currentPlatform = platforms.find(p => p.id === currentPlatformId);
 
   useEffect(() => {
@@ -207,12 +210,14 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
   }, []);
 
   async function loadPlatforms() {
-    const [platformsData, platformId] = await Promise.all([
+    const [platformsData, platformId, superAdmin] = await Promise.all([
       getUserAdminPlatforms(),
       getPlatformId(),
+      isSuperAdmin(),
     ]);
     setPlatforms(platformsData as Platform[]);
     setCurrentPlatformId(platformId);
+    setIsSuperAdminUser(superAdmin);
   }
 
   async function handleSelectPlatform(platformId: string) {
@@ -303,23 +308,29 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
               onClick={() => setPlatformDropdownOpen(!platformDropdownOpen)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700 hover:border-indigo-500/50 transition-colors"
             >
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
-                style={{ backgroundColor: currentPlatform?.color_primary || '#6366f1' }}
-              >
-                {currentPlatform?.logo_url ? (
-                  <img
-                    src={currentPlatform.logo_url}
-                    alt={currentPlatform.name}
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                ) : (
-                  currentPlatform?.name?.charAt(0) || 'B'
-                )}
-              </div>
+              {isAllSelected ? (
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white bg-indigo-600 shrink-0">
+                  <Globe className="h-4 w-4" />
+                </div>
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
+                  style={{ backgroundColor: currentPlatform?.color_primary || '#6366f1' }}
+                >
+                  {currentPlatform?.logo_url ? (
+                    <img
+                      src={currentPlatform.logo_url}
+                      alt={currentPlatform.name}
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  ) : (
+                    currentPlatform?.name?.charAt(0) || 'B'
+                  )}
+                </div>
+              )}
               <div className="flex-1 text-left min-w-0">
-                <p className="font-medium text-white text-sm truncate">{currentPlatform?.name || 'Selecionar'}</p>
-                <p className="text-xs text-zinc-500 truncate">{currentPlatform?.domain}</p>
+                <p className="font-medium text-white text-sm truncate">{isAllSelected ? 'Todas as Bancas' : currentPlatform?.name || 'Selecionar'}</p>
+                {!isAllSelected && <p className="text-xs text-zinc-500 truncate">{currentPlatform?.domain}</p>}
               </div>
               <ChevronDown className={`h-4 w-4 text-zinc-400 transition-transform shrink-0 ${platformDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -331,6 +342,27 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
                   <p className="text-xs font-medium text-zinc-500 uppercase px-2">Selecionar Banca</p>
                 </div>
                 <div className="max-h-48 overflow-y-auto py-1">
+                  {/* "Todas as Bancas" option for super_admins */}
+                  {isSuperAdminUser && (
+                    <button
+                      onClick={() => handleSelectPlatform(ALL_PLATFORMS_ID)}
+                      disabled={isPending}
+                      className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-800/50 transition-colors ${isAllSelected ? 'bg-indigo-500/10' : ''} disabled:opacity-50`}
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white bg-indigo-600 shrink-0">
+                        <Globe className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="font-medium text-white text-sm">Todas as Bancas</p>
+                        <p className="text-xs text-zinc-500">Visão agregada</p>
+                      </div>
+                      {switchingId === ALL_PLATFORMS_ID ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-indigo-400 shrink-0" />
+                      ) : isAllSelected ? (
+                        <Check className="h-4 w-4 text-indigo-400 shrink-0" />
+                      ) : null}
+                    </button>
+                  )}
                   {platforms.map((platform) => {
                     const isSelected = platform.id === currentPlatformId;
                     const isSwitching = switchingId === platform.id;

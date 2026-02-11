@@ -8,6 +8,8 @@ import {
 import { requireAdmin } from '@/lib/admin/actions/auth';
 import { StatCard, StatusBadge } from '@/components/admin/shared';
 import { formatCurrency } from '@/lib/utils/format-currency';
+import { getPlatformId } from '@/lib/utils/platform';
+import { ALL_PLATFORMS_ID } from '@/lib/utils/platform-constants';
 import Link from 'next/link';
 
 function LoadingCard() {
@@ -329,12 +331,16 @@ async function PendingWithdrawalsTable() {
 
 export default async function AdminDashboardPage() {
   await requireAdmin();
+  const platformId = await getPlatformId();
+  const isAll = platformId === ALL_PLATFORMS_ID;
 
   return (
     <div className="space-y-4 md:space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-sm md:text-base text-zinc-500">Visão geral da plataforma</p>
+        <p className="text-sm md:text-base text-zinc-500">
+          {isAll ? 'Visão geral de todas as bancas' : 'Visão geral da plataforma'}
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -346,20 +352,24 @@ export default async function AdminDashboardPage() {
         <DashboardStats />
       </Suspense>
 
-      {/* Tables Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <Suspense fallback={<LoadingTable />}>
-          <RecentBetsTable />
-        </Suspense>
-        <Suspense fallback={<LoadingTable />}>
-          <RecentDepositsTable />
-        </Suspense>
-      </div>
+      {!isAll && (
+        <>
+          {/* Tables Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <Suspense fallback={<LoadingTable />}>
+              <RecentBetsTable />
+            </Suspense>
+            <Suspense fallback={<LoadingTable />}>
+              <RecentDepositsTable />
+            </Suspense>
+          </div>
 
-      {/* Pending Withdrawals */}
-      <Suspense fallback={<LoadingTable />}>
-        <PendingWithdrawalsTable />
-      </Suspense>
+          {/* Pending Withdrawals */}
+          <Suspense fallback={<LoadingTable />}>
+            <PendingWithdrawalsTable />
+          </Suspense>
+        </>
+      )}
     </div>
   );
 }

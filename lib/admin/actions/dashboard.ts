@@ -1,8 +1,9 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
+import { ALL_PLATFORMS_ID } from '@/lib/utils/platform-constants';
 
 export interface DashboardStats {
   totalGanhos: number;
@@ -27,10 +28,17 @@ export interface DashboardStats {
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
   await requireAdmin();
-  const supabase = await createClient();
 
   // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
+  const isAll = platformId === ALL_PLATFORMS_ID;
+
+  // Use admin client (service_role) for cross-platform queries to bypass RLS
+  const supabase = isAll ? createAdminClient() : await createClient();
+
+  // Helper: conditionally add platform_id filter
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pf = <T,>(query: T): T => isAll ? query : (query as any).eq('platform_id', platformId);
 
   // Calcular datas em horário de Brasília (UTC-3)
   // Brasil não usa horário de verão desde 2019
@@ -61,75 +69,65 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     activeUsersResult,
   ] = await Promise.all([
     // 1. Total de ganhos (prêmios pagos aos apostadores)
-    supabase
+    pf(supabase
       .from('apostas')
-      .select('premio_valor')
-      .eq('platform_id', platformId)
+      .select('premio_valor'))
       .eq('status', 'ganhou'),
 
     // 2. Total de apostas (count)
-    supabase
+    pf(supabase
       .from('apostas')
-      .select('*', { count: 'exact', head: true })
-      .eq('platform_id', platformId),
+      .select('*', { count: 'exact', head: true })),
 
     // 3. Total de depósitos aprovados
-    supabase
+    pf(supabase
       .from('pagamentos')
-      .select('valor')
-      .eq('platform_id', platformId)
+      .select('valor'))
       .eq('status', 'PAID'),
 
     // 4. Total de saques pagos
-    supabase
+    pf(supabase
       .from('saques')
-      .select('valor')
-      .eq('platform_id', platformId)
+      .select('valor'))
       .eq('status', 'PAID'),
 
     // 5. Depósitos do dia
-    supabase
+    pf(supabase
       .from('pagamentos')
-      .select('valor')
-      .eq('platform_id', platformId)
+      .select('valor'))
       .eq('status', 'PAID')
       .gte('paid_at', startOfDay),
 
     // 6. Depósitos da semana
-    supabase
+    pf(supabase
       .from('pagamentos')
-      .select('valor')
-      .eq('platform_id', platformId)
+      .select('valor'))
       .eq('status', 'PAID')
       .gte('paid_at', startOfWeek),
 
     // 7. Depósitos do mês
-    supabase
+    pf(supabase
       .from('pagamentos')
-      .select('valor')
-      .eq('platform_id', platformId)
+      .select('valor'))
       .eq('status', 'PAID')
       .gte('paid_at', startOfMonth),
 
     // 8. Saques de hoje
-    supabase
+    pf(supabase
       .from('saques')
-      .select('valor')
-      .eq('platform_id', platformId)
+      .select('valor'))
       .gte('created_at', startOfDay),
 
     // 9. Apostas de hoje (count)
-    supabase
+    pf(supabase
       .from('apostas')
-      .select('*', { count: 'exact', head: true })
-      .eq('platform_id', platformId)
+      .select('*', { count: 'exact', head: true }))
       .gte('created_at', startOfDay),
 
     // 10. Usuários ativos (últimos 7 dias)
-    supabase
+    pf(supabase
       .from('apostas')
-      .select('user_id')
-      .eq('platform_id', platformId)
+      .select('user_id'))
       .gte('created_at', sevenDaysAgo),
   ]);
 

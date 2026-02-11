@@ -7,6 +7,8 @@
  */
 export const DEFAULT_PLATFORM_ID = 'ff61b7a2-1098-4bc4-99c5-5afb600fbc57';
 
+export const ALL_PLATFORMS_ID = 'all';
+
 export interface Platform {
   id: string;
   domain: string;
