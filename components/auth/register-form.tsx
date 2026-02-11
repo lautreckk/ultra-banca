@@ -7,7 +7,8 @@ import { maskCPF } from '@/lib/utils/mask-cpf';
 import { cpfToEmail, isValidCpf } from '@/lib/utils/cpf-to-email';
 import { createClient } from '@/lib/supabase/client';
 import { trackSignup } from '@/lib/actions/auth';
-import { trackCompleteRegistration } from '@/lib/tracking/facebook';
+import { trackCompleteRegistration, trackLead } from '@/lib/tracking/facebook';
+import { trackLeadCAPI } from '@/lib/tracking/facebook-capi';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 
 function getPlatformIdFromCookie(): string | null {
@@ -126,6 +127,11 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
 
       trackSignup().catch(() => {});
       trackCompleteRegistration();
+      trackLead();
+      trackLeadCAPI({
+        email: cpfToEmail(formData.cpf, config.slug),
+        phone: formData.telefone.replace(/\D/g, '') || undefined,
+      }).catch(() => {});
       window.location.replace('/login?cadastro=sucesso');
     } catch {
       setError('Erro ao criar conta. Tente novamente.');
