@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAllGateways, getPrimaryGateway, setPrimaryGateway, type GatewayConfig } from '@/lib/admin/actions/settings';
+import { checkPendingPayments, type CheckPendingResult } from '@/lib/admin/actions/financial';
 import { Button } from '@/components/ui/button';
 import { ToggleSwitch } from '@/components/admin/shared';
 import {
@@ -11,7 +12,8 @@ import {
   Loader2,
   Star,
   Settings,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,6 +39,8 @@ export default function AdminPagamentosPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<CheckPendingResult | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,6 +82,23 @@ export default function AdminPagamentosPage() {
       setError('Erro ao definir gateway principal');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCheckPending = async () => {
+    setIsChecking(true);
+    setCheckResult(null);
+    setError('');
+    try {
+      const result = await checkPendingPayments();
+      setCheckResult(result);
+      if (!result.success) {
+        setError(result.error || 'Erro ao verificar pagamentos');
+      }
+    } catch {
+      setError('Erro ao verificar pagamentos pendentes');
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -195,6 +216,72 @@ export default function AdminPagamentosPage() {
             />
           ))}
         </div>
+      </div>
+
+      {/* Check Pending Payments */}
+      <div className="bg-[#374151] rounded-lg p-4 md:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 md:p-3 rounded-lg bg-amber-500/20">
+              <RefreshCw className="h-5 w-5 md:h-6 md:w-6 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-base md:text-lg font-semibold text-white">Verificar Pagamentos Pendentes</h2>
+              <p className="text-xs md:text-sm text-zinc-500">
+                Consulta BSPay/WashPay para confirmar pagamentos que o webhook não capturou
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleCheckPending}
+            disabled={isChecking}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            {isChecking ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Verificar Agora
+              </>
+            )}
+          </Button>
+        </div>
+
+        {checkResult && (
+          <div className={`rounded-lg p-3 md:p-4 ${checkResult.confirmed > 0 ? 'bg-green-500/10 border border-green-500/30' : 'bg-zinc-800/50'}`}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="text-center">
+                <div className="text-lg md:text-xl font-bold text-white">{checkResult.total_pending}</div>
+                <div className="text-xs text-zinc-500">Pendentes</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg md:text-xl font-bold text-cyan-400">{checkResult.checked}</div>
+                <div className="text-xs text-zinc-500">Verificados</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg md:text-xl font-bold text-green-400">{checkResult.confirmed}</div>
+                <div className="text-xs text-zinc-500">Confirmados</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg md:text-xl font-bold text-red-400">{checkResult.errors}</div>
+                <div className="text-xs text-zinc-500">Erros</div>
+              </div>
+            </div>
+            {checkResult.confirmed > 0 && (
+              <p className="text-sm text-green-400 mt-3 text-center">
+                {checkResult.confirmed} pagamento(s) confirmado(s) e saldo creditado!
+              </p>
+            )}
+          </div>
+        )}
+
+        <p className="text-xs text-zinc-600 mt-3">
+          Verificação automática a cada 30 minutos via scraper. Use este botão para verificar manualmente.
+        </p>
       </div>
 
       {/* Info Card */}

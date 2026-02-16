@@ -1655,6 +1655,59 @@ LOTERIA_TO_BANCA = {
 # FUNCAO AGENDADA (CRON) - COM SKIP INTELIGENTE
 # =============================================================================
 
+def check_pending_payments(supabase_url: str, supabase_key: str):
+    """
+    Verifica pagamentos PENDING via polling nas APIs BSPay/WashPay.
+    Chamado ao final de cada scrape_scheduled (a cada 30 min).
+    """
+    import requests
+
+    print(f"\n💳 Verificando pagamentos pendentes via polling...")
+
+    try:
+        url = f"{supabase_url}/functions/v1/check-pending-payments"
+        resp = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json",
+            },
+            json={"hours_back": 24, "limit": 100},
+            timeout=120,
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            checked = data.get("checked", 0)
+            confirmed = data.get("confirmed", 0)
+            errors = data.get("errors", 0)
+            print(f"  ✅ Pagamentos: {checked} verificados, {confirmed} confirmados, {errors} erros")
+        else:
+            print(f"  ❌ Erro ao verificar pagamentos: HTTP {resp.status_code} - {resp.text[:200]}")
+    except Exception as e:
+        print(f"  ❌ Exceção ao verificar pagamentos: {e}")
+
+
+@app.function(
+    image=image,
+    secrets=[supabase_secret],
+    timeout=120,  # 2 min max
+    schedule=modal.Cron("*/2 * * * *"),  # A cada 2 minutos, 24/7
+)
+def reconcile_payments():
+    """
+    Reconciliation job - roda a cada 2 minutos.
+    Verifica pagamentos PENDING via API BSPay/WashPay.
+    Padrão: Event-Driven (webhook) + Reconciliation (este cron).
+    """
+    from supabase import create_client
+
+    supabase_url = os.environ["SUPABASE_URL"]
+    supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+
+    check_pending_payments(supabase_url, supabase_key)
+
+
 @app.function(
     image=image,
     secrets=[supabase_secret, firecrawl_secret],

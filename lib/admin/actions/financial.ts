@@ -563,3 +563,56 @@ export async function rejectWithdrawal(
 
   return { success: true };
 }
+
+// =============================================
+// CHECK PENDING PAYMENTS (POLLING)
+// =============================================
+
+export interface CheckPendingResult {
+  success: boolean;
+  checked: number;
+  confirmed: number;
+  errors: number;
+  total_pending: number;
+  results?: Array<{ id: string; status: string; provider: string; confirmed: boolean }>;
+  error?: string;
+}
+
+export async function checkPendingPayments(): Promise<CheckPendingResult> {
+  await requireAdmin();
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return { success: false, checked: 0, confirmed: 0, errors: 0, total_pending: 0, error: 'Missing env vars' };
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/check-pending-payments`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ hours_back: 48, limit: 200 }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return { success: false, checked: 0, confirmed: 0, errors: 0, total_pending: 0, error: `HTTP ${response.status}: ${text.slice(0, 200)}` };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      checked: data.checked || 0,
+      confirmed: data.confirmed || 0,
+      errors: data.errors || 0,
+      total_pending: data.total_pending || 0,
+      results: data.results,
+    };
+  } catch (error) {
+    return { success: false, checked: 0, confirmed: 0, errors: 0, total_pending: 0, error: String(error) };
+  }
+}
