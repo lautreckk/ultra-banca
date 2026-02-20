@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
+import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
 export interface Bet {
   id: string;
@@ -78,7 +79,10 @@ export async function getBets(params: BetsListParams = {}): Promise<BetsListResu
   }
 
   if (search) {
-    query = query.or(`profiles.nome.ilike.%${search}%,profiles.cpf.ilike.%${search}%`);
+    const safe = sanitizeSearchParam(search);
+    if (safe.length > 0) {
+      query = query.or(`profiles.nome.ilike.%${safe}%,profiles.cpf.ilike.%${safe}%`);
+    }
   }
 
   if (dateFrom) {

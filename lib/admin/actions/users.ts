@@ -5,6 +5,7 @@ import { requireAdmin } from './auth';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { getPlatformId } from '@/lib/utils/platform';
+import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
 export interface UserProfile {
   id: string;
@@ -86,7 +87,10 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
     .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
-    query = query.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`);
+    const safe = sanitizeSearchParam(search);
+    if (safe.length > 0) {
+      query = query.or(`nome.ilike.%${safe}%,cpf.ilike.%${safe}%`);
+    }
   }
 
   // Filtro por último login
@@ -109,7 +113,10 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
     .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
-    allUsersQuery = allUsersQuery.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`);
+    const safeAll = sanitizeSearchParam(search);
+    if (safeAll.length > 0) {
+      allUsersQuery = allUsersQuery.or(`nome.ilike.%${safeAll}%,cpf.ilike.%${safeAll}%`);
+    }
   }
 
   // Aplicar filtro de login

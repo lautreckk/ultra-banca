@@ -15,15 +15,9 @@ import { DEFAULT_PLATFORM_ID, ALL_PLATFORMS_ID } from './platform-constants';
  * @throws Error se não conseguir determinar o platform_id
  */
 export async function getPlatformId(): Promise<string> {
-  // 1. Tentar obter do cookie (definido pelo middleware)
   const cookieStore = await cookies();
   const platformIdFromCookie = cookieStore.get('platform_id')?.value;
 
-  if (platformIdFromCookie) {
-    return platformIdFromCookie;
-  }
-
-  // 2. Tentar obter do profile do usuário autenticado
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -35,12 +29,33 @@ export async function getPlatformId(): Promise<string> {
       .single();
 
     if (profile?.platform_id) {
+      // Admins podem trocar plataforma via cookie; jogadores não
+      const { data: adminRole } = await supabase
+        .from('admin_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!adminRole && platformIdFromCookie && platformIdFromCookie !== profile.platform_id) {
+        console.warn('[SECURITY] Cookie platform_id mismatch', {
+          userId: user.id,
+          cookie: platformIdFromCookie,
+          profile: profile.platform_id,
+        });
+        return profile.platform_id;
+      }
+
+      // Admin com cookie válido ou jogador sem manipulação
+      if (adminRole && platformIdFromCookie) {
+        return platformIdFromCookie;
+      }
+
       return profile.platform_id;
     }
   }
 
-  // 3. Fallback para plataforma default
-  return DEFAULT_PLATFORM_ID;
+  // Usuário não autenticado ou sem profile: usar cookie ou fallback
+  return platformIdFromCookie || DEFAULT_PLATFORM_ID;
 }
 
 /**
@@ -191,7 +206,7 @@ export async function switchPlatform(platformId: string): Promise<{ success: boo
     }
     const cookieStore = await cookies();
     cookieStore.set('platform_id', platformId, {
-      httpOnly: false,
+      httpOnly: false, // Client lê via document.cookie (signup, home). Validação server-side em getPlatformId()
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
@@ -232,7 +247,7 @@ export async function switchPlatform(platformId: string): Promise<{ success: boo
   // Definir cookie com a nova plataforma
   const cookieStore = await cookies();
   cookieStore.set('platform_id', platformId, {
-    httpOnly: false,
+    httpOnly: false, // Client lê via document.cookie (signup, home). Validação server-side em getPlatformId()
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',

@@ -5,6 +5,7 @@ import { requireAdmin } from './auth';
 import { logAudit } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { getPlatformId } from '@/lib/utils/platform';
+import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
 // =============================================
 // TYPES
@@ -103,7 +104,10 @@ export async function getPromotores(params: PromotoresListParams = {}): Promise<
     .eq('platform_id', platformId);  // MULTI-TENANT: Filtro por plataforma
 
   if (search) {
-    query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%,codigo_afiliado.ilike.%${search}%`);
+    const safe = sanitizeSearchParam(search);
+    if (safe.length > 0) {
+      query = query.or(`nome.ilike.%${safe}%,email.ilike.%${safe}%,codigo_afiliado.ilike.%${safe}%`);
+    }
   }
 
   if (status === 'ativos') {

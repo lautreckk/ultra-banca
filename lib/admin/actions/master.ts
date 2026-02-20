@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
 // =============================================
 // SUPER ADMIN CHECK
@@ -382,20 +383,9 @@ export async function linkAdminToPlatform(
     return { success: false, error: 'Plataforma não encontrada' };
   }
 
-  // Criar vínculo
-  const { error } = await supabase.from('platform_admins').insert({
-    user_id: userId,
-    platform_id: platformId,
-    permissions,
-    created_by: user.id,
-  });
+  // Garantir que o usuário tenha role de admin (via RPC com GUC flag)
+  const adminClient = createAdminClient();
 
-  if (error) {
-    console.error('Error linking admin to platform:', error);
-    return { success: false, error: error.message };
-  }
-
-  // Garantir que o usuário tenha role de admin
   const { data: adminRole } = await supabase
     .from('admin_roles')
     .select('id')
@@ -403,11 +393,36 @@ export async function linkAdminToPlatform(
     .single();
 
   if (!adminRole) {
-    await supabase.from('admin_roles').insert({
-      user_id: userId,
-      role: 'admin',
-      permissions: {},
-    });
+    const { data: roleResult, error: roleError } = await adminClient.rpc(
+      'fn_grant_admin_role',
+      {
+        p_target_user_id: userId,
+        p_role: 'admin',
+        p_actor_id: user.id,
+        p_permissions: permissions || {},
+      }
+    );
+
+    if (roleError || !roleResult?.success) {
+      console.error('Error creating admin role:', roleError || roleResult?.error);
+      return { success: false, error: 'Falha ao criar role de admin' };
+    }
+  }
+
+  // Criar vínculo via RPC (com GUC flag)
+  const { data: linkResult, error: linkError } = await adminClient.rpc(
+    'fn_link_platform_admin',
+    {
+      p_user_id: userId,
+      p_platform_id: platformId,
+      p_permissions: permissions || {},
+      p_created_by: user.id,
+    }
+  );
+
+  if (linkError || !linkResult?.success) {
+    console.error('Error linking platform admin:', linkError || linkResult?.error);
+    return { success: false, error: 'Falha ao linkar admin à plataforma' };
   }
 
   return { success: true };
@@ -416,18 +431,21 @@ export async function linkAdminToPlatform(
 export async function unlinkAdminFromPlatform(
   linkId: string
 ): Promise<{ success: boolean; error?: string }> {
-  await requireSuperAdmin();
+  const { user } = await requireSuperAdmin();
 
-  const supabase = await createClient();
+  const adminClient = createAdminClient();
 
-  const { error } = await supabase
-    .from('platform_admins')
-    .delete()
-    .eq('id', linkId);
+  const { data: result, error } = await adminClient.rpc(
+    'fn_unlink_platform_admin',
+    {
+      p_link_id: linkId,
+      p_actor_id: user.id,
+    }
+  );
 
-  if (error) {
-    console.error('Error unlinking admin from platform:', error);
-    return { success: false, error: error.message };
+  if (error || !result?.success) {
+    console.error('Error unlinking admin from platform:', error || result?.error);
+    return { success: false, error: error?.message || result?.error || 'Falha ao desvincular admin' };
   }
 
   return { success: true };
@@ -586,7 +604,7 @@ export async function searchUsersForAdmin(
       platform_id,
       platforms(name)
     `)
-    .or(`nome.ilike.%${query}%,cpf.ilike.%${query}%`)
+    .or(`nome.ilike.%${sanitizeSearchParam(query)}%,cpf.ilike.%${sanitizeSearchParam(query)}%`)
     .limit(10);
 
   if (error) {

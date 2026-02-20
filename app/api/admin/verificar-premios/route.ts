@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { safeError } from '@/lib/utils/safe-error';
 
 export async function POST(request: Request) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     if (error) {
       console.error('Erro ao verificar apostas:', error);
       return NextResponse.json(
-        { error: error.message },
+        { error: safeError(error) },
         { status: 500 }
       );
     }

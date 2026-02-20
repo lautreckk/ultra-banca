@@ -10,6 +10,7 @@ import { trackSignup } from '@/lib/actions/auth';
 import { trackCompleteRegistration, trackLead } from '@/lib/tracking/facebook';
 import { trackLeadCAPI } from '@/lib/tracking/facebook-capi';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { sanitizeInput } from '@/lib/utils/sanitize';
 
 function getPlatformIdFromCookie(): string | null {
   if (typeof document === 'undefined') return null;
@@ -101,7 +102,7 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
         options: {
           data: {
             cpf: cpfNumbers,
-            nome: formData.nome.trim(),
+            nome: sanitizeInput(formData.nome, 200),
             telefone: formData.telefone.replace(/\D/g, '') || null,
             codigo_convite: formData.codigoConvite.trim() || null,
             platform_id: platformId,

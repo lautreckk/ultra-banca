@@ -91,10 +91,13 @@ export async function sendCAPIEvent(params: CAPIEventParams): Promise<{ success:
 
     // Enviar para Facebook
     const response = await fetch(
-      `https://graph.facebook.com/v19.0/${facebook_pixel_id}/events?access_token=${facebook_access_token}`,
+      `https://graph.facebook.com/v19.0/${facebook_pixel_id}/events`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${facebook_access_token}`,
+        },
         body: JSON.stringify(eventPayload),
       }
     );

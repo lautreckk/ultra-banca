@@ -7,8 +7,8 @@ export async function POST(request: Request) {
         const headersList = await headers();
         const secret = headersList.get('x-internal-secret');
 
-        // Simple security check using env var (or hardcoded for now if env not set for simplicity in this context, but env is better)
-        if (secret !== process.env.INTERNAL_API_SECRET) {
+        const expectedSecret = process.env.INTERNAL_API_SECRET;
+        if (!expectedSecret || !secret || secret !== expectedSecret) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

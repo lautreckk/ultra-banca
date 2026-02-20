@@ -10,6 +10,7 @@ import { applyDepositBonus } from './bonus-config';
 import { processarComissaoDeposito, getComissaoAutomaticaSetting } from './promotores';
 import { getPlatformId } from '@/lib/utils/platform';
 import { WashPayClient, type WashPayPixKeyType } from '@/lib/washpay/client';
+import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
 // =============================================
 // DEPOSITS
@@ -70,7 +71,10 @@ export async function getDeposits(params: DepositsListParams = {}): Promise<Depo
   }
 
   if (search) {
-    query = query.or(`profiles.nome.ilike.%${search}%,profiles.cpf.ilike.%${search}%`);
+    const safe = sanitizeSearchParam(search);
+    if (safe.length > 0) {
+      query = query.or(`profiles.nome.ilike.%${safe}%,profiles.cpf.ilike.%${safe}%`);
+    }
   }
 
   const { data, count, error } = await query
@@ -287,7 +291,10 @@ export async function getWithdrawals(params: WithdrawalsListParams = {}): Promis
   }
 
   if (search) {
-    query = query.or(`profiles.nome.ilike.%${search}%,profiles.cpf.ilike.%${search}%,chave_pix.ilike.%${search}%`);
+    const safe = sanitizeSearchParam(search);
+    if (safe.length > 0) {
+      query = query.or(`profiles.nome.ilike.%${safe}%,profiles.cpf.ilike.%${safe}%,chave_pix.ilike.%${safe}%`);
+    }
   }
 
   const { data, count, error } = await query

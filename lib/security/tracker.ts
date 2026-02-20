@@ -66,7 +66,7 @@ export async function getLocationFromIp(ip: string): Promise<LocationInfo> {
 
   try {
     // Usa ip-api.com para geolocalização (grátis, sem API key)
-    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country,countryCode,isp`, {
+    const response = await fetch(`https://ipapi.co/${ip}/json/`, {
       next: { revalidate: 3600 }, // Cache por 1 hora
     });
 
@@ -76,13 +76,13 @@ export async function getLocationFromIp(ip: string): Promise<LocationInfo> {
 
     const data = await response.json();
 
-    if (data.status === 'success') {
+    if (!data.error) {
       return {
         city: data.city || 'Desconhecida',
-        region: data.regionName || 'Desconhecida',
-        country: data.country || 'Desconhecido',
-        countryCode: data.countryCode || 'XX',
-        isp: data.isp || 'Desconhecido',
+        region: data.region || 'Desconhecida',
+        country: data.country_name || 'Desconhecido',
+        countryCode: data.country_code || 'XX',
+        isp: data.org || 'Desconhecido',
       };
     }
 

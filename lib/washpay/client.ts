@@ -217,18 +217,4 @@ class WashPayClient {
   }
 }
 
-// Singleton instance
-let washPayClient: WashPayClient | null = null;
-
-export function getWashPayClient(): WashPayClient {
-  if (!washPayClient) {
-    const apiKey = process.env.WASHPAY_API_KEY;
-    if (!apiKey) {
-      throw new Error('WASHPAY_API_KEY environment variable is not set');
-    }
-    washPayClient = new WashPayClient(apiKey);
-  }
-  return washPayClient;
-}
-
 export { WashPayClient };

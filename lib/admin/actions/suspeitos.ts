@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
+import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
 // =============================================
 // TYPES
@@ -342,7 +343,7 @@ export async function searchUsersForSuspeito(search: string): Promise<Array<{
     .from('profiles')
     .select('id, nome, cpf, saldo')
     .eq('platform_id', platformId)
-    .or(`nome.ilike.%${search}%,cpf.ilike.%${search}%`)
+    .or(`nome.ilike.%${sanitizeSearchParam(search)}%,cpf.ilike.%${sanitizeSearchParam(search)}%`)
     .limit(10);
 
   if (error) {
