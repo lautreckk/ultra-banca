@@ -363,7 +363,8 @@ export async function updateSession(request: NextRequest) {
     // A2.5: Em domínios de banca, a landing page (/) NÃO deve ser acessível
     // A Cupula só pode ser acessada pelo domínio admin (gabrielsena.net)
     // Domínios de banca devem ir direto para o login
-    if (!adminDomainAccess && pathname === '/') {
+    // Em dev (localhost), também redireciona para /login para simular banca
+    if ((!adminDomainAccess || devDomain) && pathname === '/') {
       return redirect(request, '/login');
     }
 
