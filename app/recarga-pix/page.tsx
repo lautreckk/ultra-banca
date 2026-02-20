@@ -147,15 +147,27 @@ export default function RecargaPixPage() {
     setError('');
 
     try {
-      // Get current session token
-      const { data: { session } } = await supabase.auth.getSession();
+      // Force token refresh via getUser() before calling Edge Function
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
-      if (!session) {
-        throw new Error('Você precisa estar logado');
+      if (authError || !authUser) {
+        router.push('/login');
+        return;
       }
 
-      // Call Supabase Edge Function
+      // Get fresh session after token refresh
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        router.push('/login');
+        return;
+      }
+
+      // Call Supabase Edge Function with explicit fresh token
       const { data, error: fnError } = await supabase.functions.invoke('create-pix-payment', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {
           valor: valorNum,
           tipo: 'deposito',
@@ -164,7 +176,9 @@ export default function RecargaPixPage() {
       });
 
       if (fnError) {
-        throw new Error(fnError.message || 'Erro ao criar pagamento');
+        // Extract detailed error from response if available
+        const errorMsg = (data as Record<string, string>)?.error || fnError.message || 'Erro ao criar pagamento';
+        throw new Error(errorMsg);
       }
 
       if (!data.success) {
