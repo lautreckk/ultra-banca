@@ -157,12 +157,36 @@ export interface CreatePlatformData {
   active_gateway?: string;
 }
 
+/**
+ * Normaliza slug: lowercase, sem acentos, sem espaços, sem caracteres especiais
+ */
+function normalizeSlug(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Plataforma de referência para copiar modalidades ao criar nova plataforma
+ */
+const REFERENCE_PLATFORM_ID = 'ff61b7a2-1098-4bc4-99c5-5afb600fbc57'; // Banca Pantanal
+
 export async function createPlatform(
   data: CreatePlatformData
 ): Promise<{ success: boolean; platformId?: string; error?: string }> {
   await requireSuperAdmin();
 
   const supabase = await createClient();
+
+  // Normalizar slug server-side (previne espaços, maiúsculas, acentos)
+  const slug = normalizeSlug(data.slug || data.name);
+
+  if (!slug) {
+    return { success: false, error: 'Slug inválido' };
+  }
 
   // Verificar se domínio já existe
   const { data: existingDomain } = await supabase
@@ -179,7 +203,7 @@ export async function createPlatform(
   const { data: existingSlug } = await supabase
     .from('platforms')
     .select('id')
-    .eq('slug', data.slug)
+    .eq('slug', slug)
     .single();
 
   if (existingSlug) {
@@ -202,7 +226,7 @@ export async function createPlatform(
     .insert({
       client_id: data.client_id,
       domain: data.domain,
-      slug: data.slug,
+      slug,
       name: data.name,
       site_description: data.site_description || null,
       logo_url: data.logo_url || null,
@@ -218,7 +242,52 @@ export async function createPlatform(
     return { success: false, error: error.message };
   }
 
-  return { success: true, platformId: platform.id };
+  const platformId = platform.id;
+
+  // ===== AUTO-PROVISIONING: configurar plataforma automaticamente =====
+
+  // 1. Copiar modalidades de loteria da plataforma de referência
+  const { data: refModalidades } = await supabase
+    .from('platform_modalidades')
+    .select('codigo, multiplicador, valor_minimo, valor_maximo, ativo, ordem')
+    .eq('platform_id', REFERENCE_PLATFORM_ID);
+
+  if (refModalidades && refModalidades.length > 0) {
+    await supabase.from('platform_modalidades').insert(
+      refModalidades.map((m) => ({ ...m, platform_id: platformId }))
+    );
+  }
+
+  // 2. Copiar config do gateway BSPay da plataforma de referência
+  const { data: refGateway } = await supabase
+    .from('gateway_config')
+    .select('gateway_name, client_id, client_secret, webhook_secret')
+    .eq('platform_id', REFERENCE_PLATFORM_ID)
+    .eq('gateway_name', data.active_gateway || 'bspay')
+    .single();
+
+  if (refGateway) {
+    await supabase.from('gateway_config').insert({
+      ...refGateway,
+      platform_id: platformId,
+    });
+  }
+
+  // 3. Copiar config do PlayFivers (casino) da plataforma de referência
+  const { data: refPlayfiver } = await supabase
+    .from('playfiver_config')
+    .select('agent_token, secret_key, callback_url, ativo, default_rtp')
+    .eq('platform_id', REFERENCE_PLATFORM_ID)
+    .single();
+
+  if (refPlayfiver) {
+    await supabase.from('playfiver_config').insert({
+      ...refPlayfiver,
+      platform_id: platformId,
+    });
+  }
+
+  return { success: true, platformId };
 }
 
 export async function updatePlatform(
@@ -229,10 +298,16 @@ export async function updatePlatform(
 
   const supabase = await createClient();
 
+  // Normalizar slug se estiver sendo atualizado
+  const updateData = { ...data };
+  if (updateData.slug) {
+    updateData.slug = normalizeSlug(updateData.slug);
+  }
+
   const { error } = await supabase
     .from('platforms')
     .update({
-      ...data,
+      ...updateData,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id);
