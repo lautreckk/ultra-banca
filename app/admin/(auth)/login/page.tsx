@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.currentLevel === 'aal2' || aalData?.nextLevel === 'aal1') {
         // Já está logado com nível adequado
-        router.push('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
       }
     }
   };
@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
         console.error('Erro ao verificar AAL:', aalError);
         // Continuar sem MFA se houver erro
         trackLogin().catch(() => {});
-        router.push('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
         return;
       }
 
@@ -117,7 +117,7 @@ export default function AdminLoginPage() {
         if (factorsError || !factorsData?.totp || factorsData.totp.length === 0) {
           // Sem fatores, continuar normal
           trackLogin().catch(() => {});
-          router.push('/admin/dashboard');
+          window.location.href = '/admin/dashboard';
           return;
         }
 
@@ -127,7 +127,7 @@ export default function AdminLoginPage() {
         if (!verifiedFactor) {
           // Nenhum fator verificado, continuar normal
           trackLogin().catch(() => {});
-          router.push('/admin/dashboard');
+          window.location.href = '/admin/dashboard';
           return;
         }
 
@@ -140,7 +140,7 @@ export default function AdminLoginPage() {
 
       // Sem MFA ou já em aal2, rastrear login e redirecionar
       trackLogin().catch(() => {});
-      router.push('/admin/dashboard');
+      window.location.href = '/admin/dashboard';
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       setError('Erro ao fazer login. Tente novamente.');
@@ -187,7 +187,7 @@ export default function AdminLoginPage() {
       if (newAalData?.currentLevel === 'aal2') {
         // Rastrear login após MFA
         trackLogin().catch(() => {});
-        router.push('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
       } else {
         setError('Erro na verificação. Tente fazer login novamente.');
         setStep('credentials');
