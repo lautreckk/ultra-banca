@@ -462,6 +462,29 @@ export async function updateSession(request: NextRequest) {
   // CENÁRIO B1: É ADMIN
   // ============================================================================
   if (isAdmin) {
+    // Para admins não-super, garantir que o cookie platform_id
+    // corresponde a uma plataforma que eles têm acesso
+    if (!isSuperAdmin) {
+      const { data: adminPlatforms } = await supabase
+        .from('platform_admins')
+        .select('platform_id')
+        .eq('user_id', user.id);
+
+      const adminPlatformIds = adminPlatforms?.map(p => p.platform_id) || [];
+
+      if (adminPlatformIds.length > 0 && !adminPlatformIds.includes(platformId)) {
+        platformId = adminPlatformIds[0];
+        request.cookies.set('platform_id', platformId);
+        supabaseResponse.cookies.set('platform_id', platformId, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 365,
+        });
+      }
+    }
+
     if (!adminDomainAccess) {
       await supabase.auth.signOut();
       return redirect(request, '/login');

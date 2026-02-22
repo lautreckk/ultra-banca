@@ -270,6 +270,7 @@ export async function createPlatform(
     await supabase.from('gateway_config').insert({
       ...refGateway,
       platform_id: platformId,
+      ativo: true,
     });
   }
 
