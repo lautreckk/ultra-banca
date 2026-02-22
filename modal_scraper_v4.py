@@ -296,7 +296,7 @@ def parse_portalbrasil(soup, data: str, banca: str, estado: str) -> list:
         matches = re.findall(premio_pattern, content_text)
 
         if matches:
-            for milhar, grupo, bicho in matches[:7]:
+            for milhar, grupo, bicho in matches[:10]:
                 premios.append({
                     "milhar": milhar,
                     "grupo": grupo,
@@ -308,7 +308,7 @@ def parse_portalbrasil(soup, data: str, banca: str, estado: str) -> list:
             milhar_pattern = r'[1-7][ºª°]\s*[:\-]?\s*(\d{4})'
             milhar_matches = re.findall(milhar_pattern, content_text)
             if len(milhar_matches) >= 5:
-                premios = [{"milhar": m, "grupo": "", "bicho": ""} for m in milhar_matches[:7]]
+                premios = [{"milhar": m, "grupo": "", "bicho": ""} for m in milhar_matches[:10]]
 
         if len(premios) >= 5:
             resultados.append({
@@ -411,7 +411,7 @@ def scrape_federal_requests(data: str) -> list:
                     "horario": "19:00",
                     "banca": "FEDERAL",
                     "loteria": "FEDERAL",
-                    "premios": premios[:7],
+                    "premios": premios[:10],
                     "fonte": "Requests/Federal",
                 })
                 log_success("FED", "Requests/Federal",
@@ -522,7 +522,7 @@ def scrape_boasorte_requests(data: str) -> list:
                     "horario": horario,
                     "banca": "BOASORTE",
                     "loteria": "BOASORTE",
-                    "premios": premios[:7],
+                    "premios": premios[:10],
                     "fonte": "Requests/BoaSorte",
                 })
                 log_info("BS", "Requests/BoaSorte",
@@ -579,7 +579,7 @@ def scrape_boasorte_requests(data: str) -> list:
                             "horario": horario,
                             "banca": "BOASORTE",
                             "loteria": "BOASORTE",
-                            "premios": premios[:7],
+                            "premios": premios[:10],
                             "fonte": "Requests/BoaSorte(fallback)",
                         })
                 if resultados:
@@ -1159,7 +1159,7 @@ def extrair_premios_tabela(table) -> list:
                 })
                 break
 
-    return premios[:7]  # Máximo 7 prêmios
+    return premios[:10]  # Máximo 10 prêmios
 
 
 # =============================================================================
@@ -1258,6 +1258,9 @@ def _upsert_resultados_caixa(supabase, resultados_caixa: list) -> int:
                 "premio_5": None,
                 "premio_6": None,
                 "premio_7": None,
+                "premio_8": None,
+                "premio_9": None,
+                "premio_10": None,
                 "bicho_1": None,
                 "bicho_2": None,
                 "bicho_3": None,
@@ -1265,6 +1268,9 @@ def _upsert_resultados_caixa(supabase, resultados_caixa: list) -> int:
                 "bicho_5": None,
                 "bicho_6": None,
                 "bicho_7": None,
+                "bicho_8": None,
+                "bicho_9": None,
+                "bicho_10": None,
             }, on_conflict="data,horario,banca,loteria").execute()
             upserted += 1
         except Exception as e:
@@ -1296,6 +1302,9 @@ def _upsert_resultados(supabase, todos_resultados: list) -> int:
                 "premio_5": premios[4]["milhar"] if len(premios) > 4 else None,
                 "premio_6": premios[5]["milhar"] if len(premios) > 5 else None,
                 "premio_7": premios[6]["milhar"] if len(premios) > 6 else None,
+                "premio_8": premios[7]["milhar"] if len(premios) > 7 else None,
+                "premio_9": premios[8]["milhar"] if len(premios) > 8 else None,
+                "premio_10": premios[9]["milhar"] if len(premios) > 9 else None,
                 "bicho_1": premios[0].get("bicho", "") if len(premios) > 0 else None,
                 "bicho_2": premios[1].get("bicho", "") if len(premios) > 1 else None,
                 "bicho_3": premios[2].get("bicho", "") if len(premios) > 2 else None,
@@ -1303,6 +1312,9 @@ def _upsert_resultados(supabase, todos_resultados: list) -> int:
                 "bicho_5": premios[4].get("bicho", "") if len(premios) > 4 else None,
                 "bicho_6": premios[5].get("bicho", "") if len(premios) > 5 else None,
                 "bicho_7": premios[6].get("bicho", "") if len(premios) > 6 else None,
+                "bicho_8": premios[7].get("bicho", "") if len(premios) > 7 else None,
+                "bicho_9": premios[8].get("bicho", "") if len(premios) > 8 else None,
+                "bicho_10": premios[9].get("bicho", "") if len(premios) > 9 else None,
             }, on_conflict="data,horario,banca,loteria").execute()
             upserted += 1
         except Exception:
@@ -1821,7 +1833,7 @@ def verificar_modalidade(modalidade: str, palpites: list, resultado: dict, posic
     Args:
         modalidade: código da modalidade (ex: "milhar", "centena_inv", "duque_gp")
         palpites: lista de palpites do apostador
-        resultado: dict com premio_1..premio_7
+        resultado: dict com premio_1..premio_10
         posicoes_validas: lista de posições a verificar (ex: ["premio_1", "premio_2"...])
 
     Returns:
@@ -2409,27 +2421,27 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
             # FIX: parser robusto para todos os formatos de colocacao
             posicoes_validas = []
             if posicao == "geral":
-                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7", "premio_8", "premio_9", "premio_10"]
             elif "_e_" in posicao:
                 # Combo format: "1_e_1_5_premio" → pega o range mais amplo
                 parts = posicao.replace("_premio", "").split("_e_")
                 for part in parts:
                     nums = [int(x) for x in part.split("_") if x.isdigit()]
                     if len(nums) == 1:
-                        pos_key = f"premio_{min(nums[0], 7)}"
+                        pos_key = f"premio_{min(nums[0], 10)}"
                         if pos_key not in posicoes_validas:
                             posicoes_validas.append(pos_key)
                     elif len(nums) >= 2:
-                        for i in range(nums[0], min(nums[-1] + 1, 8)):
+                        for i in range(nums[0], min(nums[-1] + 1, 11)):
                             pos_key = f"premio_{i}"
                             if pos_key not in posicoes_validas:
                                 posicoes_validas.append(pos_key)
             elif "_premio" in posicao:
                 nums = [int(x) for x in posicao.replace("_premio", "").replace("_ao_", "_").split("_") if x.isdigit()]
                 if len(nums) == 1:
-                    posicoes_validas = [f"premio_{min(nums[0], 7)}"]
+                    posicoes_validas = [f"premio_{min(nums[0], 10)}"]
                 elif len(nums) >= 2:
-                    posicoes_validas = [f"premio_{i}" for i in range(nums[0], min(nums[-1] + 1, 8))]
+                    posicoes_validas = [f"premio_{i}" for i in range(nums[0], min(nums[-1] + 1, 11))]
             if not posicoes_validas:
                 posicoes_validas = ["premio_1"]
 
@@ -2547,19 +2559,20 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
 
                         if is_lotece:
                             # Padrão B: TODOS os prêmios recebem inversão completa da milhar
-                            for pos in ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]:
+                            for pos in ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7", "premio_8", "premio_9", "premio_10"]:
                                 val = str(resultado_verificar.get(pos, "") or "").strip()
                                 if val and len(val) >= 4:
                                     resultado_verificar[pos] = val[::-1]
                         else:
-                            # Padrão A: P1-P5 = inversão completa da milhar, P6-P7 = None (não temos P8-P9 no DB)
-                            for pos in ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5"]:
+                            # Padrão A: P1-P7 = inversão completa da milhar, P8-P10 = None (derivam de prêmios além do range)
+                            for pos in ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]:
                                 val = str(resultado_verificar.get(pos, "") or "").strip()
                                 if val and len(val) >= 4:
                                     resultado_verificar[pos] = val[::-1]
-                            # P6-P7 da MALUCA derivam de P8-P9 normal (que não armazenamos), então anulamos
-                            resultado_verificar["premio_6"] = None
-                            resultado_verificar["premio_7"] = None
+                            # P8-P10 da MALUCA derivam de prêmios além do range normal, então anulamos
+                            resultado_verificar["premio_8"] = None
+                            resultado_verificar["premio_9"] = None
+                            resultado_verificar["premio_10"] = None
 
                         print(f"  MALUCA: Invertendo milhar ({'LOTECE' if is_lotece else 'padrao'}) para {loteria_id}")
                     else:
@@ -2915,7 +2928,7 @@ def main(
 
         if resultado.get('resultados'):
             print(f"\nResultados encontrados:")
-            for r in resultado.get('resultados', [])[:5]:
+            for r in resultado.get('resultados', [])[:10]:
                 premios = r.get('premios', [])
                 p1 = premios[0]['milhar'] if premios else 'N/A'
                 bicho = premios[0].get('bicho', '') if premios else ''

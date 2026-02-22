@@ -19,11 +19,21 @@ interface ResultadoDB {
   premio_3: string;
   premio_4: string;
   premio_5: string;
+  premio_6: string;
+  premio_7: string;
+  premio_8: string;
+  premio_9: string;
+  premio_10: string;
   bicho_1: string;
   bicho_2: string;
   bicho_3: string;
   bicho_4: string;
   bicho_5: string;
+  bicho_6: string;
+  bicho_7: string;
+  bicho_8: string;
+  bicho_9: string;
+  bicho_10: string;
 }
 
 interface ResultadoFormatado {
@@ -230,7 +240,12 @@ function formatResultados(resultado: ResultadoDB): ResultadoFormatado[] {
     { milhar: resultado.premio_3, bicho: resultado.bicho_3 },
     { milhar: resultado.premio_4, bicho: resultado.bicho_4 },
     { milhar: resultado.premio_5, bicho: resultado.bicho_5 },
-  ];
+    { milhar: resultado.premio_6, bicho: resultado.bicho_6 },
+    { milhar: resultado.premio_7, bicho: resultado.bicho_7 },
+    { milhar: resultado.premio_8, bicho: resultado.bicho_8 },
+    { milhar: resultado.premio_9, bicho: resultado.bicho_9 },
+    { milhar: resultado.premio_10, bicho: resultado.bicho_10 },
+  ].filter(p => p.milhar);
 
   return premios.map((premio, index) => {
     const dezena = parseInt(premio.milhar.slice(-2));

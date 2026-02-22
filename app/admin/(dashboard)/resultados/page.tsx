@@ -20,6 +20,9 @@ interface Resultado {
   premio_5: string | null;
   premio_6: string | null;
   premio_7: string | null;
+  premio_8: string | null;
+  premio_9: string | null;
+  premio_10: string | null;
   created_at: string;
 }
 
@@ -103,7 +106,10 @@ export default function AdminResultadosPage() {
           r.premio_4?.includes(searchPremio) ||
           r.premio_5?.includes(searchPremio) ||
           r.premio_6?.includes(searchPremio) ||
-          r.premio_7?.includes(searchPremio)
+          r.premio_7?.includes(searchPremio) ||
+          r.premio_8?.includes(searchPremio) ||
+          r.premio_9?.includes(searchPremio) ||
+          r.premio_10?.includes(searchPremio)
         );
       }
 
@@ -132,7 +138,7 @@ export default function AdminResultadosPage() {
 
   // Exportar CSV
   const exportCSV = () => {
-    const headers = ['Data', 'Horário', 'Banca', 'Loteria', '1º', '2º', '3º', '4º', '5º', '6º', '7º'];
+    const headers = ['Data', 'Horário', 'Banca', 'Loteria', '1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
     const rows = resultados.map(r => [
       r.data,
       r.horario,
@@ -145,6 +151,9 @@ export default function AdminResultadosPage() {
       r.premio_5 || '',
       r.premio_6 || '',
       r.premio_7 || '',
+      r.premio_8 || '',
+      r.premio_9 || '',
+      r.premio_10 || '',
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -371,6 +380,9 @@ export default function AdminResultadosPage() {
                   <th className="px-3 py-3 text-center text-pink-400 font-medium whitespace-nowrap">5º</th>
                   <th className="px-3 py-3 text-center text-zinc-500 font-medium whitespace-nowrap">6º</th>
                   <th className="px-3 py-3 text-center text-zinc-500 font-medium whitespace-nowrap">7º</th>
+                  <th className="px-3 py-3 text-center text-zinc-500 font-medium whitespace-nowrap">8º</th>
+                  <th className="px-3 py-3 text-center text-zinc-500 font-medium whitespace-nowrap">9º</th>
+                  <th className="px-3 py-3 text-center text-zinc-500 font-medium whitespace-nowrap">10º</th>
                   <th className="px-3 py-3 text-center text-zinc-400 font-medium whitespace-nowrap">Verificar</th>
                 </tr>
               </thead>
@@ -414,6 +426,15 @@ export default function AdminResultadosPage() {
                     </td>
                     <td className="px-3 py-2 text-center font-mono text-zinc-500">
                       {r.premio_7 || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-center font-mono text-zinc-500">
+                      {r.premio_8 || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-center font-mono text-zinc-500">
+                      {r.premio_9 || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-center font-mono text-zinc-500">
+                      {r.premio_10 || '-'}
                     </td>
                     <td className="px-3 py-2 text-center">
                       <button

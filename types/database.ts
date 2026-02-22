@@ -1677,6 +1677,9 @@ export type Database = {
           bicho_5: string | null
           bicho_6: string | null
           bicho_7: string | null
+          bicho_8: string | null
+          bicho_9: string | null
+          bicho_10: string | null
           created_at: string | null
           data: string
           horario: string
@@ -1689,6 +1692,9 @@ export type Database = {
           premio_5: string | null
           premio_6: string | null
           premio_7: string | null
+          premio_8: string | null
+          premio_9: string | null
+          premio_10: string | null
         }
         Insert: {
           banca?: string | null
@@ -1699,6 +1705,9 @@ export type Database = {
           bicho_5?: string | null
           bicho_6?: string | null
           bicho_7?: string | null
+          bicho_8?: string | null
+          bicho_9?: string | null
+          bicho_10?: string | null
           created_at?: string | null
           data: string
           horario: string
@@ -1711,6 +1720,9 @@ export type Database = {
           premio_5?: string | null
           premio_6?: string | null
           premio_7?: string | null
+          premio_8?: string | null
+          premio_9?: string | null
+          premio_10?: string | null
         }
         Update: {
           banca?: string | null
@@ -1721,6 +1733,9 @@ export type Database = {
           bicho_5?: string | null
           bicho_6?: string | null
           bicho_7?: string | null
+          bicho_8?: string | null
+          bicho_9?: string | null
+          bicho_10?: string | null
           created_at?: string | null
           data?: string
           horario?: string
@@ -1733,6 +1748,9 @@ export type Database = {
           premio_5?: string | null
           premio_6?: string | null
           premio_7?: string | null
+          premio_8?: string | null
+          premio_9?: string | null
+          premio_10?: string | null
         }
         Relationships: []
       }

@@ -33,11 +33,21 @@ interface Resultado {
   premio_3: string | null;
   premio_4: string | null;
   premio_5: string | null;
+  premio_6: string | null;
+  premio_7: string | null;
+  premio_8: string | null;
+  premio_9: string | null;
+  premio_10: string | null;
   bicho_1: string | null;
   bicho_2: string | null;
   bicho_3: string | null;
   bicho_4: string | null;
   bicho_5: string | null;
+  bicho_6: string | null;
+  bicho_7: string | null;
+  bicho_8: string | null;
+  bicho_9: string | null;
+  bicho_10: string | null;
 }
 
 export default function PremiadasPorDataPage() {
@@ -121,7 +131,7 @@ export default function PremiadasPorDataPage() {
                         <span className="text-[#D4A84B] font-medium">{resultado.horario}</span>
                       </div>
                       <div className="flex gap-2 flex-wrap">
-                        {[1, 2, 3, 4, 5].map((i) => {
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => {
                           const premio = resultado[`premio_${i}` as keyof Resultado] as string | null;
                           return (
                             <div key={i} className="text-center">

@@ -128,7 +128,7 @@ export function parseResultadosHtml(html: string, estado: string): ResultadoSort
         horario: parsed.horario,
         banca: BANCAS_CONFIG[estado]?.nome || estado,
         loteria: parsed.loteria,
-        premios: premios.slice(0, 7), // Pegar até 7º prêmio
+        premios: premios.slice(0, 10), // Pegar até 10º prêmio
       });
     }
   });
