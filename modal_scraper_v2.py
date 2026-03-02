@@ -1,0 +1,2271 @@
+"""
+Ultra Banca - Scraper de Resultados v2
+Usa Firecrawl para scraping inteligente
+"""
+
+import modal
+from datetime import datetime, timedelta
+from typing import Optional
+import os
+import re
+
+# Criar app Modal separado
+app = modal.App("ultra-banca-scraper-v2")
+
+# Imagem com Firecrawl + requests para fallback
+image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    "firecrawl-py",
+    "beautifulsoup4",
+    "supabase",
+    "requests",
+)
+
+# Secrets
+supabase_secret = modal.Secret.from_name("supabase-ultra-banca")
+firecrawl_secret = modal.Secret.from_name("firecrawl-key")
+
+# =============================================================================
+# CONFIGURACAO DAS BANCAS - MULTIPLAS FONTES
+# =============================================================================
+
+# Fonte 1: ResultadoFacil (principal)
+FONTE_RESULTADOFACIL = {
+    "nome": "ResultadoFacil",
+    "base_url": "https://www.resultadofacil.com.br",
+    "url_pattern": "/resultado-do-jogo-do-bicho/{estado}/do-dia/{data}",
+}
+
+# Fonte 2: PortalBrasil (backup)
+FONTE_PORTALBRASIL = {
+    "nome": "PortalBrasil",
+    "base_url": "https://portalbrasil.net",
+    "url_pattern": "/jogodobicho/{estado_slug}/",
+}
+
+# Mapeamento de estados para cada fonte
+ESTADOS_CONFIG = {
+    "RJ": {
+        "url_param": "RJ",
+        "banca": "RIO/FEDERAL",
+        "portalbrasil_slug": None,  # RJ fica na página principal
+    },
+    "BA": {
+        "url_param": "BA",
+        "banca": "BAHIA",
+        "portalbrasil_slug": "bahia",
+    },
+    "GO": {
+        "url_param": "GO",
+        "banca": "LOOK/GOIAS",
+        "portalbrasil_slug": "goias",
+    },
+    "CE": {
+        "url_param": "CE",
+        "banca": "LOTECE",
+        "portalbrasil_slug": "ceara",
+    },
+    "PE": {
+        "url_param": "PE",
+        "banca": "LOTEP",
+        "portalbrasil_slug": "pernambuco",
+    },
+    "PB": {
+        "url_param": "PB",
+        "banca": "PARAIBA",
+        "portalbrasil_slug": "paraiba",
+    },
+    "SP": {
+        "url_param": "SP",
+        "banca": "SAO-PAULO",
+        "portalbrasil_slug": "sao-paulo",
+    },
+    "MG": {
+        "url_param": "MG",
+        "banca": "MINAS-GERAIS",
+        "portalbrasil_slug": "minas-gerais",
+    },
+    "DF": {
+        "url_param": "DF",
+        "banca": "BRASILIA",
+        "portalbrasil_slug": "brasilia-df",
+    },
+    "RN": {
+        "url_param": "RN",
+        "banca": "RIO-GRANDE-NORTE",
+        "portalbrasil_slug": "rio-grande-do-norte",
+    },
+    "RS": {
+        "url_param": "RS",
+        "banca": "RIO-GRANDE-SUL",
+        "portalbrasil_slug": "rio-grande-do-sul",
+    },
+    "SE": {
+        "url_param": "SE",
+        "banca": "SERGIPE",
+        "portalbrasil_slug": "sergipe",
+    },
+    "PR": {
+        "url_param": "PR",
+        "banca": "PARANA",
+        "portalbrasil_slug": "parana",
+    },
+    "FED": {
+        "url_param": "banca-federal",
+        "banca": "FEDERAL",
+        "portalbrasil_slug": None,
+    },
+    "NAC": {
+        "url_param": None,  # URL especial - não usa padrão
+        "banca": "NACIONAL",
+        "portalbrasil_slug": None,
+        "custom_url": "/resultados-loteria-nacional-do-dia-{data}",
+    },
+}
+
+BASE_URL = "https://www.resultadofacil.com.br"
+
+
+# =============================================================================
+# LOGGING HELPERS
+# =============================================================================
+
+def log_info(estado: str, fonte: str, msg: str):
+    """Log informativo com formato padronizado"""
+    print(f"[{estado}] 📡 {fonte}: {msg}")
+
+def log_success(estado: str, fonte: str, msg: str):
+    """Log de sucesso"""
+    print(f"[{estado}] ✅ {fonte}: {msg}")
+
+def log_warning(estado: str, fonte: str, msg: str):
+    """Log de aviso"""
+    print(f"[{estado}] ⚠️  {fonte}: {msg}")
+
+def log_error(estado: str, fonte: str, msg: str):
+    """Log de erro"""
+    print(f"[{estado}] ❌ {fonte}: {msg}")
+
+def log_fallback(estado: str, de: str, para: str, motivo: str):
+    """Log de fallback entre fontes"""
+    print(f"[{estado}] 🔄 FALLBACK: {de} → {para} (motivo: {motivo})")
+
+
+# =============================================================================
+# FONTE 2: PORTALBRASIL.NET (BACKUP)
+# =============================================================================
+
+def scrape_portalbrasil(estado: str, data: str, banca: str) -> list:
+    """
+    Scrape do PortalBrasil.net - fonte secundária com bicho incluso
+    """
+    import requests
+    from bs4 import BeautifulSoup
+
+    config = ESTADOS_CONFIG.get(estado)
+    if not config or not config.get("portalbrasil_slug"):
+        log_warning(estado, "PortalBrasil", "Estado não configurado para esta fonte")
+        return []
+
+    url = f"{FONTE_PORTALBRASIL['base_url']}/jogodobicho/{config['portalbrasil_slug']}/"
+    log_info(estado, "PortalBrasil", f"Acessando: {url}")
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "pt-BR,pt;q=0.9",
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        html = response.text
+        log_info(estado, "PortalBrasil", f"HTML recebido: {len(html)} bytes")
+
+        soup = BeautifulSoup(html, "html.parser")
+        resultados = parse_portalbrasil(soup, data, banca, estado)
+
+        if resultados:
+            log_success(estado, "PortalBrasil", f"Encontrados {len(resultados)} resultados")
+        else:
+            log_warning(estado, "PortalBrasil", "Nenhum resultado encontrado")
+
+        return resultados
+
+    except requests.exceptions.Timeout:
+        log_error(estado, "PortalBrasil", "Timeout ao acessar")
+        return []
+    except requests.exceptions.RequestException as e:
+        log_error(estado, "PortalBrasil", f"Erro de conexão: {e}")
+        return []
+    except Exception as e:
+        log_error(estado, "PortalBrasil", f"Erro inesperado: {e}")
+        return []
+
+
+def parse_portalbrasil(soup, data: str, banca: str, estado: str) -> list:
+    """
+    Parser específico para PortalBrasil.net
+    Formato: "9866-17 (Macaco)" = milhar-grupo (bicho)
+    """
+    resultados = []
+
+    # PortalBrasil usa estrutura com h3 ou h4 para títulos das loterias
+    # Exemplo: "12h00 – Alvorada MG"
+    headers = soup.find_all(['h2', 'h3', 'h4'])
+
+    for header in headers:
+        header_text = header.get_text(strip=True)
+
+        # Busca horário no formato "12h00" ou "12:00"
+        horario_match = re.search(r'(\d{1,2})[h:H](\d{2})', header_text)
+        if not horario_match:
+            continue
+
+        hora = horario_match.group(1).zfill(2)
+        minuto = horario_match.group(2)
+        horario = f"{hora}:{minuto}"
+
+        # Identifica loteria
+        loteria = identificar_loteria(header_text)
+
+        # Busca os prêmios após o header
+        # PortalBrasil usa formato: "1º: 9866-17 (Macaco)"
+        premios = []
+
+        # Procura no próximo elemento ou nos irmãos
+        next_elem = header.find_next_sibling()
+        content_text = ""
+
+        # Coleta texto dos próximos elementos até encontrar outro header
+        for _ in range(10):
+            if next_elem is None:
+                break
+            if next_elem.name in ['h2', 'h3', 'h4', 'hr']:
+                break
+            content_text += " " + next_elem.get_text()
+            next_elem = next_elem.find_next_sibling()
+
+        # Também verifica o parent
+        parent = header.find_parent()
+        if parent:
+            content_text += " " + parent.get_text()
+
+        # Extrai prêmios no formato "1º: 9866-17 (Macaco)" ou "9866-17 (Macaco)"
+        # Padrão: 4 dígitos + hífen + 2 dígitos + bicho entre parênteses
+        premio_pattern = r'(\d{4})-(\d{2})\s*\(([^)]+)\)'
+        matches = re.findall(premio_pattern, content_text)
+
+        if matches:
+            for milhar, grupo, bicho in matches[:7]:
+                premios.append({
+                    "milhar": milhar,
+                    "grupo": grupo,
+                    "bicho": bicho.strip(),
+                })
+
+        # Fallback: busca só milhares se não encontrou padrão completo
+        if len(premios) < 5:
+            milhar_pattern = r'[1-7][ºª°]\s*[:\-]?\s*(\d{4})'
+            milhar_matches = re.findall(milhar_pattern, content_text)
+            if len(milhar_matches) >= 5:
+                premios = [{"milhar": m, "grupo": "", "bicho": ""} for m in milhar_matches[:7]]
+
+        if len(premios) >= 5:
+            resultados.append({
+                "data": data,
+                "horario": horario,
+                "banca": banca,
+                "loteria": loteria,
+                "premios": premios,
+                "fonte": "PortalBrasil",
+            })
+            log_info(estado, "PortalBrasil", f"  → {horario} {loteria}: 1º={premios[0]['milhar']} ({premios[0].get('bicho', '')})")
+
+    return resultados
+
+
+# =============================================================================
+# FONTE 1: RESULTADOFACIL + FALLBACKS
+# =============================================================================
+
+def scrape_resultadofacil_requests(url: str, estado: str, data: str, banca: str) -> list:
+    """
+    Scrape ResultadoFacil usando requests direto (fallback do Firecrawl)
+    """
+    import requests
+    from bs4 import BeautifulSoup
+
+    log_info(estado, "ResultadoFacil", "Tentando via requests direto...")
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "pt-BR,pt;q=0.9",
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        html_content = response.text
+        log_info(estado, "ResultadoFacil", f"HTML recebido: {len(html_content)} bytes")
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        resultados = parse_resultados(soup, data, banca)
+
+        if resultados:
+            log_success(estado, "ResultadoFacil", f"Encontrados {len(resultados)} resultados via requests")
+        else:
+            log_warning(estado, "ResultadoFacil", "Nenhum resultado via requests")
+
+        return resultados
+
+    except Exception as e:
+        log_error(estado, "ResultadoFacil", f"Erro requests: {e}")
+        return []
+
+
+@app.function(image=image, secrets=[supabase_secret, firecrawl_secret], timeout=300)
+def scrape_estado_firecrawl(estado: str, data: Optional[str] = None) -> dict:
+    """
+    Scrape inteligente com múltiplas fontes:
+    1. ResultadoFacil via Firecrawl
+    2. ResultadoFacil via requests (se Firecrawl falhar)
+    3. PortalBrasil (se ResultadoFacil não tiver resultados)
+    """
+    from firecrawl import Firecrawl
+    from bs4 import BeautifulSoup
+
+    config = ESTADOS_CONFIG.get(estado)
+    if not config:
+        log_error(estado, "Sistema", "Estado não configurado")
+        return {"estado": estado, "error": "Estado não configurado", "resultados": []}
+
+    data_scrape = data or datetime.now().strftime("%Y-%m-%d")
+
+    # URL customizada para bancas especiais (ex: NACIONAL)
+    if config.get("custom_url"):
+        url_resultadofacil = f"{BASE_URL}{config['custom_url'].format(data=data_scrape)}"
+    else:
+        url_resultadofacil = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
+
+    print(f"\n{'='*60}")
+    print(f"[{estado}] 🎯 INICIANDO SCRAPE - {config['banca']} - {data_scrape}")
+    print(f"{'='*60}")
+
+    resultados = []
+    fonte_utilizada = None
+    tentativas = []
+
+    # =========================================================================
+    # TENTATIVA 1: ResultadoFacil via Firecrawl
+    # =========================================================================
+    log_info(estado, "Firecrawl", f"Acessando: {url_resultadofacil}")
+
+    try:
+        api_key = os.environ.get("FIRECRAWL_API_KEY")
+        if not api_key:
+            log_error(estado, "Firecrawl", "API key não encontrada")
+            tentativas.append({"fonte": "Firecrawl", "status": "erro", "motivo": "API key ausente"})
+        else:
+            firecrawl = Firecrawl(api_key=api_key)
+
+            response = firecrawl.scrape(
+                url_resultadofacil,
+                formats=["html", "markdown"],
+                wait_for=5000,
+                timeout=30000,
+            )
+
+            if response:
+                html_content = getattr(response, "html", "") or ""
+                markdown_content = getattr(response, "markdown", "") or ""
+
+                log_info(estado, "Firecrawl", f"HTML: {len(html_content)} bytes | Markdown: {len(markdown_content)} bytes")
+
+                if html_content:
+                    soup = BeautifulSoup(html_content, "html.parser")
+                    resultados = parse_resultados(soup, data_scrape, config['banca'])
+
+                if not resultados and markdown_content:
+                    log_info(estado, "Firecrawl", "Tentando parse via Markdown...")
+                    resultados = parse_markdown(markdown_content, data_scrape, config['banca'])
+
+                if resultados:
+                    log_success(estado, "Firecrawl", f"✓ {len(resultados)} resultados encontrados")
+                    fonte_utilizada = "Firecrawl/ResultadoFacil"
+                    tentativas.append({"fonte": "Firecrawl", "status": "sucesso", "resultados": len(resultados)})
+                else:
+                    log_warning(estado, "Firecrawl", "HTML recebido mas sem resultados parseáveis")
+                    tentativas.append({"fonte": "Firecrawl", "status": "sem_dados", "html_size": len(html_content)})
+            else:
+                log_warning(estado, "Firecrawl", "Resposta vazia")
+                tentativas.append({"fonte": "Firecrawl", "status": "erro", "motivo": "resposta vazia"})
+
+    except Exception as e:
+        error_msg = str(e)
+        if "Rate Limit" in error_msg:
+            log_warning(estado, "Firecrawl", "Rate limit atingido")
+            tentativas.append({"fonte": "Firecrawl", "status": "rate_limit"})
+        else:
+            log_error(estado, "Firecrawl", f"Erro: {error_msg[:100]}")
+            tentativas.append({"fonte": "Firecrawl", "status": "erro", "motivo": error_msg[:50]})
+
+    # =========================================================================
+    # TENTATIVA 2: ResultadoFacil via requests (se Firecrawl falhou)
+    # =========================================================================
+    if not resultados:
+        log_fallback(estado, "Firecrawl", "Requests", "sem resultados ou erro")
+
+        resultados = scrape_resultadofacil_requests(url_resultadofacil, estado, data_scrape, config['banca'])
+
+        if resultados:
+            fonte_utilizada = "Requests/ResultadoFacil"
+            tentativas.append({"fonte": "Requests/ResultadoFacil", "status": "sucesso", "resultados": len(resultados)})
+        else:
+            tentativas.append({"fonte": "Requests/ResultadoFacil", "status": "sem_dados"})
+
+    # =========================================================================
+    # TENTATIVA 3: PortalBrasil (se ResultadoFacil não tiver resultados)
+    # =========================================================================
+    if not resultados:
+        log_fallback(estado, "ResultadoFacil", "PortalBrasil", "sem resultados")
+
+        resultados = scrape_portalbrasil(estado, data_scrape, config['banca'])
+
+        if resultados:
+            fonte_utilizada = "PortalBrasil"
+            tentativas.append({"fonte": "PortalBrasil", "status": "sucesso", "resultados": len(resultados)})
+        else:
+            tentativas.append({"fonte": "PortalBrasil", "status": "sem_dados"})
+
+    # =========================================================================
+    # RESUMO FINAL
+    # =========================================================================
+    print(f"\n[{estado}] 📊 RESUMO:")
+    for t in tentativas:
+        status_icon = "✅" if t["status"] == "sucesso" else "⚠️" if t["status"] == "sem_dados" else "❌"
+        print(f"[{estado}]    {status_icon} {t['fonte']}: {t['status']}" + (f" ({t.get('resultados', 0)} resultados)" if t.get('resultados') else ""))
+
+    if resultados:
+        print(f"[{estado}] ✅ SUCESSO: {len(resultados)} resultados via {fonte_utilizada}")
+    else:
+        print(f"[{estado}] ⚠️  SEM RESULTADOS em nenhuma fonte")
+
+    print(f"{'='*60}\n")
+
+    return {
+        "estado": estado,
+        "banca": config['banca'],
+        "url": url_resultadofacil,
+        "resultados": resultados,
+        "fonte_utilizada": fonte_utilizada,
+        "tentativas": tentativas,
+        "error": None
+    }
+
+
+def parse_resultados(soup, data: str, banca: str) -> list:
+    """Parser principal - tenta várias estratégias"""
+    resultados = []
+
+    # Estratégia 1: h3 com classe "g"
+    resultados = parse_estrutura_h3(soup, data, banca)
+    if resultados:
+        return resultados
+
+    # Estratégia 2: Qualquer h3 com horário
+    resultados = parse_qualquer_h3(soup, data, banca)
+    if resultados:
+        return resultados
+
+    # Estratégia 3: Busca por tabelas
+    resultados = parse_por_tabelas(soup, data, banca)
+
+    return resultados
+
+
+def parse_estrutura_h3(soup, data: str, banca: str) -> list:
+    """Parser pela estrutura conhecida com h3.g"""
+    resultados = []
+
+    for header in soup.find_all("h3", class_="g"):
+        resultado = extrair_resultado_de_header(header, data, banca)
+        if resultado:
+            resultados.append(resultado)
+
+    return resultados
+
+
+def parse_qualquer_h3(soup, data: str, banca: str) -> list:
+    """Parser por qualquer h3 que contenha horário"""
+    resultados = []
+
+    for header in soup.find_all("h3"):
+        header_text = header.get_text(strip=True)
+
+        # Verifica se tem horário no texto
+        if re.search(r'\d{1,2}[h:H]\d{2}', header_text):
+            resultado = extrair_resultado_de_header(header, data, banca)
+            if resultado:
+                resultados.append(resultado)
+
+    return resultados
+
+
+def extrair_resultado_de_header(header, data: str, banca: str) -> Optional[dict]:
+    """Extrai resultado a partir de um elemento header"""
+    header_text = header.get_text(strip=True)
+
+    # Extrai horário
+    horario_match = re.search(r'(\d{1,2})[h:H](\d{2})?', header_text)
+    if not horario_match:
+        return None
+
+    horario = f"{horario_match.group(1).zfill(2)}:{horario_match.group(2) or '00'}"
+
+    # Identifica loteria
+    loteria = identificar_loteria(header_text)
+
+    # Busca tabela de prêmios
+    table = header.find_next("table")
+    if not table:
+        return None
+
+    premios = extrair_premios_tabela(table)
+
+    if len(premios) >= 5:
+        return {
+            "data": data,
+            "horario": horario,
+            "banca": banca,
+            "loteria": loteria,
+            "premios": premios,
+        }
+
+    return None
+
+
+def parse_por_tabelas(soup, data: str, banca: str) -> list:
+    """Parser buscando todas as tabelas com estrutura de prêmios"""
+    resultados = []
+    tabelas_processadas = set()
+
+    for table in soup.find_all("table"):
+        # Evita processar mesma tabela
+        table_id = id(table)
+        if table_id in tabelas_processadas:
+            continue
+        tabelas_processadas.add(table_id)
+
+        premios = extrair_premios_tabela(table)
+
+        if len(premios) >= 5:
+            # Busca horário e loteria nos elementos anteriores
+            horario, loteria = buscar_info_tabela(table)
+
+            if horario:
+                resultados.append({
+                    "data": data,
+                    "horario": horario,
+                    "banca": banca,
+                    "loteria": loteria,
+                    "premios": premios,
+                })
+
+    return resultados
+
+
+def buscar_info_tabela(table) -> tuple:
+    """Busca horário e loteria nos elementos antes da tabela"""
+    horario = None
+    loteria = "GERAL"
+
+    # Busca em elementos anteriores
+    for elem in table.find_all_previous(["h1", "h2", "h3", "h4", "p", "div", "span"], limit=15):
+        text = elem.get_text(strip=True)
+
+        # Busca horário
+        if not horario:
+            h_match = re.search(r'(\d{1,2})[h:H](\d{2})?', text)
+            if h_match:
+                horario = f"{h_match.group(1).zfill(2)}:{h_match.group(2) or '00'}"
+
+        # Busca loteria
+        lot = identificar_loteria(text)
+        if lot != "GERAL":
+            loteria = lot
+            break
+
+    return horario, loteria
+
+
+def parse_markdown(markdown: str, data: str, banca: str) -> list:
+    """Parser pelo conteúdo Markdown - múltiplas estratégias"""
+    resultados = []
+
+    # Divide por seções (headers ou linhas em branco múltiplas)
+    sections = re.split(r'\n##?\s+|\n{3,}', markdown)
+
+    for section in sections:
+        # Estratégia 1: Busca horário no formato 12h, 12h00, 12:00
+        horario_match = re.search(r'(\d{1,2})[h:H](\d{2})?', section)
+        if not horario_match:
+            continue
+
+        hora = horario_match.group(1).zfill(2)
+        minuto = horario_match.group(2) or "00"
+        horario = f"{hora}:{minuto}"
+
+        loteria = identificar_loteria(section[:300])
+
+        # Múltiplas estratégias para extrair prêmios
+        premios_matches = []
+
+        # Estratégia 1: | 1234 | (tabelas markdown)
+        premios_matches = re.findall(r'\|\s*(\d{4})\s*\|', section)
+
+        # Estratégia 2: Linhas com "1º" seguido de número
+        if len(premios_matches) < 5:
+            premios_matches = re.findall(r'[1-7][ºª°]\s*[:\|]?\s*(\d{4})', section)
+
+        # Estratégia 3: Números de 4 dígitos em sequência (após filtrar datas/horários)
+        if len(premios_matches) < 5:
+            # Remove datas e horários conhecidos
+            section_clean = re.sub(r'\d{4}-\d{2}-\d{2}', '', section)
+            section_clean = re.sub(r'\d{1,2}[h:H]\d{2}', '', section_clean)
+            section_clean = re.sub(r'\d{2}/\d{2}/\d{4}', '', section_clean)
+
+            # Busca milhares restantes
+            all_milhares = re.findall(r'\b(\d{4})\b', section_clean)
+            if len(all_milhares) >= 5:
+                premios_matches = all_milhares[:7]
+
+        # Estratégia 4: Busca bicho + milhar (ex: "Avestruz 1234")
+        if len(premios_matches) < 5:
+            bicho_pattern = r'(?:Avestruz|Águia|Burro|Borboleta|Cachorro|Cabra|Carneiro|Camelo|Cobra|Coelho|Cavalo|Elefante|Galo|Gato|Jacaré|Leão|Macaco|Porco|Pavão|Peru|Touro|Tigre|Urso|Veado|Vaca)\s*[:\-]?\s*(\d{4})'
+            premios_matches = re.findall(bicho_pattern, section, re.IGNORECASE)
+
+        if len(premios_matches) >= 5:
+            premios = [{"milhar": m, "bicho": ""} for m in premios_matches[:7]]
+            resultados.append({
+                "data": data,
+                "horario": horario,
+                "banca": banca,
+                "loteria": loteria,
+                "premios": premios,
+            })
+
+    return resultados
+
+
+def identificar_loteria(texto: str) -> str:
+    """Identifica a loteria pelo texto"""
+    texto_upper = texto.upper()
+
+    # Ordem importa: mais específico primeiro
+    # RIO DE JANEIRO
+    if "CORUJA" in texto_upper:
+        return "CORUJA"
+    if "PTM" in texto_upper:
+        return "PTM"
+    if "PTV" in texto_upper:
+        return "PTV"
+    if "PTN" in texto_upper:
+        return "PTN"
+
+    # BAHIA
+    if "MALUCA" in texto_upper:
+        return "MALUCA"
+
+    # BRASILIA / DF
+    if "LBR" in texto_upper:
+        return "LBR"
+
+    # CEARA
+    if "LOTECE" in texto_upper:
+        return "LOTECE"
+
+    # PERNAMBUCO
+    if "LOTEP" in texto_upper:
+        return "LOTEP"
+
+    # MINAS GERAIS
+    if "ALVORADA" in texto_upper:
+        return "ALVORADA"
+    if "MINAS DIA" in texto_upper:
+        return "MINAS-DIA"
+    if "MINAS NOITE" in texto_upper:
+        return "MINAS-NOITE"
+    if "PREFERIDA" in texto_upper:
+        return "PREFERIDA"
+
+    # RIO GRANDE DO SUL
+    if "GAUCHA" in texto_upper or "GAÚCHA" in texto_upper:
+        return "GAUCHA"
+
+    # PARANA
+    if "PARANA" in texto_upper or "PARANÁ" in texto_upper:
+        return "PARANA"
+
+    # GOIAS
+    if "LOOK" in texto_upper:
+        return "LOOK"
+    if "GOIAS" in texto_upper or "GOIÁS" in texto_upper:
+        return "GOIAS"
+
+    # SAO PAULO
+    if "PAULISTA" in texto_upper:
+        return "PAULISTA"
+
+    # NACIONAL
+    if "NACIONAL" in texto_upper:
+        return "NACIONAL"
+
+    # FEDERAL
+    if "FEDERAL" in texto_upper:
+        return "FEDERAL"
+
+    # PT genérico (Rio)
+    if re.search(r'\bPT\b', texto_upper):
+        return "PT"
+
+    return "GERAL"
+
+
+def extrair_premios_tabela(table) -> list:
+    """Extrai prêmios de uma tabela HTML"""
+    premios = []
+
+    for row in table.find_all("tr"):
+        cells = row.find_all("td")
+        if len(cells) < 2:
+            continue
+
+        # Busca célula com 4 dígitos (milhar)
+        for i, cell in enumerate(cells):
+            text = cell.get_text(strip=True)
+            milhar_match = re.search(r'\b(\d{4})\b', text)
+            if milhar_match:
+                bicho = ""
+                # Tenta pegar bicho da última célula
+                if len(cells) > 2:
+                    bicho_text = cells[-1].get_text(strip=True)
+                    if not re.search(r'\d{4}', bicho_text) and len(bicho_text) < 20:
+                        bicho = bicho_text
+
+                premios.append({
+                    "milhar": milhar_match.group(1),
+                    "bicho": bicho,
+                })
+                break
+
+    return premios[:7]  # Máximo 7 prêmios
+
+
+# =============================================================================
+# FUNCAO PRINCIPAL
+# =============================================================================
+
+@app.function(image=image, secrets=[supabase_secret, firecrawl_secret], timeout=900)
+def scrape_todos_v2(data: Optional[str] = None, estados: Optional[list] = None) -> dict:
+    """
+    Scrape todos os estados usando Firecrawl
+    """
+    from supabase import create_client
+    import time
+
+    supabase_url = os.environ["SUPABASE_URL"]
+    supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    supabase = create_client(supabase_url, supabase_key)
+
+    data_scrape = data or datetime.now().strftime("%Y-%m-%d")
+    estados_scrape = estados or list(ESTADOS_CONFIG.keys())
+
+    print(f"=== Scrape V2 (Firecrawl) iniciado: {data_scrape} ===")
+    print(f"Estados: {estados_scrape}")
+
+    todos_resultados = []
+    erros = []
+
+    for estado in estados_scrape:
+        try:
+            resultado = scrape_estado_firecrawl.remote(estado, data_scrape)
+
+            if resultado.get("error"):
+                erros.append(f"{estado}: {resultado['error']}")
+                print(f"[{estado}] Erro: {resultado['error']}")
+            else:
+                todos_resultados.extend(resultado.get("resultados", []))
+                print(f"[{estado}] OK: {len(resultado.get('resultados', []))} resultados")
+
+            # Pequeno delay entre estados para não sobrecarregar
+            time.sleep(1)
+
+        except Exception as e:
+            erros.append(f"{estado}: {str(e)}")
+            print(f"[{estado}] Exceção: {e}")
+
+    print(f"\nTotal de resultados: {len(todos_resultados)}")
+
+    # Salvar no Supabase
+    upserted = 0
+    db_errors = []
+
+    for r in todos_resultados:
+        premios = r.get("premios", [])
+        if len(premios) < 5:
+            continue
+
+        try:
+            supabase.table("resultados").upsert({
+                "data": r["data"],
+                "horario": r["horario"],
+                "banca": r["banca"],
+                "loteria": r["loteria"],
+                "premio_1": premios[0]["milhar"] if len(premios) > 0 else None,
+                "premio_2": premios[1]["milhar"] if len(premios) > 1 else None,
+                "premio_3": premios[2]["milhar"] if len(premios) > 2 else None,
+                "premio_4": premios[3]["milhar"] if len(premios) > 3 else None,
+                "premio_5": premios[4]["milhar"] if len(premios) > 4 else None,
+                "premio_6": premios[5]["milhar"] if len(premios) > 5 else None,
+                "premio_7": premios[6]["milhar"] if len(premios) > 6 else None,
+                "bicho_1": premios[0].get("bicho", "") if len(premios) > 0 else None,
+                "bicho_2": premios[1].get("bicho", "") if len(premios) > 1 else None,
+                "bicho_3": premios[2].get("bicho", "") if len(premios) > 2 else None,
+                "bicho_4": premios[3].get("bicho", "") if len(premios) > 3 else None,
+                "bicho_5": premios[4].get("bicho", "") if len(premios) > 4 else None,
+                "bicho_6": premios[5].get("bicho", "") if len(premios) > 5 else None,
+                "bicho_7": premios[6].get("bicho", "") if len(premios) > 6 else None,
+            }, on_conflict="data,horario,banca,loteria").execute()
+            upserted += 1
+        except Exception as e:
+            db_errors.append(f"{r['banca']} {r['horario']}: {e}")
+
+    resultado_final = {
+        "success": True,
+        "data": data_scrape,
+        "total_scraped": len(todos_resultados),
+        "upserted": upserted,
+        "scrape_errors": erros if erros else None,
+        "db_errors": db_errors[:10] if db_errors else None,
+    }
+
+    print(f"\n=== Scrape V2 finalizado: {resultado_final} ===")
+    return resultado_final
+
+
+# =============================================================================
+# FUNCAO DE TESTE
+# =============================================================================
+
+@app.function(image=image, secrets=[supabase_secret, firecrawl_secret], timeout=120)
+def teste_firecrawl(estado: str = "RJ", data: Optional[str] = None) -> dict:
+    """
+    Testa scrape de um estado e mostra detalhes
+    """
+    from firecrawl import Firecrawl
+    from bs4 import BeautifulSoup
+
+    config = ESTADOS_CONFIG.get(estado)
+    if not config:
+        return {"error": f"Estado {estado} não configurado"}
+
+    data_scrape = data or datetime.now().strftime("%Y-%m-%d")
+
+    if config.get("custom_url"):
+        url = f"{BASE_URL}{config['custom_url'].format(data=data_scrape)}"
+    else:
+        url = f"{BASE_URL}/resultado-do-jogo-do-bicho/{config['url_param']}/do-dia/{data_scrape}"
+
+    print(f"Testando Firecrawl: {url}")
+
+    resultado = {
+        "estado": estado,
+        "url": url,
+        "data": data_scrape,
+    }
+
+    try:
+        api_key = os.environ.get("FIRECRAWL_API_KEY")
+        if not api_key:
+            return {"error": "FIRECRAWL_API_KEY não encontrada"}
+
+        firecrawl = Firecrawl(api_key=api_key)
+
+        print("Chamando Firecrawl...")
+        response = firecrawl.scrape(
+            url,
+            formats=["html", "markdown"],
+            wait_for=5000,
+            timeout=30000,
+        )
+
+        resultado["firecrawl_success"] = True if response else False
+
+        # Firecrawl retorna objeto Document com atributos
+        html = getattr(response, "html", "") or "" if response else ""
+        markdown = getattr(response, "markdown", "") or "" if response else ""
+
+        resultado["html_size"] = len(html)
+        resultado["markdown_size"] = len(markdown)
+        resultado["markdown_preview"] = markdown[:1500] if markdown else ""
+
+        if html:
+            soup = BeautifulSoup(html, "html.parser")
+
+            resultado["h3_count"] = len(soup.find_all("h3"))
+            resultado["h3_g_count"] = len(soup.find_all("h3", class_="g"))
+            resultado["table_count"] = len(soup.find_all("table"))
+
+            # Parse
+            resultados = parse_resultados(soup, data_scrape, config['banca'])
+            resultado["resultados_encontrados"] = len(resultados)
+            resultado["resultados_amostra"] = resultados[:3]
+
+        resultado["success"] = True
+
+    except Exception as e:
+        resultado["error"] = str(e)
+        resultado["success"] = False
+        import traceback
+        traceback.print_exc()
+
+    return resultado
+
+
+# =============================================================================
+# MAPEAMENTO LOTERIAS -> RESULTADOS (para verificacao de apostas)
+# =============================================================================
+
+LOTERIA_TO_BANCA = {
+    # RIO DE JANEIRO
+    "rj_pt_09": ("RIO/FEDERAL", "09:20"),
+    "rj_ptm_11": ("RIO/FEDERAL", "11:00"),
+    "rj_pt_14": ("RIO/FEDERAL", "14:20"),
+    "pt_14": ("RIO/FEDERAL", "14:20"),  # alias
+    "rj_ptv_16": ("RIO/FEDERAL", "16:00"),
+    "rj_ptn_18": ("RIO/FEDERAL", "18:20"),
+    "rj_coruja_21": ("RIO/FEDERAL", "21:20"),
+    "coruja_21": ("RIO/FEDERAL", "21:20"),  # alias
+    # BAHIA (LN = Loteria Nordeste / alias comum na interface)
+    "ba_10": ("BAHIA", "10:00"),
+    "ln_10": ("BAHIA", "10:00"),
+    "ba_12": ("BAHIA", "12:00"),
+    "ba_15": ("BAHIA", "15:00"),
+    "ba_19": ("BAHIA", "19:00"),
+    "ba_20": ("BAHIA", "20:00"),
+    "ba_21": ("BAHIA", "21:00"),
+    "ba_maluca_10": ("BAHIA", "10:00"),
+    "ba_maluca_12": ("BAHIA", "12:00"),
+    "ba_maluca_15": ("BAHIA", "15:00"),
+    "ba_maluca_19": ("BAHIA", "19:00"),
+    "ba_maluca_20": ("BAHIA", "20:00"),
+    "ba_maluca_21": ("BAHIA", "21:00"),
+    # GOIAS
+    "go_07": ("LOOK/GOIAS", "07:00"),
+    "go_09": ("LOOK/GOIAS", "09:00"),
+    "go_11": ("LOOK/GOIAS", "11:00"),
+    "go_14": ("LOOK/GOIAS", "14:00"),
+    "go_16": ("LOOK/GOIAS", "16:00"),
+    "go_18": ("LOOK/GOIAS", "18:00"),
+    "go_21": ("LOOK/GOIAS", "21:00"),
+    "go_23": ("LOOK/GOIAS", "23:00"),
+    # CEARA
+    "ce_11": ("LOTECE", "11:00"),
+    "ce_12": ("LOTECE", "12:00"),
+    "ce_14": ("LOTECE", "14:00"),
+    "ce_15": ("LOTECE", "15:45"),
+    "ce_19": ("LOTECE", "19:00"),
+    # PERNAMBUCO
+    "pe_09": ("LOTEP", "09:20"),
+    "pe_09b": ("LOTEP", "09:30"),
+    "pe_09c": ("LOTEP", "09:40"),
+    "pe_10": ("LOTEP", "10:00"),
+    "pe_11": ("LOTEP", "11:00"),
+    "pe_12": ("LOTEP", "12:40"),
+    "pe_12b": ("LOTEP", "12:45"),
+    "pe_14": ("LOTEP", "14:00"),
+    "pe_15": ("LOTEP", "15:40"),
+    "pe_15b": ("LOTEP", "15:45"),
+    "pe_17": ("LOTEP", "17:00"),
+    "pe_18": ("LOTEP", "18:30"),
+    "pe_19": ("LOTEP", "19:00"),
+    "pe_19b": ("LOTEP", "19:30"),
+    "pe_20": ("LOTEP", "20:00"),
+    "pe_21": ("LOTEP", "21:00"),
+    # PARAIBA
+    "pb_09": ("PARAIBA", "09:45"),
+    "pb_10": ("PARAIBA", "10:45"),
+    "pb_12": ("PARAIBA", "12:45"),
+    "pb_15": ("PARAIBA", "15:45"),
+    "pb_18": ("PARAIBA", "18:00"),
+    "pb_19": ("PARAIBA", "19:05"),
+    "pb_20": ("PARAIBA", "20:00"),
+    "pb_lotep_10": ("PARAIBA", "10:45"),
+    "pb_lotep_12": ("PARAIBA", "12:45"),
+    "pb_lotep_15": ("PARAIBA", "15:45"),
+    "pb_lotep_18": ("PARAIBA", "18:00"),
+    # SAO PAULO
+    "sp_08": ("SAO-PAULO", "08:00"),
+    "sp_10": ("SAO-PAULO", "10:00"),
+    "sp_12": ("SAO-PAULO", "12:00"),
+    "sp_13": ("SAO-PAULO", "13:00"),
+    "sp_15": ("SAO-PAULO", "15:30"),
+    "sp_17": ("SAO-PAULO", "17:00"),
+    "sp_18": ("SAO-PAULO", "18:00"),
+    "sp_19": ("SAO-PAULO", "19:00"),
+    "sp_ptn_20": ("SAO-PAULO", "20:00"),
+    # MINAS GERAIS
+    "mg_12": ("MINAS-GERAIS", "12:00"),
+    "mg_13": ("MINAS-GERAIS", "13:00"),
+    "mg_15": ("MINAS-GERAIS", "15:00"),
+    "mg_19": ("MINAS-GERAIS", "19:00"),
+    "mg_21": ("MINAS-GERAIS", "21:00"),
+    # DISTRITO FEDERAL / LBR
+    "df_00": ("BRASILIA", "00:40"),
+    "df_07": ("BRASILIA", "07:30"),
+    "df_08": ("BRASILIA", "08:30"),
+    "df_10": ("BRASILIA", "10:00"),
+    "df_12": ("BRASILIA", "12:40"),
+    "df_13": ("BRASILIA", "13:00"),
+    "df_15": ("BRASILIA", "15:00"),
+    "df_17": ("BRASILIA", "17:00"),
+    "df_18": ("BRASILIA", "18:40"),
+    "df_19": ("BRASILIA", "19:00"),
+    "df_20": ("BRASILIA", "20:40"),
+    "df_22": ("BRASILIA", "22:00"),
+    "df_23": ("BRASILIA", "23:00"),
+    # RIO GRANDE DO NORTE
+    "rn_08": ("RIO-GRANDE-NORTE", "08:30"),
+    "rn_11": ("RIO-GRANDE-NORTE", "11:45"),
+    "rn_16": ("RIO-GRANDE-NORTE", "16:45"),
+    "rn_18": ("RIO-GRANDE-NORTE", "18:30"),
+    # RIO GRANDE DO SUL
+    "rs_14": ("RIO-GRANDE-SUL", "14:00"),
+    "rs_18": ("RIO-GRANDE-SUL", "18:00"),
+    # SERGIPE
+    "se_10": ("SERGIPE", "10:00"),
+    "se_13": ("SERGIPE", "13:00"),
+    "se_14": ("SERGIPE", "14:00"),
+    "se_16": ("SERGIPE", "16:00"),
+    "se_19": ("SERGIPE", "19:00"),
+    # PARANA
+    "pr_14": ("PARANA", "14:00"),
+    "pr_18": ("PARANA", "18:00"),
+    # NACIONAL
+    "nac_02": ("NACIONAL", "02:00"),
+    "nac_08": ("NACIONAL", "08:00"),
+    "nac_10": ("NACIONAL", "10:00"),
+    "nac_12": ("NACIONAL", "12:00"),
+    "nac_15": ("NACIONAL", "15:00"),
+    "nac_17": ("NACIONAL", "17:00"),
+    "nac_21": ("NACIONAL", "21:00"),
+    # FAZENDINHA
+    "lt_look_23hs": ("LOOK/GOIAS", "23:19"),
+    "lt_nacional_23hs": ("NACIONAL", "22:59"),
+    # FEDERAL
+    "fed_19": ("FEDERAL", "19:00"),
+}
+
+
+# =============================================================================
+# FUNCAO AGENDADA (CRON UNICO)
+# =============================================================================
+
+@app.function(
+    image=image,
+    secrets=[supabase_secret, firecrawl_secret],
+    timeout=900,  # 15 min - tempo extra para delays
+    schedule=modal.Cron("*/30 0-4,10-23 * * *"),  # Cobre: 7-20h + 21-23h + 1h Brasilia
+)
+def scrape_scheduled():
+    """
+    Scrape agendado - roda a cada 30 minutos nos horarios relevantes
+    Cobre todos os horarios de sorteio (7h-23h + madrugada)
+    """
+    from supabase import create_client
+    import time
+
+    print(f"=== Scrape V2 agendado: {datetime.utcnow()} UTC ===")
+
+    supabase_url = os.environ["SUPABASE_URL"]
+    supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    supabase = create_client(supabase_url, supabase_key)
+
+    data_scrape = datetime.now().strftime("%Y-%m-%d")
+    estados_scrape = list(ESTADOS_CONFIG.keys())
+
+    todos_resultados = []
+    erros = []
+
+    for estado in estados_scrape:
+        try:
+            resultado = scrape_estado_firecrawl.remote(estado, data_scrape)
+
+            if resultado.get("error"):
+                erros.append(f"{estado}: {resultado['error']}")
+                print(f"[{estado}] Erro: {resultado['error']}")
+            else:
+                todos_resultados.extend(resultado.get("resultados", []))
+                print(f"[{estado}] OK: {len(resultado.get('resultados', []))} resultados")
+
+            # Delay de 6 segundos entre estados (Firecrawl free: 11 req/min)
+            time.sleep(6)
+
+        except Exception as e:
+            erros.append(f"{estado}: {str(e)}")
+            print(f"[{estado}] Exceção: {e}")
+
+    # Salvar no Supabase
+    upserted = 0
+    for r in todos_resultados:
+        premios = r.get("premios", [])
+        if len(premios) < 5:
+            continue
+        try:
+            supabase.table("resultados").upsert({
+                "data": r["data"],
+                "horario": r["horario"],
+                "banca": r["banca"],
+                "loteria": r["loteria"],
+                "premio_1": premios[0]["milhar"] if len(premios) > 0 else None,
+                "premio_2": premios[1]["milhar"] if len(premios) > 1 else None,
+                "premio_3": premios[2]["milhar"] if len(premios) > 2 else None,
+                "premio_4": premios[3]["milhar"] if len(premios) > 3 else None,
+                "premio_5": premios[4]["milhar"] if len(premios) > 4 else None,
+                "premio_6": premios[5]["milhar"] if len(premios) > 5 else None,
+                "premio_7": premios[6]["milhar"] if len(premios) > 6 else None,
+                "bicho_1": premios[0].get("bicho", "") if len(premios) > 0 else None,
+                "bicho_2": premios[1].get("bicho", "") if len(premios) > 1 else None,
+                "bicho_3": premios[2].get("bicho", "") if len(premios) > 2 else None,
+                "bicho_4": premios[3].get("bicho", "") if len(premios) > 3 else None,
+                "bicho_5": premios[4].get("bicho", "") if len(premios) > 4 else None,
+                "bicho_6": premios[5].get("bicho", "") if len(premios) > 5 else None,
+                "bicho_7": premios[6].get("bicho", "") if len(premios) > 6 else None,
+            }, on_conflict="data,horario,banca,loteria").execute()
+            upserted += 1
+        except Exception:
+            pass
+
+    print(f"Scrape: {len(todos_resultados)} resultados, {upserted} upserted")
+
+    # Verificar apostas pendentes
+    verificar_premios_v2.remote(data_scrape)
+
+    return {"total": len(todos_resultados), "upserted": upserted}
+
+
+# =============================================================================
+# VERIFICACAO DE PREMIOS E REEMBOLSO
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# FUNÇÕES AUXILIARES PARA VERIFICAÇÃO DE MODALIDADES
+# -----------------------------------------------------------------------------
+
+def extrair_dezena(premio: str) -> str:
+    """Extrai os últimos 2 dígitos (dezena direita)"""
+    return premio[-2:] if len(premio) >= 2 else premio.zfill(2)
+
+def extrair_dezena_esq(premio: str) -> str:
+    """Extrai os primeiros 2 dígitos (dezena esquerda)"""
+    return premio[:2] if len(premio) >= 2 else premio.zfill(2)
+
+def extrair_dezena_meio(premio: str) -> str:
+    """Extrai os 2 dígitos do meio (posições 1 e 2 em milhar de 4 dígitos)"""
+    if len(premio) >= 4:
+        return premio[1:3]
+    return premio[-2:] if len(premio) >= 2 else premio.zfill(2)
+
+def extrair_centena(premio: str) -> str:
+    """Extrai os últimos 3 dígitos (centena direita)"""
+    return premio[-3:] if len(premio) >= 3 else premio.zfill(3)
+
+def extrair_centena_esq(premio: str) -> str:
+    """Extrai os primeiros 3 dígitos (centena esquerda)"""
+    return premio[:3] if len(premio) >= 3 else premio.zfill(3)
+
+def extrair_unidade(premio: str) -> str:
+    """Extrai o último dígito"""
+    return premio[-1] if premio else "0"
+
+def dezena_to_grupo(dezena: str) -> int:
+    """Converte dezena (00-99) para grupo (1-25)"""
+    try:
+        dez = int(dezena)
+        if dez == 0:
+            return 25  # 00 pertence ao grupo 25 (Vaca)
+        return ((dez - 1) // 4) + 1
+    except:
+        return 0
+
+def is_invertido(palpite: str, premio: str, n_digitos: int) -> bool:
+    """Verifica se palpite é uma permutação dos últimos N dígitos do prêmio"""
+    from itertools import permutations
+
+    palpite_digits = palpite[-n_digitos:].zfill(n_digitos)
+    premio_digits = premio[-n_digitos:].zfill(n_digitos)
+
+    # Gera todas as permutações dos dígitos do prêmio
+    for perm in permutations(premio_digits):
+        if ''.join(perm) == palpite_digits:
+            return True
+    return False
+
+def is_invertido_esq(palpite: str, premio: str, n_digitos: int) -> bool:
+    """Verifica se palpite é uma permutação dos primeiros N dígitos do prêmio"""
+    from itertools import permutations
+
+    palpite_digits = palpite[:n_digitos].zfill(n_digitos)
+    premio_digits = premio[:n_digitos].zfill(n_digitos)
+
+    for perm in permutations(premio_digits):
+        if ''.join(perm) == palpite_digits:
+            return True
+    return False
+
+def verificar_modalidade(modalidade: str, palpites: list, resultado: dict, posicoes_validas: list) -> bool:
+    """
+    Verifica se a aposta ganhou baseado na modalidade.
+
+    Args:
+        modalidade: código da modalidade (ex: "milhar", "centena_inv", "duque_gp")
+        palpites: lista de palpites do apostador
+        resultado: dict com premio_1..premio_7
+        posicoes_validas: lista de posições a verificar (ex: ["premio_1", "premio_2"...])
+
+    Returns:
+        True se ganhou, False caso contrário
+    """
+    modalidade = modalidade.lower().strip()
+
+    # Extrai todos os prêmios das posições válidas
+    premios = []
+    for pos in posicoes_validas:
+        premio = str(resultado.get(pos, "") or "").strip()
+        if premio and len(premio) >= 2:
+            premios.append(premio.zfill(4))
+
+    if not premios:
+        return False
+
+    # Extrai dezenas e grupos dos prêmios
+    dezenas = [extrair_dezena(p) for p in premios]
+    dezenas_esq = [extrair_dezena_esq(p) for p in premios]
+    dezenas_meio = [extrair_dezena_meio(p) for p in premios]
+    grupos = [dezena_to_grupo(d) for d in dezenas]
+    grupos_esq = [dezena_to_grupo(d) for d in dezenas_esq]
+    grupos_meio = [dezena_to_grupo(d) for d in dezenas_meio]
+
+    # Normaliza palpites
+    palpites_norm = [str(p).strip() for p in palpites if p]
+    if not palpites_norm:
+        return False
+
+    # =========================================================================
+    # MILHAR (4 dígitos)
+    # =========================================================================
+    if modalidade == "milhar":
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):
+                    return True
+
+    elif modalidade == "milhar_ct":
+        # Milhar e Centena - ganha se acertar milhar OU centena
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):  # Milhar exata
+                    return True
+                if len(palpite) >= 3 and premio.endswith(palpite[-3:]):  # Centena
+                    return True
+
+    elif modalidade.startswith("milhar_inv"):
+        # Milhar invertida (permutações)
+        for palpite in palpites_norm:
+            for premio in premios:
+                if is_invertido(palpite, premio, 4):
+                    return True
+
+    # =========================================================================
+    # CENTENA (3 dígitos)
+    # =========================================================================
+    elif modalidade == "centena":
+        for palpite in palpites_norm:
+            for premio in premios:
+                if len(palpite) >= 3 and premio.endswith(palpite[-3:]):
+                    return True
+
+    elif modalidade == "centena_esquerda" or modalidade == "centena_esq":
+        for palpite in palpites_norm:
+            for premio in premios:
+                if len(palpite) >= 3 and premio.startswith(palpite[:3]):
+                    return True
+
+    elif modalidade == "centena_3x":
+        # Centena em qualquer posição (esq, meio, dir)
+        for palpite in palpites_norm:
+            palpite_3 = palpite[-3:].zfill(3) if len(palpite) >= 3 else palpite.zfill(3)
+            for premio in premios:
+                # Direita
+                if premio.endswith(palpite_3):
+                    return True
+                # Esquerda (em milhar de 4 dígitos)
+                if len(premio) >= 4 and premio[:3] == palpite_3:
+                    return True
+                # Meio (posições 1-3 em milhar)
+                if len(premio) >= 4 and premio[1:4] == palpite_3:
+                    return True
+
+    elif modalidade.startswith("centena_inv"):
+        # Centena invertida
+        is_esq = "esq" in modalidade
+        for palpite in palpites_norm:
+            for premio in premios:
+                if is_esq:
+                    if is_invertido_esq(palpite, premio, 3):
+                        return True
+                else:
+                    if is_invertido(palpite, premio, 3):
+                        return True
+
+    # =========================================================================
+    # DEZENA (2 dígitos)
+    # =========================================================================
+    elif modalidade == "dezena":
+        for palpite in palpites_norm:
+            palpite_dez = palpite[-2:].zfill(2)
+            if palpite_dez in dezenas:
+                return True
+
+    elif modalidade == "dezena_esq":
+        for palpite in palpites_norm:
+            palpite_dez = palpite[-2:].zfill(2)
+            if palpite_dez in dezenas_esq:
+                return True
+
+    elif modalidade == "dezena_meio":
+        for palpite in palpites_norm:
+            palpite_dez = palpite[-2:].zfill(2)
+            if palpite_dez in dezenas_meio:
+                return True
+
+    # =========================================================================
+    # GRUPO (bicho 1-25)
+    # =========================================================================
+    elif modalidade == "grupo":
+        for palpite in palpites_norm:
+            try:
+                palpite_grupo = int(palpite)
+                if palpite_grupo in grupos:
+                    return True
+            except:
+                pass
+
+    elif modalidade == "grupo_esq":
+        for palpite in palpites_norm:
+            try:
+                palpite_grupo = int(palpite)
+                if palpite_grupo in grupos_esq:
+                    return True
+            except:
+                pass
+
+    elif modalidade == "grupo_meio":
+        for palpite in palpites_norm:
+            try:
+                palpite_grupo = int(palpite)
+                if palpite_grupo in grupos_meio:
+                    return True
+            except:
+                pass
+
+    # =========================================================================
+    # UNIDADE (1 dígito)
+    # =========================================================================
+    elif modalidade == "unidade":
+        for palpite in palpites_norm:
+            palpite_un = palpite[-1] if palpite else ""
+            for premio in premios:
+                if palpite_un == extrair_unidade(premio):
+                    return True
+
+    # =========================================================================
+    # DUQUE DEZENA (2 dezenas devem aparecer nos prêmios)
+    # =========================================================================
+    elif modalidade.startswith("duque_dez"):
+        if len(palpites_norm) < 2:
+            return False
+
+        # Determina qual conjunto de dezenas usar
+        if "esq" in modalidade:
+            dezenas_check = dezenas_esq
+        elif "meio" in modalidade:
+            dezenas_check = dezenas_meio
+        else:
+            dezenas_check = dezenas
+
+        # Os 2 palpites devem estar nas dezenas dos prêmios
+        palpite1 = palpites_norm[0][-2:].zfill(2)
+        palpite2 = palpites_norm[1][-2:].zfill(2)
+
+        if palpite1 in dezenas_check and palpite2 in dezenas_check:
+            return True
+
+    # =========================================================================
+    # DUQUE GRUPO (2 grupos devem aparecer nos prêmios)
+    # =========================================================================
+    elif modalidade.startswith("duque_gp"):
+        if len(palpites_norm) < 2:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = grupos_esq
+        elif "meio" in modalidade:
+            grupos_check = grupos_meio
+        else:
+            grupos_check = grupos
+
+        try:
+            palpite1 = int(palpites_norm[0])
+            palpite2 = int(palpites_norm[1])
+            if palpite1 in grupos_check and palpite2 in grupos_check:
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # TERNO DEZENA (3 dezenas devem aparecer)
+    # =========================================================================
+    elif modalidade.startswith("terno_dez"):
+        if len(palpites_norm) < 3:
+            return False
+
+        is_seco = "seco" in modalidade
+
+        if "esq" in modalidade:
+            dezenas_check = dezenas_esq[:3] if is_seco else dezenas_esq
+        elif "meio" in modalidade:
+            dezenas_check = dezenas_meio[:3] if is_seco else dezenas_meio
+        else:
+            dezenas_check = dezenas[:3] if is_seco else dezenas
+
+        palpites_dez = [p[-2:].zfill(2) for p in palpites_norm[:3]]
+
+        # Todos os 3 palpites devem estar nas dezenas
+        if all(p in dezenas_check for p in palpites_dez):
+            return True
+
+    # =========================================================================
+    # TERNO GRUPO (3 grupos devem aparecer)
+    # =========================================================================
+    elif modalidade.startswith("terno_gp"):
+        if len(palpites_norm) < 3:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = grupos_esq
+        elif "meio" in modalidade:
+            grupos_check = grupos_meio
+        else:
+            grupos_check = grupos
+
+        try:
+            palpites_gp = [int(p) for p in palpites_norm[:3]]
+            if all(p in grupos_check for p in palpites_gp):
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # QUADRA GRUPO (4 grupos devem aparecer)
+    # =========================================================================
+    elif modalidade.startswith("quadra_gp"):
+        if len(palpites_norm) < 4:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = grupos_esq
+        elif "meio" in modalidade:
+            grupos_check = grupos_meio
+        else:
+            grupos_check = grupos
+
+        try:
+            palpites_gp = [int(p) for p in palpites_norm[:4]]
+            if all(p in grupos_check for p in palpites_gp):
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # QUINA GRUPO (5 grupos de 8 escolhidos devem aparecer em 5 prêmios)
+    # =========================================================================
+    elif modalidade.startswith("quina_gp"):
+        if len(palpites_norm) < 8:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = set(grupos_esq[:5])  # Usa 5 primeiros prêmios
+        elif "meio" in modalidade:
+            grupos_check = set(grupos_meio[:5])
+        else:
+            grupos_check = set(grupos[:5])
+
+        try:
+            palpites_gp = set(int(p) for p in palpites_norm[:8])
+            # Pelo menos 5 dos 8 palpites devem estar nos grupos dos prêmios
+            acertos = palpites_gp.intersection(grupos_check)
+            if len(acertos) >= 5:
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # SENA GRUPO (6 grupos de 10 escolhidos devem aparecer em 6 prêmios)
+    # =========================================================================
+    elif modalidade.startswith("sena_gp"):
+        if len(palpites_norm) < 10:
+            return False
+
+        if "esq" in modalidade:
+            grupos_check = set(grupos_esq[:6])
+        elif "meio" in modalidade:
+            grupos_check = set(grupos_meio[:6])
+        else:
+            grupos_check = set(grupos[:6])
+
+        try:
+            palpites_gp = set(int(p) for p in palpites_norm[:10])
+            acertos = palpites_gp.intersection(grupos_check)
+            if len(acertos) >= 6:
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # PASSE (combinação de 2 grupos em sequência)
+    # =========================================================================
+    elif modalidade == "passe_vai":
+        # Grupo do 1º prêmio = palpite1, Grupo do 2º prêmio = palpite2
+        if len(palpites_norm) < 2 or len(grupos) < 2:
+            return False
+        try:
+            p1, p2 = int(palpites_norm[0]), int(palpites_norm[1])
+            if grupos[0] == p1 and grupos[1] == p2:
+                return True
+        except:
+            pass
+
+    elif modalidade == "passe_vai_vem":
+        # Qualquer ordem: (p1,p2) ou (p2,p1) nos 2 primeiros grupos
+        if len(palpites_norm) < 2 or len(grupos) < 2:
+            return False
+        try:
+            p1, p2 = int(palpites_norm[0]), int(palpites_norm[1])
+            g1, g2 = grupos[0], grupos[1]
+            if (g1 == p1 and g2 == p2) or (g1 == p2 and g2 == p1):
+                return True
+        except:
+            pass
+
+    # =========================================================================
+    # PALPITÃO (jogo especial - verificar regras específicas)
+    # =========================================================================
+    elif modalidade == "palpitao":
+        # Palpitão geralmente é uma combinação especial
+        # Implementação depende das regras específicas da banca
+        # Por ora, assume que é uma milhar especial
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):
+                    return True
+
+    # =========================================================================
+    # LOTINHA / QUININHA / SENINHA (jogos de dezenas acumuladas)
+    # O jogador escolhe N dezenas (ex: "03-06-13-18-24-28")
+    # Precisa acertar X dezenas nos resultados do dia:
+    # - Lotinha: 4 acertos
+    # - Quininha: 5 acertos
+    # - Seninha: 6 acertos
+    # NOTA: A verificação completa é feita no loop principal (verificar_premios_v2)
+    # pois precisa de TODOS os resultados do dia, não apenas um.
+    # Esta seção é fallback caso seja chamada com resultado único.
+    # =========================================================================
+    elif modalidade.startswith("lotinha_") or modalidade.startswith("quininha_") or modalidade.startswith("seninha_"):
+        # Determina quantos acertos são necessários
+        if modalidade.startswith("lotinha_"):
+            acertos_necessarios = 4
+        elif modalidade.startswith("quininha_"):
+            acertos_necessarios = 5
+        elif modalidade.startswith("seninha_"):
+            acertos_necessarios = 6
+        else:
+            return False
+
+        # Pega o primeiro palpite (formato: "03-06-13-18-24-28-30-...")
+        if not palpites_norm:
+            return False
+
+        palpite_str = palpites_norm[0]
+
+        # Separa as dezenas do palpite
+        dezenas_palpite = set()
+        for part in palpite_str.replace(" ", "").split("-"):
+            part = part.strip()
+            if part and part.isdigit():
+                dezenas_palpite.add(part.zfill(2))
+
+        if not dezenas_palpite:
+            return False
+
+        # Extrai dezenas dos prêmios disponíveis (direita - últimos 2 dígitos)
+        dezenas_resultado = set()
+        for premio in premios:
+            if len(premio) >= 2:
+                dez = premio[-2:].zfill(2)
+                dezenas_resultado.add(dez)
+
+        # Conta quantas dezenas do palpite aparecem no resultado
+        acertos = len(dezenas_palpite & dezenas_resultado)
+
+        if acertos >= acertos_necessarios:
+            return True
+
+    # =========================================================================
+    # FALLBACK - Modalidade não reconhecida
+    # =========================================================================
+    else:
+        print(f"  [AVISO] Modalidade não reconhecida: {modalidade}")
+        # Tenta verificação básica como milhar
+        for palpite in palpites_norm:
+            for premio in premios:
+                if palpite.zfill(4) == premio.zfill(4):
+                    return True
+
+    return False
+
+
+def horario_expirou(data_jogo: str, horario: str, horas_limite: int = 1) -> bool:
+    """
+    Verifica se passou X horas do horário do sorteio
+    """
+    try:
+        # Monta datetime do sorteio
+        hora, minuto = horario.split(":")
+        sorteio_dt = datetime.strptime(f"{data_jogo} {hora}:{minuto}", "%Y-%m-%d %H:%M")
+
+        # Adiciona horas de tolerância
+        limite_dt = sorteio_dt + timedelta(hours=horas_limite)
+
+        # Compara com agora (Brasília = UTC-3)
+        agora_utc = datetime.utcnow()
+        agora_brasilia = agora_utc - timedelta(hours=3)
+
+        return agora_brasilia > limite_dt
+    except Exception:
+        return False
+
+
+def _enviar_alerta_scraper(titulo: str, mensagem: str, exc: Optional[Exception] = None) -> None:
+    """Envia sinal de erro para Admin Master (webhook ou log critico)."""
+    import traceback
+    body = f"[SCRAPER ULTRA BANCA] {titulo}\n{mensagem}"
+    if exc:
+        body += f"\n\nExceção: {exc}\n{traceback.format_exc()}"
+    print(f"CRITICAL: {body}")
+    webhook_url = os.environ.get("SCRAPER_ALERT_WEBHOOK_URL") or os.environ.get("ADMIN_ALERT_WEBHOOK_URL")
+    if webhook_url:
+        try:
+            import requests
+            requests.post(
+                webhook_url,
+                json={"title": titulo, "message": mensagem, "source": "ultra-banca-scraper", "exception": str(exc) if exc else None},
+                timeout=10
+            )
+        except Exception as e:
+            print(f"CRITICAL: Falha ao enviar webhook de alerta: {e}")
+
+
+@app.function(image=image, secrets=[supabase_secret], timeout=300)
+def verificar_premios_v2(data: Optional[str] = None) -> dict:
+    """
+    Verifica apostas pendentes contra resultados (Versão Otimizada)
+    - Busca Odds Dinâmicas no banco
+    - Paginação de apostas
+    - Filtra por data e loterias com resultado
+    - Premiação via RPC fn_process_payout (atômico)
+    """
+    from supabase import create_client
+
+    try:
+        supabase_url = os.environ["SUPABASE_URL"]
+        supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+        supabase = create_client(supabase_url, supabase_key)
+    except Exception as e:
+        _enviar_alerta_scraper("Erro de conexão com o banco", "Falha ao criar cliente Supabase.", e)
+        return {"verificadas": 0, "ganhou": 0, "perdeu": 0, "reembolsado": 0, "error": str(e)}
+
+    data_verificar = data or datetime.now().strftime("%Y-%m-%d")
+    print(f"=== Verificando premios para {data_verificar} ===")
+
+    try:
+        # 1. Busca resultados do dia (ANTES das apostas para saber o que validar)
+        resultados_resp = supabase.table("resultados").select("*").eq("data", data_verificar).execute()
+        resultados = resultados_resp.data or []
+    except Exception as e:
+        _enviar_alerta_scraper("Erro ao buscar resultados", f"data={data_verificar}", e)
+        return {"verificadas": 0, "ganhou": 0, "perdeu": 0, "reembolsado": 0, "error": str(e)}
+
+    if not resultados:
+        print(f"  Sem resultados para {data_verificar}")
+        return {"verificadas": 0, "ganhou": 0, "perdeu": 0, "reembolsado": 0}
+
+    total_verificadas = 0
+    ganhou = 0
+    perdeu = 0
+    reembolsado = 0
+    ainda_pendente = 0
+    try:
+        # Indexa resultados por horario+banca
+        resultados_map = {}
+        loterias_com_resultado = set()
+        for r in resultados:
+            key = f"{r['horario']}_{r['banca']}"
+            resultados_map[key] = r
+            loterias_com_resultado.add(r['banca'])
+        print(f"  Resultados disponíveis: {len(resultados)} ({len(loterias_com_resultado)} bancas)")
+
+        # 2. Odds por plataforma (multi-tenant): platform_modalidades primeiro, fallback para modalidades_config
+        def get_multiplicador_platform(platform_id: Optional[str], modalidade: str, aposta_multiplicador: float, dynamic: dict) -> float:
+            # Se a aposta já tem multiplicador definido, usar esse
+            if aposta_multiplicador and aposta_multiplicador > 0:
+                return float(aposta_multiplicador)
+
+            # Primeiro tenta buscar da tabela platform_modalidades (config por banca)
+            if platform_id:
+                try:
+                    r = supabase.table("platform_modalidades").select("multiplicador").eq("platform_id", platform_id).eq("codigo", modalidade).eq("ativo", True).execute()
+                    if r.data and len(r.data) > 0:
+                        mult = float(r.data[0].get("multiplicador", 0) or 0)
+                        if mult > 0:
+                            return mult
+                except Exception as e:
+                    print(f"  [AVISO] Falha ao buscar multiplicador platform_modalidades: {e}")
+
+            # Fallback: usa RPC fn_get_multiplicador que faz a lógica de fallback no banco
+            if platform_id:
+                try:
+                    rpc = supabase.rpc("fn_get_multiplicador", {"p_platform_id": platform_id, "p_codigo": modalidade}).execute()
+                    raw = getattr(rpc, "data", None)
+                    if raw and float(raw) > 0:
+                        return float(raw)
+                except Exception:
+                    pass
+
+            # Último fallback: dynamic_odds carregado de modalidades_config global
+            return float(dynamic.get(modalidade, 0))
+
+        dynamic_odds = {}
+        try:
+            odds_resp = supabase.table("modalidades_config").select("codigo, multiplicador").eq("ativo", True).execute()
+            if odds_resp.data:
+                for item in odds_resp.data:
+                    dynamic_odds[item["codigo"]] = float(item["multiplicador"])
+                print(f"  Odds dinâmicas carregadas: {len(dynamic_odds)} modalidades")
+        except Exception as e:
+            print(f"  [AVISO] Falha ao buscar odds dinâmicas: {e}")
+
+        loteria_ids_com_resultado = set()
+        for key in resultados_map.keys():
+            if "_" not in key:
+                continue
+            horario, banca = key.split("_", 1)
+            for lid, (mb, mh) in LOTERIA_TO_BANCA.items():
+                if mb == banca and mh == horario:
+                    loteria_ids_com_resultado.add(lid)
+
+        # Buscar todas as pendentes do dia (limite 50k) e processar em memoria para evitar loop de paginacao
+        MAX_APOSTAS = 50000
+        print(f"  Buscando apostas pendentes para {data_verificar} (limite {MAX_APOSTAS})...")
+        query = supabase.table("apostas").select("*").eq("data_jogo", data_verificar).eq("status", "pendente").order("id").limit(MAX_APOSTAS)
+        apostas_resp = query.execute()
+        apostas_lote = apostas_resp.data or []
+        total_verificadas = len(apostas_lote)
+        print(f"  Total pendentes no dia: {len(apostas_lote)}")
+        ids_perdeu_batch = []
+
+        for aposta in apostas_lote:
+            loterias = aposta.get("loterias", [])
+            palpites_raw = aposta.get("palpites") or aposta.get("palpite")
+            if isinstance(palpites_raw, list):
+                palpites_lista = [str(p).strip() for p in palpites_raw if p is not None and str(p).strip()]
+            else:
+                palpites_lista = [str(palpites_raw).strip()] if palpites_raw else []
+            if not palpites_lista:
+                palpites_lista = [""]
+            modalidade_raw = (aposta.get("modalidade") or "milhar").strip().upper()
+            modalidade = "centena" if "MILHAR_CT" in modalidade_raw or "CENTENA" in modalidade_raw else (modalidade_raw.lower() if isinstance(aposta.get("modalidade"), str) else "milhar")
+            posicao = aposta.get("posicao", "1_premio")
+            valor_aposta = float(aposta.get("valor_total", 0) or aposta.get("valor", 0) or 0)
+            user_id = aposta.get("user_id")
+            platform_id = aposta.get("platform_id")
+
+            posicoes_validas = []
+            if posicao == "1_premio":
+                posicoes_validas = ["premio_1"]
+            elif posicao in ("1_ao_5", "1_5_premio"):
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5"]
+            elif posicao in ("1_ao_7", "1_7_premio"):
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]
+            elif posicao in ("1_10_premio", "1_ao_10"):
+                posicoes_validas = ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]
+            else:
+                match = re.match(r"(\d+)_premio", posicao)
+                if match:
+                    posicoes_validas = [f"premio_{match.group(1)}"]
+
+            aposta_ganhou = False
+            todos_resultados_saiu = True
+            loterias_sem_resultado = []
+            horario_mais_tardio = None
+
+            # =========================================================================
+            # TRATAMENTO ESPECIAL: LOTINHA / QUININHA / SENINHA
+            # Estes jogos usam TODOS os resultados do dia (loterias vazio)
+            # Jogador escolhe N dezenas, precisa acertar X:
+            # - Lotinha: 4 acertos, Quininha: 5 acertos, Seninha: 6 acertos
+            # =========================================================================
+            is_lotinha_quininha_seninha = modalidade.startswith("lotinha_") or modalidade.startswith("quininha_") or modalidade.startswith("seninha_")
+
+            if is_lotinha_quininha_seninha:
+                # Determina quantos acertos são necessários
+                if modalidade.startswith("lotinha_"):
+                    acertos_necessarios = 4
+                elif modalidade.startswith("quininha_"):
+                    acertos_necessarios = 5
+                else:  # seninha
+                    acertos_necessarios = 6
+
+                # Verifica se há resultados suficientes no dia
+                if not resultados_map:
+                    todos_resultados_saiu = False
+                    ainda_pendente += 1
+                    print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Aguardando resultados do dia")
+                    continue
+
+                # Pega o palpite (formato: "03-06-13-18-24-28-30-...")
+                palpite_str = palpites_lista[0] if palpites_lista else ""
+
+                # Separa as dezenas do palpite
+                dezenas_palpite = set()
+                for part in palpite_str.replace(" ", "").split("-"):
+                    part = part.strip()
+                    if part and part.isdigit():
+                        dezenas_palpite.add(part.zfill(2))
+
+                if not dezenas_palpite:
+                    print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Palpite inválido: {palpite_str}")
+                    ids_perdeu_batch.append(aposta["id"])
+                    perdeu += 1
+                    continue
+
+                # Coleta TODAS as dezenas de TODOS os resultados do dia
+                dezenas_resultado = set()
+                for key, resultado in resultados_map.items():
+                    for pos in ["premio_1", "premio_2", "premio_3", "premio_4", "premio_5", "premio_6", "premio_7"]:
+                        premio = str(resultado.get(pos, "") or "").strip()
+                        if premio and len(premio) >= 2:
+                            dez = premio[-2:].zfill(2)
+                            dezenas_resultado.add(dez)
+
+                # Conta quantas dezenas do palpite aparecem nos resultados
+                acertos = len(dezenas_palpite & dezenas_resultado)
+                print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Dezenas palpite: {len(dezenas_palpite)}, Dezenas resultado: {len(dezenas_resultado)}, Acertos: {acertos}/{acertos_necessarios}")
+
+                if acertos >= acertos_necessarios:
+                    aposta_ganhou = True
+                    print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - GANHOU! Acertos: {acertos}")
+                else:
+                    # Verificar se todos os sorteios do dia já saíram (mínimo esperado)
+                    # Se temos pelo menos 5 resultados, consideramos completo
+                    if len(resultados_map) >= 5:
+                        ids_perdeu_batch.append(aposta["id"])
+                        perdeu += 1
+                        print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Perdeu (acertos insuficientes)")
+                    else:
+                        ainda_pendente += 1
+                        print(f"  Aposta {aposta['id'][:8]} ({modalidade}) - Aguardando mais resultados ({len(resultados_map)} disponíveis)")
+
+                # Continua para próxima aposta se não ganhou
+                if not aposta_ganhou:
+                    continue
+
+            # =========================================================================
+            # VERIFICAÇÃO PADRÃO (para jogos normais com loterias específicas)
+            # =========================================================================
+            if not is_lotinha_quininha_seninha:
+                for loteria_id in loterias:
+                    mapping = LOTERIA_TO_BANCA.get(loteria_id)
+                    if not mapping:
+                        print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} | Resultado no scraper: (nao mapeada)")
+                        continue
+                    banca, horario = mapping
+                    key = f"{horario}_{banca}"
+                    resultado = resultados_map.get(key)
+                    print(f"  Comparando Aposta {aposta['id'][:8]} - Loteria na aposta: {loteria_id} (banca={banca}, horario={horario}) | Resultado no scraper: key={key!r} | Existe: {'sim' if resultado else 'nao'}")
+                    if horario_mais_tardio is None or horario > horario_mais_tardio:
+                        horario_mais_tardio = horario
+                    if not resultado:
+                        todos_resultados_saiu = False
+                        loterias_sem_resultado.append((loteria_id, banca, horario))
+                        continue
+
+                    # Usa a função de verificação completa para todas as modalidades
+                    aposta_ganhou = verificar_modalidade(
+                        modalidade=modalidade,
+                        palpites=palpites_lista,
+                        resultado=resultado,
+                        posicoes_validas=posicoes_validas
+                    )
+
+                    if aposta_ganhou:
+                        print(f"  Aposta {aposta['id'][:8]} - Modalidade {modalidade} - GANHOU na loteria {loteria_id}")
+                        break
+
+            if aposta_ganhou:
+                multiplicador = get_multiplicador_platform(
+                    platform_id, modalidade,
+                    float(aposta.get("multiplicador", 0) or 0),
+                    dynamic_odds
+                )
+                valor_premio = valor_aposta * multiplicador
+                ganhou += 1
+                print(f"  Aposta {aposta['id'][:8]} GANHOU! Premio: R${valor_premio:.2f}")
+                if user_id and valor_premio > 0:
+                    try:
+                        rpc_resp = supabase.rpc("fn_process_payout", {
+                            "p_bet_id": aposta["id"],
+                            "p_amount": round(float(valor_premio), 2),
+                            "p_metadata": {"modalidade": modalidade}
+                        }).execute()
+                        raw = getattr(rpc_resp, "data", None) or (rpc_resp.model_dump() if hasattr(rpc_resp, "model_dump") else None)
+                        result = (raw[0] if isinstance(raw, list) and raw else raw) or {}
+                        if isinstance(result, dict) and result.get("success"):
+                            novo_saldo = result.get("new_balance")
+                            try:
+                                app_url = os.environ.get("APP_URL", "https://ultrabanca.app")
+                                internal_secret = os.environ.get("INTERNAL_API_SECRET", "ultra-banca-secret-key-123")
+                                if internal_secret:
+                                    import requests
+                                    profile_resp = supabase.table("profiles").select("nome, telefone").eq("id", user_id).single().execute()
+                                    requests.post(
+                                        f"{app_url}/api/internal/triggers",
+                                        json={
+                                            "triggerType": "premio",
+                                            "userData": {
+                                                "nome": (profile_resp.data or {}).get("nome", "Cliente"),
+                                                "telefone": (profile_resp.data or {}).get("telefone"),
+                                                "premio": valor_premio,
+                                                "modalidade": modalidade,
+                                                "saldo": novo_saldo
+                                            }
+                                        },
+                                        headers={"x-internal-secret": internal_secret},
+                                        timeout=5
+                                    )
+                            except Exception as trigger_err:
+                                print(f"  [Erro Gatilho] {trigger_err}")
+                        else:
+                            err = result.get("error", "unknown") if isinstance(result, dict) else "rpc failed"
+                            print(f"  Erro RPC payout {aposta['id'][:8]}: {err}")
+                    except Exception as e:
+                        print(f"  Erro ao processar payout {aposta['id'][:8]}: {e}")
+
+            elif todos_resultados_saiu:
+                ids_perdeu_batch.append(aposta["id"])
+                perdeu += 1
+                print(f"  Aposta {aposta['id'][:8]} perdeu")
+            else:
+                todas_expiraram = True
+                for lot_id, banca, horario in loterias_sem_resultado:
+                    if not horario_expirou(data_verificar, horario, horas_limite=12):
+                        todas_expiraram = False
+                        break
+                if todas_expiraram and loterias_sem_resultado:
+                    # Usar RPC fn_process_refund para reembolso atômico (evita race conditions)
+                    try:
+                        loterias_str = ", ".join([f"{lid} ({banca} {h})" for lid, banca, h in loterias_sem_resultado])
+                        rpc_resp = supabase.rpc("fn_process_refund", {
+                            "p_bet_id": aposta["id"],
+                            "p_reason": f"Resultado não disponível após 12h: {loterias_str}"
+                        }).execute()
+                        raw = getattr(rpc_resp, "data", None) or (rpc_resp.model_dump() if hasattr(rpc_resp, "model_dump") else None)
+                        result = (raw[0] if isinstance(raw, list) and raw else raw) or {}
+                        if isinstance(result, dict) and result.get("success"):
+                            reembolsado += 1
+                            refund_val = result.get("refund", 0)
+                            print(f"  Aposta {aposta['id'][:8]} REEMBOLSADA via RPC (R${refund_val:.2f})")
+                        else:
+                            err = result.get("error", "unknown") if isinstance(result, dict) else "rpc failed"
+                            print(f"  Erro RPC refund {aposta['id'][:8]}: {err}")
+                            ainda_pendente += 1
+                    except Exception as e:
+                        print(f"  Erro ao reembolsar {aposta['id'][:8]}: {e}")
+                        ainda_pendente += 1
+                else:
+                    ainda_pendente += 1
+                    print(f"  Aposta {aposta['id'][:8]} ainda pendente (aguardando resultado)")
+
+        # Marcar como perdeu em lote (evita N updates)
+        if ids_perdeu_batch:
+            try:
+                rpc = supabase.rpc("fn_mark_bets_lost", {"p_bet_ids": ids_perdeu_batch}).execute()
+                raw = getattr(rpc, "data", None)
+                res = (raw[0] if isinstance(raw, list) and raw else raw) or {}
+                n = res.get("updated", 0) if isinstance(res, dict) else 0
+                print(f"  Batch perdeu: {len(ids_perdeu_batch)} IDs enviados, {n} atualizados")
+            except Exception as e:
+                print(f"  [AVISO] Batch perdeu falhou: {e}; marcando uma a uma")
+                for bid in ids_perdeu_batch:
+                    try:
+                        supabase.table("apostas").update({"status": "perdeu"}).eq("id", bid).execute()
+                    except Exception:
+                        pass
+
+        resultado_final = {
+            "data": data_verificar,
+            "verificadas": total_verificadas,
+            "ganhou": ganhou,
+            "perdeu": perdeu,
+            "reembolsado": reembolsado,
+            "pendente": ainda_pendente,
+        }
+        print(f"=== Verificacao concluida: {resultado_final} ===")
+        return resultado_final
+    except Exception as e:
+        _enviar_alerta_scraper("Erro na verificacao de premios", f"data={data_verificar}. Processo interrompido.", e)
+        return {
+            "data": data_verificar,
+            "verificadas": total_verificadas,
+            "ganhou": ganhou,
+            "perdeu": perdeu,
+            "reembolsado": reembolsado,
+            "pendente": ainda_pendente,
+            "error": str(e),
+        }
+
+
+# =============================================================================
+# CLI
+# =============================================================================
+
+@app.function(image=image, secrets=[supabase_secret, firecrawl_secret], timeout=1800)
+def scrape_ultimos_dias(dias: int = 7) -> dict:
+    """
+    Scrape dos últimos N dias para todos os estados
+    """
+    from supabase import create_client
+    import time
+
+    supabase_url = os.environ["SUPABASE_URL"]
+    supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    supabase = create_client(supabase_url, supabase_key)
+
+    hoje = datetime.now()
+    resultados_total = []
+    resumo_por_dia = {}
+
+    print(f"\n{'='*70}")
+    print(f"SCRAPE DOS ÚLTIMOS {dias} DIAS")
+    print(f"{'='*70}\n")
+
+    for i in range(dias):
+        data_scrape = (hoje - timedelta(days=i)).strftime("%Y-%m-%d")
+        print(f"\n{'='*70}")
+        print(f"DIA {i+1}/{dias}: {data_scrape}")
+        print(f"{'='*70}")
+
+        todos_resultados = []
+        erros = []
+
+        for estado in list(ESTADOS_CONFIG.keys()):
+            try:
+                resultado = scrape_estado_firecrawl.remote(estado, data_scrape)
+
+                if resultado.get("error"):
+                    erros.append(f"{estado}: {resultado['error']}")
+                else:
+                    todos_resultados.extend(resultado.get("resultados", []))
+                    print(f"[{estado}] OK: {len(resultado.get('resultados', []))} resultados")
+
+                # Delay entre estados
+                time.sleep(2)
+
+            except Exception as e:
+                erros.append(f"{estado}: {str(e)}")
+                print(f"[{estado}] Exceção: {e}")
+
+        # Salvar no Supabase
+        upserted = 0
+        for r in todos_resultados:
+            premios = r.get("premios", [])
+            if len(premios) < 5:
+                continue
+            try:
+                supabase.table("resultados").upsert({
+                    "data": r["data"],
+                    "horario": r["horario"],
+                    "banca": r["banca"],
+                    "loteria": r["loteria"],
+                    "premio_1": premios[0]["milhar"] if len(premios) > 0 else None,
+                    "premio_2": premios[1]["milhar"] if len(premios) > 1 else None,
+                    "premio_3": premios[2]["milhar"] if len(premios) > 2 else None,
+                    "premio_4": premios[3]["milhar"] if len(premios) > 3 else None,
+                    "premio_5": premios[4]["milhar"] if len(premios) > 4 else None,
+                    "premio_6": premios[5]["milhar"] if len(premios) > 5 else None,
+                    "premio_7": premios[6]["milhar"] if len(premios) > 6 else None,
+                    "bicho_1": premios[0].get("bicho", "") if len(premios) > 0 else None,
+                    "bicho_2": premios[1].get("bicho", "") if len(premios) > 1 else None,
+                    "bicho_3": premios[2].get("bicho", "") if len(premios) > 2 else None,
+                    "bicho_4": premios[3].get("bicho", "") if len(premios) > 3 else None,
+                    "bicho_5": premios[4].get("bicho", "") if len(premios) > 4 else None,
+                    "bicho_6": premios[5].get("bicho", "") if len(premios) > 5 else None,
+                    "bicho_7": premios[6].get("bicho", "") if len(premios) > 6 else None,
+                }, on_conflict="data,horario,banca,loteria").execute()
+                upserted += 1
+            except Exception:
+                pass
+
+        resumo_por_dia[data_scrape] = {
+            "scraped": len(todos_resultados),
+            "upserted": upserted,
+            "erros": len(erros),
+        }
+        resultados_total.extend(todos_resultados)
+
+        print(f"\n📊 Resumo {data_scrape}: {len(todos_resultados)} scraped, {upserted} upserted")
+
+        # Verificar apostas do dia
+        verificar_premios_v2.remote(data_scrape)
+
+    print(f"\n{'='*70}")
+    print(f"RESUMO FINAL - {dias} DIAS")
+    print(f"{'='*70}")
+    for data_str, stats in resumo_por_dia.items():
+        print(f"  {data_str}: {stats['scraped']} scraped, {stats['upserted']} upserted, {stats['erros']} erros")
+    print(f"\nTOTAL: {len(resultados_total)} resultados")
+
+    return {
+        "success": True,
+        "dias": dias,
+        "total_resultados": len(resultados_total),
+        "resumo_por_dia": resumo_por_dia,
+    }
+
+
+@app.local_entrypoint()
+def main(
+    comando: str = "scrape",
+    estado: str = "RJ",
+    data: Optional[str] = None,
+    dias: int = 7,
+):
+    """
+    Comandos:
+        scrape   - Scrape inteligente de um estado (com múltiplas fontes e logs)
+        teste    - Testa somente Firecrawl (debug)
+        todos    - Scrape de todos os estados para uma data
+        historico - Scrape dos últimos N dias (padrão: 7)
+
+    Exemplos:
+        modal run modal_scraper_v2.py --comando scrape --estado MG --data 2026-01-30
+        modal run modal_scraper_v2.py --comando teste --estado RJ --data 2026-01-29
+        modal run modal_scraper_v2.py --comando todos --data 2026-01-29
+        modal run modal_scraper_v2.py --comando historico --dias 7
+    """
+    if comando == "scrape":
+        # Usa a função principal com múltiplas fontes e logs detalhados
+        print(f"\n{'#'*70}")
+        print(f"# SCRAPE INTELIGENTE: {estado} - {data or 'hoje'}")
+        print(f"{'#'*70}\n")
+
+        resultado = scrape_estado_firecrawl.remote(estado, data)
+
+        print(f"\n{'#'*70}")
+        print(f"# RESULTADO FINAL")
+        print(f"{'#'*70}")
+        print(f"Estado: {resultado.get('estado')}")
+        print(f"Banca: {resultado.get('banca')}")
+        print(f"Fonte utilizada: {resultado.get('fonte_utilizada', 'N/A')}")
+        print(f"Total de resultados: {len(resultado.get('resultados', []))}")
+
+        if resultado.get('tentativas'):
+            print(f"\nTentativas:")
+            for t in resultado.get('tentativas', []):
+                print(f"  - {t}")
+
+        if resultado.get('resultados'):
+            print(f"\nResultados encontrados:")
+            for r in resultado.get('resultados', [])[:5]:
+                premios = r.get('premios', [])
+                p1 = premios[0]['milhar'] if premios else 'N/A'
+                bicho = premios[0].get('bicho', '') if premios else ''
+                print(f"  {r['horario']} {r['loteria']}: 1º={p1} {bicho}")
+
+        if resultado.get('error'):
+            print(f"\n❌ ERRO: {resultado.get('error')}")
+
+    elif comando == "teste":
+        print(f"Testando Firecrawl com {estado}...")
+        resultado = teste_firecrawl.remote(estado, data)
+
+        print(f"\n{'='*50}")
+        print(f"URL: {resultado.get('url')}")
+        print(f"Firecrawl success: {resultado.get('firecrawl_success')}")
+        print(f"HTML size: {resultado.get('html_size')} bytes")
+        print(f"Markdown size: {resultado.get('markdown_size')} bytes")
+        print(f"h3 encontrados: {resultado.get('h3_count')}")
+        print(f"h3.g encontrados: {resultado.get('h3_g_count')}")
+        print(f"Tabelas: {resultado.get('table_count')}")
+        print(f"Resultados parseados: {resultado.get('resultados_encontrados')}")
+
+        if resultado.get('resultados_amostra'):
+            print(f"\nAmostra:")
+            for r in resultado.get('resultados_amostra', []):
+                p1 = r['premios'][0]['milhar'] if r.get('premios') else 'N/A'
+                print(f"  {r['horario']} {r['loteria']}: 1o={p1}")
+
+        if resultado.get('markdown_preview'):
+            print(f"\n{'='*50}")
+            print("Markdown preview:")
+            print(resultado.get('markdown_preview'))
+
+        if resultado.get('error'):
+            print(f"\nERRO: {resultado.get('error')}")
+
+    elif comando == "todos":
+        print(f"Scraping todos os estados para {data or 'hoje'}...")
+        resultado = scrape_todos_v2.remote(data)
+        print(f"\nResultado: {resultado}")
+
+    elif comando == "historico":
+        print(f"\n{'#'*70}")
+        print(f"# SCRAPE HISTÓRICO: ÚLTIMOS {dias} DIAS")
+        print(f"{'#'*70}\n")
+        resultado = scrape_ultimos_dias.remote(dias)
+        print(f"\nResultado final: {resultado}")
+
+    elif comando == "verificar":
+        data_verificar = data or datetime.now().strftime("%Y-%m-%d")
+        print(f"\n{'#'*70}")
+        print(f"# VERIFICAR PRÊMIOS: {data_verificar}")
+        print(f"{'#'*70}\n")
+        resultado = verificar_premios_v2.remote(data_verificar)
+        print(f"\nResultado: {resultado}")
+
+    else:
+        print(f"Comando: {comando}")
+        print("Comandos válidos: scrape, teste, todos, historico, verificar")

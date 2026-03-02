@@ -1,0 +1,145 @@
+/**
+ * Layout Modern - Theme Tokens
+ * Estilo: Cassino/Bet365 com sidebar e glassmorphism
+ */
+
+[data-layout="modern"] {
+  /* ==================== LAYOUT STRUCTURE ==================== */
+
+  /* Sidebar */
+  --modern-sidebar-width: 16rem; /* 256px */
+  --modern-sidebar-collapsed-width: 4rem; /* 64px */
+  --modern-sidebar-transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Container */
+  --modern-container-max-width: 100%; /* Full width com sidebar */
+  --modern-container-padding: 2rem;
+  --modern-header-height: 4.5rem;
+
+  /* Grid de Modalidades */
+  --modern-grid-columns: repeat(auto-fill, minmax(280px, 1fr));
+  --modern-grid-gap: 1.5rem;
+
+  /* ==================== DESIGN TOKENS ==================== */
+
+  /* Border Radius */
+  --modern-card-radius: 1rem; /* 16px - mais arredondado */
+  --modern-button-radius: 0.75rem;
+  --modern-input-radius: 0.5rem;
+
+  /* Shadows (mais pronunciadas) */
+  --modern-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --modern-card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+  --modern-sidebar-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+
+  /* Glassmorphism */
+  --modern-glass-bg: rgba(255, 255, 255, 0.1);
+  --modern-glass-border: 1px solid rgba(255, 255, 255, 0.2);
+  --modern-glass-blur: blur(10px);
+
+  /* Spacing */
+  --modern-spacing-xs: 0.5rem;
+  --modern-spacing-sm: 1rem;
+  --modern-spacing-md: 1.5rem;
+  --modern-spacing-lg: 2rem;
+  --modern-spacing-xl: 3rem;
+
+  /* Transitions */
+  --modern-transition-fast: 0.15s ease-in-out;
+  --modern-transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --modern-transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ==================== COLOR OVERRIDES ==================== */
+  /* Cores mais vibrantes que o default */
+
+  /* Mantém as cores base do ThemeInjector, mas adiciona gradientes */
+  --modern-gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  --modern-gradient-accent: linear-gradient(135deg, var(--color-accent-teal) 0%, var(--color-accent-green) 100%);
+
+  /* Background com textura sutil */
+  --modern-bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+
+  /* ==================== TYPOGRAPHY ==================== */
+
+  /* Fontes mais modernas */
+  --modern-font-heading: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --modern-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Tamanhos */
+  --modern-text-xs: 0.75rem;
+  --modern-text-sm: 0.875rem;
+  --modern-text-base: 1rem;
+  --modern-text-lg: 1.125rem;
+  --modern-text-xl: 1.25rem;
+  --modern-text-2xl: 1.5rem;
+  --modern-text-3xl: 1.875rem;
+
+  /* Weights */
+  --modern-font-normal: 400;
+  --modern-font-medium: 500;
+  --modern-font-semibold: 600;
+  --modern-font-bold: 700;
+
+  /* ==================== Z-INDEX ==================== */
+
+  --modern-z-sidebar: 40;
+  --modern-z-header: 50;
+  --modern-z-modal: 100;
+  --modern-z-toast: 200;
+}
+
+/* ==================== RESPONSIVE BREAKPOINTS ==================== */
+
+/* Tablet - sidebar colapsada */
+@media (max-width: 1024px) {
+  [data-layout="modern"] {
+    --modern-sidebar-width: 4rem;
+    --modern-container-padding: 1.5rem;
+    --modern-grid-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/* Mobile - sem sidebar, bottom nav */
+@media (max-width: 768px) {
+  [data-layout="modern"] {
+    --modern-sidebar-width: 0;
+    --modern-container-padding: 1rem;
+    --modern-grid-columns: 1fr;
+    --modern-card-radius: 0.75rem;
+  }
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+[data-layout="modern"] .modern-glass {
+  background: var(--modern-glass-bg);
+  border: var(--modern-glass-border);
+  backdrop-filter: var(--modern-glass-blur);
+  -webkit-backdrop-filter: var(--modern-glass-blur);
+}
+
+[data-layout="modern"] .modern-card {
+  border-radius: var(--modern-card-radius);
+  box-shadow: var(--modern-card-shadow);
+  transition: box-shadow var(--modern-transition-normal);
+}
+
+[data-layout="modern"] .modern-card:hover {
+  box-shadow: var(--modern-card-shadow-hover);
+}
+
+[data-layout="modern"] .modern-gradient-bg {
+  background: var(--modern-gradient-primary);
+}
+
+/* Bottom nav para mobile */
+[data-layout="modern"] .modern-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--modern-z-header);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
