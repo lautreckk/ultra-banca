@@ -280,16 +280,17 @@ export async function updateSession(request: NextRequest) {
   const existingPlatformId = request.cookies.get('platform_id')?.value;
 
   // Para rotas de ADMIN: respeitar o cookie existente (admin pode escolher plataforma)
-  // Para banca: usar cookie existente se já resolvido, senão resolver pelo domínio
+  // Para banca (domínios não-admin): SEMPRE resolver pelo domínio para evitar
+  // que um cookie de outra plataforma mostre a banca errada
   const isAdminPath = pathname.startsWith('/admin');
 
   let platformId: string;
 
-  if (existingPlatformId) {
-    // Cookie já existe - reusar sem query ao banco
+  if (existingPlatformId && adminDomainAccess) {
+    // Domínio admin: reusar cookie (admin pode trocar plataforma manualmente)
     platformId = existingPlatformId;
   } else {
-    // Primeiro acesso: resolver pelo domínio
+    // Domínio de banca OU primeiro acesso: resolver pelo domínio
     const platformResult = await resolvePlatformByDomain(supabase, host);
 
     if (!platformResult) {
@@ -311,7 +312,9 @@ export async function updateSession(request: NextRequest) {
 
   // Setar cookies no RESPONSE para o browser armazenar.
   // Feito DEPOIS do getUser() porque ele pode recriar supabaseResponse.
-  if (!isAdminPath || !existingPlatformId) {
+  // Para domínios de banca: SEMPRE setar para garantir que o cookie reflete o domínio correto.
+  // Para domínio admin: só setar se não existia cookie antes (admin controla via switchPlatform).
+  if (!adminDomainAccess || !existingPlatformId) {
     supabaseResponse.cookies.set('platform_id', platformId, {
       httpOnly: false, // Client precisa acessar para passar no signup
       secure: process.env.NODE_ENV === 'production',
@@ -365,7 +368,15 @@ export async function updateSession(request: NextRequest) {
     // Domínios de banca devem ir direto para o login
     // Em dev (localhost), também redireciona para /login para simular banca
     if ((!adminDomainAccess || devDomain) && pathname === '/') {
-      return redirect(request, '/login');
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      // Preservar código de convite/afiliado (tanto ?p= quanto ?ref=)
+      const inviteCode = request.nextUrl.searchParams.get('p') || request.nextUrl.searchParams.get('ref');
+      if (inviteCode) {
+        url.searchParams.delete('ref');
+        url.searchParams.set('p', inviteCode);
+      }
+      return NextResponse.redirect(url);
     }
 
     // A3: Rotas públicas ou auth -> Permitir
