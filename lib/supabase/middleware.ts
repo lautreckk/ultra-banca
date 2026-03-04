@@ -172,12 +172,13 @@ async function resolvePlatformByDomain(
   // Normalizar: remover www. e converter para minúsculas
   domain = domain.toLowerCase().replace(/^www\./, '');
 
-  // 1. Tentar pelo domínio completo
+  // 1. Tentar pelo domínio (sem www e com www, para cobrir ambos os formatos no banco)
   const { data: platform, error } = await supabase
     .from('platforms')
     .select('id, domain, slug, name, ativo')
-    .eq('domain', domain)
+    .in('domain', [domain, `www.${domain}`])
     .eq('ativo', true)
+    .limit(1)
     .single();
 
   if (platform) {
