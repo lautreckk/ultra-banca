@@ -173,17 +173,25 @@ async function resolvePlatformByDomain(
   domain = domain.toLowerCase().replace(/^www\./, '');
 
   // 1. Tentar pelo domínio (sem www e com www, para cobrir ambos os formatos no banco)
+  const domainWithWww = `www.${domain}`;
   const { data: platform, error } = await supabase
     .from('platforms')
     .select('id, domain, slug, name, ativo')
-    .in('domain', [domain, `www.${domain}`])
+    .or(`domain.eq.${domain},domain.eq.${domainWithWww}`)
     .eq('ativo', true)
     .limit(1)
-    .single();
+    .maybeSingle();
+
+  if (error) {
+    console.error('[MULTI-TENANT] Erro ao resolver plataforma por domínio:', { domain, domainWithWww, error: error.message });
+  }
 
   if (platform) {
+    console.log('[MULTI-TENANT] ✅ Plataforma resolvida:', { domain, platformId: platform.id, name: platform.name });
     return { platformId: platform.id, platform };
   }
+
+  console.warn('[MULTI-TENANT] ⚠️ Nenhuma plataforma encontrada para domínio:', { domain, domainWithWww });
 
   // 2. Tentar pelo slug (primeiro segmento do domínio)
   // Ex: bancapantanal.vercel.app -> slug = bancapantanal
