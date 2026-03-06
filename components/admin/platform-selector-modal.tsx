@@ -41,8 +41,8 @@ export function PlatformSelectorModal({
     startTransition(async () => {
       const result = await switchPlatform(platformId);
       if (result.success) {
-        router.refresh();
-        onClose();
+        // Full reload para garantir que todas as páginas client re-busquem dados da nova plataforma
+        window.location.reload();
       } else {
         alert(result.error);
         setSelectedId(null);
