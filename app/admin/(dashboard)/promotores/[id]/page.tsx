@@ -47,6 +47,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { getPlatformDomain } from '@/lib/utils/platform';
 
 // =============================================
 // EDIT MODAL
@@ -464,8 +465,13 @@ export default function PromotorDetailPage() {
   const [comissoes, setComissoes] = useState<PromotorComissao[]>([]);
   const [comissoesTotal, setComissoesTotal] = useState(0);
   const [comissoesPage, setComissoesPage] = useState(1);
+  const [referidosDateFrom, setReferidosDateFrom] = useState('');
+  const [referidosDateTo, setReferidosDateTo] = useState('');
+  const [comissoesDateFrom, setComissoesDateFrom] = useState('');
+  const [comissoesDateTo, setComissoesDateTo] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [platformDomain, setPlatformDomain] = useState<string>('');
 
   // Modals
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -494,23 +500,33 @@ export default function PromotorDetailPage() {
 
   const fetchReferidos = useCallback(async () => {
     try {
-      const result = await getPromotorReferidos(promotorId, { page: referidosPage, pageSize });
+      const result = await getPromotorReferidos(promotorId, {
+        page: referidosPage,
+        pageSize,
+        dateFrom: referidosDateFrom || undefined,
+        dateTo: referidosDateTo || undefined,
+      });
       setReferidos(result.referidos);
       setReferidosTotal(result.total);
     } catch (error) {
       console.error('Error fetching referidos:', error);
     }
-  }, [promotorId, referidosPage]);
+  }, [promotorId, referidosPage, referidosDateFrom, referidosDateTo]);
 
   const fetchComissoes = useCallback(async () => {
     try {
-      const result = await getPromotorComissoes(promotorId, { page: comissoesPage, pageSize });
+      const result = await getPromotorComissoes(promotorId, {
+        page: comissoesPage,
+        pageSize,
+        dateFrom: comissoesDateFrom || undefined,
+        dateTo: comissoesDateTo || undefined,
+      });
       setComissoes(result.comissoes);
       setComissoesTotal(result.total);
     } catch (error) {
       console.error('Error fetching comissoes:', error);
     }
-  }, [promotorId, comissoesPage]);
+  }, [promotorId, comissoesPage, comissoesDateFrom, comissoesDateTo]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -519,6 +535,7 @@ export default function PromotorDetailPage() {
       setIsLoading(false);
     };
     loadData();
+    getPlatformDomain().then(domain => setPlatformDomain(domain));
   }, [fetchPromotor, fetchStats]);
 
   useEffect(() => {
@@ -529,10 +546,15 @@ export default function PromotorDetailPage() {
     fetchComissoes();
   }, [fetchComissoes]);
 
+  const getPromotorLink = () => {
+    if (!promotor) return '';
+    const baseUrl = platformDomain ? `https://${platformDomain}` : (typeof window !== 'undefined' ? window.location.origin : '');
+    return `${baseUrl}?ref=${promotor.codigo_afiliado}`;
+  };
+
   const handleCopyLink = () => {
-    if (!promotor) return;
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const link = `${baseUrl}?ref=${promotor.codigo_afiliado}`;
+    const link = getPromotorLink();
+    if (!link) return;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -674,7 +696,7 @@ export default function PromotorDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex-1 bg-zinc-800 rounded-xl px-4 py-3 font-mono text-sm text-zinc-300 truncate">
-            {typeof window !== 'undefined' ? `${window.location.origin}?ref=${promotor.codigo_afiliado}` : `...?ref=${promotor.codigo_afiliado}`}
+            {getPromotorLink() || `...?ref=${promotor.codigo_afiliado}`}
           </div>
           <Button
             variant="outline"
@@ -794,7 +816,33 @@ export default function PromotorDetailPage() {
       {/* Referidos Table */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
         <div className="p-4 border-b border-zinc-800">
-          <h3 className="font-semibold text-white">Indicados ({referidosTotal})</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 className="font-semibold text-white">Indicados ({referidosTotal})</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-zinc-400">De:</span>
+              <input
+                type="date"
+                value={referidosDateFrom}
+                onChange={(e) => { setReferidosDateFrom(e.target.value); setReferidosPage(1); }}
+                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+              />
+              <span className="text-xs text-zinc-400">Até:</span>
+              <input
+                type="date"
+                value={referidosDateTo}
+                onChange={(e) => { setReferidosDateTo(e.target.value); setReferidosPage(1); }}
+                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+              />
+              {(referidosDateFrom || referidosDateTo) && (
+                <button
+                  onClick={() => { setReferidosDateFrom(''); setReferidosDateTo(''); setReferidosPage(1); }}
+                  className="text-xs text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         {referidos.length === 0 ? (
           <div className="p-8 text-center text-zinc-400">
@@ -860,7 +908,33 @@ export default function PromotorDetailPage() {
       {/* Comissões Table */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
         <div className="p-4 border-b border-zinc-800">
-          <h3 className="font-semibold text-white">Histórico de Comissões ({comissoesTotal})</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 className="font-semibold text-white">Histórico de Comissões ({comissoesTotal})</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-zinc-400">De:</span>
+              <input
+                type="date"
+                value={comissoesDateFrom}
+                onChange={(e) => { setComissoesDateFrom(e.target.value); setComissoesPage(1); }}
+                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+              />
+              <span className="text-xs text-zinc-400">Até:</span>
+              <input
+                type="date"
+                value={comissoesDateTo}
+                onChange={(e) => { setComissoesDateTo(e.target.value); setComissoesPage(1); }}
+                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+              />
+              {(comissoesDateFrom || comissoesDateTo) && (
+                <button
+                  onClick={() => { setComissoesDateFrom(''); setComissoesDateTo(''); setComissoesPage(1); }}
+                  className="text-xs text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         {comissoes.length === 0 ? (
           <div className="p-8 text-center text-zinc-400">

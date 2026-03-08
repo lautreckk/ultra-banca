@@ -573,15 +573,15 @@ export async function resetPromotorPassword(
 
 export async function getPromotorReferidos(
   promotorId: string,
-  params: { page?: number; pageSize?: number } = {}
+  params: { page?: number; pageSize?: number; dateFrom?: string; dateTo?: string } = {}
 ): Promise<{ referidos: PromotorReferido[]; total: number }> {
   await requireAdmin();
   const supabase = await createClient();
-  const { page = 1, pageSize = 20 } = params;
+  const { page = 1, pageSize = 20, dateFrom, dateTo } = params;
   const offset = (page - 1) * pageSize;
 
   // Buscar referidos com dados do profile
-  const { data: referidos, count, error } = await supabase
+  let query = supabase
     .from('promotor_referidos')
     .select(`
       id,
@@ -589,7 +589,16 @@ export async function getPromotorReferidos(
       created_at,
       profiles!inner(nome, cpf, telefone)
     `, { count: 'exact' })
-    .eq('promotor_id', promotorId)
+    .eq('promotor_id', promotorId);
+
+  if (dateFrom) {
+    query = query.gte('created_at', `${dateFrom}T00:00:00`);
+  }
+  if (dateTo) {
+    query = query.lte('created_at', `${dateTo}T23:59:59`);
+  }
+
+  const { data: referidos, count, error } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1);
 
@@ -601,17 +610,30 @@ export async function getPromotorReferidos(
   // Buscar totais de depósitos e apostas para cada referido
   const userIds = referidos?.map((r) => r.user_id) || [];
 
+  let depositosQuery = supabase
+    .from('pagamentos')
+    .select('user_id, valor')
+    .in('user_id', userIds)
+    .eq('tipo', 'deposito')
+    .eq('status', 'PAID');
+
+  let apostasQuery = supabase
+    .from('apostas')
+    .select('user_id, valor_total')
+    .in('user_id', userIds);
+
+  if (dateFrom) {
+    depositosQuery = depositosQuery.gte('created_at', `${dateFrom}T00:00:00`);
+    apostasQuery = apostasQuery.gte('created_at', `${dateFrom}T00:00:00`);
+  }
+  if (dateTo) {
+    depositosQuery = depositosQuery.lte('created_at', `${dateTo}T23:59:59`);
+    apostasQuery = apostasQuery.lte('created_at', `${dateTo}T23:59:59`);
+  }
+
   const [depositosResult, apostasResult] = await Promise.all([
-    supabase
-      .from('pagamentos')
-      .select('user_id, valor')
-      .in('user_id', userIds)
-      .eq('tipo', 'deposito')
-      .eq('status', 'PAID'),
-    supabase
-      .from('apostas')
-      .select('user_id, valor_total')
-      .in('user_id', userIds),
+    depositosQuery,
+    apostasQuery,
   ]);
 
   // Agregar totais
@@ -644,11 +666,11 @@ export async function getPromotorReferidos(
 
 export async function getPromotorComissoes(
   promotorId: string,
-  params: { page?: number; pageSize?: number; tipo?: string } = {}
+  params: { page?: number; pageSize?: number; tipo?: string; dateFrom?: string; dateTo?: string } = {}
 ): Promise<{ comissoes: PromotorComissao[]; total: number }> {
   await requireAdmin();
   const supabase = await createClient();
-  const { page = 1, pageSize = 20, tipo } = params;
+  const { page = 1, pageSize = 20, tipo, dateFrom, dateTo } = params;
   const offset = (page - 1) * pageSize;
 
   let query = supabase
@@ -668,6 +690,13 @@ export async function getPromotorComissoes(
 
   if (tipo) {
     query = query.eq('tipo', tipo);
+  }
+
+  if (dateFrom) {
+    query = query.gte('created_at', `${dateFrom}T00:00:00`);
+  }
+  if (dateTo) {
+    query = query.lte('created_at', `${dateTo}T23:59:59`);
   }
 
   const { data, count, error } = await query
