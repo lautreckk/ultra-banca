@@ -16,6 +16,8 @@ export interface DashboardStats {
   saquesHoje: number;
   apostasHoje: number;
   usuariosAtivos: number;
+  depositosPromotores: number;
+  cadastrosTotal: number;
 }
 
 /**
@@ -27,7 +29,7 @@ export interface DashboardStats {
  *
  * Uma única chamada RPC retorna todas as 10 métricas.
  */
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(dateFrom?: string, dateTo?: string): Promise<DashboardStats> {
   await requireAdmin();
 
   const platformId = await getPlatformId();
@@ -36,38 +38,175 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   // Use admin client for cross-platform queries to bypass RLS
   const supabase = isAll ? createAdminClient() : await createClient();
 
-  const { data, error } = await supabase.rpc('get_dashboard_stats', {
-    p_platform_id: isAll ? 'all' : platformId,
-  });
+  const hasDateFilter = dateFrom || dateTo;
 
-  if (error || !data) {
-    console.error('[Dashboard] RPC error:', error);
+  // Se tem filtro de data, faz queries diretas; senão usa RPC padrão
+  if (!hasDateFilter) {
+    const { data, error } = await supabase.rpc('get_dashboard_stats', {
+      p_platform_id: isAll ? 'all' : platformId,
+    });
+
+    // Buscar depósitos de promotores e cadastros separadamente
+    const [depositosPromotores, cadastrosTotal] = await Promise.all([
+      getDepositosPromotores(supabase, platformId, isAll),
+      getCadastrosTotal(supabase, platformId, isAll),
+    ]);
+
+    if (error || !data) {
+      console.error('[Dashboard] RPC error:', error);
+      return {
+        totalGanhos: 0,
+        totalApostas: 0,
+        totalDepositos: 0,
+        totalSaques: 0,
+        depositosDiario: 0,
+        depositosSemanal: 0,
+        depositosMensal: 0,
+        saquesHoje: 0,
+        apostasHoje: 0,
+        usuariosAtivos: 0,
+        depositosPromotores,
+        cadastrosTotal,
+      };
+    }
+
     return {
-      totalGanhos: 0,
-      totalApostas: 0,
-      totalDepositos: 0,
-      totalSaques: 0,
-      depositosDiario: 0,
-      depositosSemanal: 0,
-      depositosMensal: 0,
-      saquesHoje: 0,
-      apostasHoje: 0,
-      usuariosAtivos: 0,
+      totalGanhos: Number(data.totalGanhos) || 0,
+      totalApostas: Number(data.totalApostas) || 0,
+      totalDepositos: Number(data.totalDepositos) || 0,
+      totalSaques: Number(data.totalSaques) || 0,
+      depositosDiario: Number(data.depositosDiario) || 0,
+      depositosSemanal: Number(data.depositosSemanal) || 0,
+      depositosMensal: Number(data.depositosMensal) || 0,
+      saquesHoje: Number(data.saquesHoje) || 0,
+      apostasHoje: Number(data.apostasHoje) || 0,
+      usuariosAtivos: Number(data.usuariosAtivos) || 0,
+      depositosPromotores,
+      cadastrosTotal,
     };
   }
 
-  return {
-    totalGanhos: Number(data.totalGanhos) || 0,
-    totalApostas: Number(data.totalApostas) || 0,
-    totalDepositos: Number(data.totalDepositos) || 0,
-    totalSaques: Number(data.totalSaques) || 0,
-    depositosDiario: Number(data.depositosDiario) || 0,
-    depositosSemanal: Number(data.depositosSemanal) || 0,
-    depositosMensal: Number(data.depositosMensal) || 0,
-    saquesHoje: Number(data.saquesHoje) || 0,
-    apostasHoje: Number(data.apostasHoje) || 0,
-    usuariosAtivos: Number(data.usuariosAtivos) || 0,
+  // Com filtro de data: queries diretas
+  const startDate = dateFrom ? `${dateFrom}T00:00:00` : undefined;
+  const endDate = dateTo ? `${dateTo}T23:59:59` : undefined;
+
+  const buildQuery = (table: string, select: string) => {
+    let query = supabase.from(table).select(select);
+    if (!isAll) query = query.eq('platform_id', platformId);
+    if (startDate) query = query.gte('created_at', startDate);
+    if (endDate) query = query.lte('created_at', endDate);
+    return query;
   };
+
+  // Queries com filtro de data
+  const ganhosQuery = buildQuery('apostas', 'premio_valor').in('status', ['ganhou']);
+  const apostasQuery = buildQuery('apostas', 'id');
+  const depositosQuery = buildQuery('pagamentos', 'valor').eq('tipo', 'deposito').eq('status', 'PAID');
+  const saquesQuery = buildQuery('saques', 'valor_liquido').eq('status', 'PAID');
+  const usuariosQuery = buildQuery('profiles', 'id');
+
+  const [
+    ganhosRes,
+    apostasRes,
+    depositosRes,
+    saquesRes,
+    usuariosRes,
+    depositosPromotores,
+    cadastrosTotal,
+  ] = await Promise.all([
+    ganhosQuery,
+    apostasQuery,
+    depositosQuery,
+    saquesQuery,
+    usuariosQuery,
+    getDepositosPromotores(supabase, platformId, isAll, startDate, endDate),
+    getCadastrosTotal(supabase, platformId, isAll, startDate, endDate),
+  ]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ganhosData = (ganhosRes.data || []) as any[];
+  const ganhosResult = ganhosData.reduce((sum, a) => sum + (Number(a.premio_valor) || 0), 0);
+  const apostasResult = (apostasRes.data || []).length;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const depositosData = (depositosRes.data || []) as any[];
+  const depositosResult = depositosData.reduce((sum, d) => sum + (Number(d.valor) || 0), 0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saquesData = (saquesRes.data || []) as any[];
+  const saquesResult = saquesData.reduce((sum, s) => sum + (Number(s.valor_liquido) || 0), 0);
+  const usuariosResult = (usuariosRes.data || []).length;
+
+  return {
+    totalGanhos: ganhosResult,
+    totalApostas: apostasResult,
+    totalDepositos: depositosResult,
+    totalSaques: saquesResult,
+    depositosDiario: depositosResult, // No filtro de data, diário = total filtrado
+    depositosSemanal: depositosResult,
+    depositosMensal: depositosResult,
+    saquesHoje: saquesResult,
+    apostasHoje: apostasResult,
+    usuariosAtivos: usuariosResult,
+    depositosPromotores,
+    cadastrosTotal,
+  };
+}
+
+/**
+ * Soma dos depósitos (PAID) de usuários indicados por promotores da banca
+ */
+async function getDepositosPromotores(
+  supabase: ReturnType<typeof createAdminClient>,
+  platformId: string,
+  isAll: boolean,
+  startDate?: string,
+  endDate?: string,
+): Promise<number> {
+  // 1. Buscar user_ids dos referidos dos promotores desta plataforma
+  let refQuery = supabase
+    .from('promotor_referidos')
+    .select('user_id, promotores!inner(platform_id)');
+  if (!isAll) {
+    refQuery = refQuery.eq('promotores.platform_id', platformId);
+  }
+  const { data: referidos } = await refQuery;
+
+  if (!referidos || referidos.length === 0) return 0;
+
+  const userIds = referidos.map((r) => r.user_id);
+
+  // 2. Somar depósitos PAID desses usuários
+  let depQuery = supabase
+    .from('pagamentos')
+    .select('valor')
+    .eq('tipo', 'deposito')
+    .eq('status', 'PAID')
+    .in('user_id', userIds);
+  if (!isAll) depQuery = depQuery.eq('platform_id', platformId);
+  if (startDate) depQuery = depQuery.gte('created_at', startDate);
+  if (endDate) depQuery = depQuery.lte('created_at', endDate);
+
+  const { data: depositos } = await depQuery;
+
+  return (depositos || []).reduce((sum, d) => sum + (Number(d.valor) || 0), 0);
+}
+
+/**
+ * Total de cadastros (profiles) na plataforma
+ */
+async function getCadastrosTotal(
+  supabase: ReturnType<typeof createAdminClient>,
+  platformId: string,
+  isAll: boolean,
+  startDate?: string,
+  endDate?: string,
+): Promise<number> {
+  let query = supabase.from('profiles').select('id', { count: 'exact', head: true });
+  if (!isAll) query = query.eq('platform_id', platformId);
+  if (startDate) query = query.gte('created_at', startDate);
+  if (endDate) query = query.lte('created_at', endDate);
+
+  const { count } = await query;
+  return count || 0;
 }
 
 export interface RecentBet {

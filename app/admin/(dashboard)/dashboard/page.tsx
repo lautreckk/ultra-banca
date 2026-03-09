@@ -6,10 +6,11 @@ import {
   getPendingWithdrawals,
 } from '@/lib/admin/actions/dashboard';
 import { requireAdmin } from '@/lib/admin/actions/auth';
-import { StatCard, StatusBadge } from '@/components/admin/shared';
+import { StatusBadge } from '@/components/admin/shared';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { getPlatformId } from '@/lib/utils/platform';
 import { ALL_PLATFORMS_ID } from '@/lib/utils/platform-constants';
+import { DashboardContent } from '@/components/admin/dashboard/dashboard-content';
 import Link from 'next/link';
 
 function LoadingCard() {
@@ -34,63 +35,10 @@ function LoadingTable() {
   );
 }
 
-async function DashboardStats() {
+async function DashboardStatsSection() {
   const stats = await getDashboardStats();
 
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-      <StatCard
-        title="Total de Ganhos (Apostadores)"
-        value={formatCurrency(stats.totalGanhos)}
-        icon="TrendingUp"
-        variant="success"
-      />
-      <StatCard
-        title="Total de Apostas"
-        value={stats.totalApostas.toLocaleString('pt-BR')}
-        subtitle={`${stats.apostasHoje} hoje`}
-        icon="Receipt"
-        variant="info"
-      />
-      <StatCard
-        title="Total de Depósitos"
-        value={formatCurrency(stats.totalDepositos)}
-        icon="ArrowDownToLine"
-        variant="default"
-      />
-      <StatCard
-        title="Total de Saques"
-        value={formatCurrency(stats.totalSaques)}
-        subtitle={`${formatCurrency(stats.saquesHoje)} hoje`}
-        icon="ArrowUpFromLine"
-        variant="warning"
-      />
-      <StatCard
-        title="Depósitos Diário"
-        value={formatCurrency(stats.depositosDiario)}
-        icon="Calendar"
-        variant="default"
-      />
-      <StatCard
-        title="Depósitos Semanal"
-        value={formatCurrency(stats.depositosSemanal)}
-        icon="CalendarDays"
-        variant="default"
-      />
-      <StatCard
-        title="Depósitos Mensal"
-        value={formatCurrency(stats.depositosMensal)}
-        icon="CalendarRange"
-        variant="default"
-      />
-      <StatCard
-        title="Usuários Ativos (7d)"
-        value={stats.usuariosAtivos.toLocaleString('pt-BR')}
-        icon="Users"
-        variant="info"
-      />
-    </div>
-  );
+  return <DashboardContent initialStats={stats} />;
 }
 
 async function RecentBetsTable() {
@@ -345,11 +293,14 @@ export default async function AdminDashboardPage() {
 
       {/* Stats Cards */}
       <Suspense fallback={
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => <LoadingCard key={i} />)}
+        <div className="space-y-4">
+          <div className="h-16 bg-zinc-900/50 border border-zinc-800 rounded-xl animate-pulse" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => <LoadingCard key={i} />)}
+          </div>
         </div>
       }>
-        <DashboardStats />
+        <DashboardStatsSection />
       </Suspense>
 
       {!isAll && (
