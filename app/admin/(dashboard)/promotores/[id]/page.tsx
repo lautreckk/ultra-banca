@@ -466,6 +466,9 @@ export default function PromotorDetailPage() {
   const [comissoes, setComissoes] = useState<PromotorComissao[]>([]);
   const [comissoesTotal, setComissoesTotal] = useState(0);
   const [comissoesPage, setComissoesPage] = useState(1);
+  const [globalDateFrom, setGlobalDateFrom] = useState('');
+  const [globalDateTo, setGlobalDateTo] = useState('');
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [referidosDateFrom, setReferidosDateFrom] = useState('');
   const [referidosDateTo, setReferidosDateTo] = useState('');
   const [comissoesDateFrom, setComissoesDateFrom] = useState('');
@@ -490,9 +493,13 @@ export default function PromotorDetailPage() {
     }
   }, [promotorId]);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (dateFrom?: string, dateTo?: string) => {
     try {
-      const data = await getPromotorStats(promotorId);
+      const data = await getPromotorStats(
+        promotorId,
+        dateFrom || undefined,
+        dateTo || undefined,
+      );
       setStats(data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -706,6 +713,83 @@ export default function PromotorDetailPage() {
           >
             {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
           </Button>
+        </div>
+      </div>
+
+      {/* Filtro Global por Data */}
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="h-4 w-4 text-zinc-400" />
+          <span className="text-sm font-medium text-zinc-300">Resumo por período</span>
+          {(globalDateFrom || globalDateTo) && (
+            <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">
+              Filtro ativo
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="text-xs text-zinc-400">De:</label>
+          <Input
+            type="date"
+            value={globalDateFrom}
+            onChange={(e) => setGlobalDateFrom(e.target.value)}
+            className="w-auto h-8 bg-zinc-800 border-zinc-700 text-white text-sm !min-h-0 !h-8 !py-1"
+            style={{ colorScheme: 'dark' }}
+          />
+          <label className="text-xs text-zinc-400">Até:</label>
+          <Input
+            type="date"
+            value={globalDateTo}
+            onChange={(e) => setGlobalDateTo(e.target.value)}
+            className="w-auto h-8 bg-zinc-800 border-zinc-700 text-white text-sm !min-h-0 !h-8 !py-1"
+            style={{ colorScheme: 'dark' }}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              if (globalDateFrom || globalDateTo) {
+                setIsLoadingStats(true);
+                await fetchStats(globalDateFrom, globalDateTo);
+                // Sincronizar filtros das tabelas
+                setReferidosDateFrom(globalDateFrom);
+                setReferidosDateTo(globalDateTo);
+                setComissoesDateFrom(globalDateFrom);
+                setComissoesDateTo(globalDateTo);
+                setReferidosPage(1);
+                setComissoesPage(1);
+                setIsLoadingStats(false);
+              }
+            }}
+            disabled={isLoadingStats || (!globalDateFrom && !globalDateTo)}
+            className="h-8 border-zinc-700"
+          >
+            {isLoadingStats ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+            <span className={isLoadingStats ? 'ml-1' : ''}>Filtrar</span>
+          </Button>
+          {(globalDateFrom || globalDateTo) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                setGlobalDateFrom('');
+                setGlobalDateTo('');
+                setReferidosDateFrom('');
+                setReferidosDateTo('');
+                setComissoesDateFrom('');
+                setComissoesDateTo('');
+                setReferidosPage(1);
+                setComissoesPage(1);
+                setIsLoadingStats(true);
+                await fetchStats();
+                setIsLoadingStats(false);
+              }}
+              className="h-8 text-zinc-400 hover:text-white"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Limpar
+            </Button>
+          )}
         </div>
       </div>
 

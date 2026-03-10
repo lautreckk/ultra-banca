@@ -740,9 +740,16 @@ export interface PromotorStats {
   saldo_atual: number;
 }
 
-export async function getPromotorStats(promotorId: string): Promise<PromotorStats | null> {
+export async function getPromotorStats(
+  promotorId: string,
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<PromotorStats | null> {
   await requireAdmin();
   const supabase = await createClient();
+
+  const startDate = dateFrom ? `${dateFrom}T00:00:00` : undefined;
+  const endDate = dateTo ? `${dateTo}T23:59:59` : undefined;
 
   // Buscar promotor
   const { data: promotor } = await supabase
@@ -755,34 +762,64 @@ export async function getPromotorStats(promotorId: string): Promise<PromotorStat
     return null;
   }
 
-  // Buscar referidos
-  const { data: referidos, count: totalIndicados } = await supabase
+  // Buscar referidos (com filtro de data opcional no cadastro)
+  let refQuery = supabase
     .from('promotor_referidos')
     .select('user_id', { count: 'exact' })
     .eq('promotor_id', promotorId);
+  if (startDate) refQuery = refQuery.gte('created_at', startDate);
+  if (endDate) refQuery = refQuery.lte('created_at', endDate);
 
-  const userIds = referidos?.map((r) => r.user_id) || [];
+  const { data: referidos, count: totalIndicados } = await refQuery;
 
-  // Buscar totais em paralelo
-  const [depositosResult, apostasResult, comissoesResult] = await Promise.all([
-    userIds.length > 0
-      ? supabase
-          .from('pagamentos')
-          .select('valor')
-          .in('user_id', userIds)
-          .eq('tipo', 'deposito')
-          .eq('status', 'PAID')
-      : { data: [] },
-    userIds.length > 0
-      ? supabase
-          .from('apostas')
-          .select('valor_total')
-          .in('user_id', userIds)
-      : { data: [] },
-    supabase
+  // Para depósitos e apostas, buscar TODOS os referidos (sem filtro de data)
+  // pois queremos os depósitos/apostas no período de todos os indicados
+  const { data: allReferidos } = await supabase
+    .from('promotor_referidos')
+    .select('user_id')
+    .eq('promotor_id', promotorId);
+
+  const allUserIds = allReferidos?.map((r) => r.user_id) || [];
+
+  // Buscar totais em paralelo (com filtro de data)
+  const buildDepQuery = () => {
+    if (allUserIds.length === 0) return { data: [] };
+    let q = supabase
+      .from('pagamentos')
+      .select('valor')
+      .in('user_id', allUserIds)
+      .eq('tipo', 'deposito')
+      .eq('status', 'PAID');
+    if (startDate) q = q.gte('created_at', startDate);
+    if (endDate) q = q.lte('created_at', endDate);
+    return q;
+  };
+
+  const buildApostasQuery = () => {
+    if (allUserIds.length === 0) return { data: [] };
+    let q = supabase
+      .from('apostas')
+      .select('valor_total')
+      .in('user_id', allUserIds);
+    if (startDate) q = q.gte('created_at', startDate);
+    if (endDate) q = q.lte('created_at', endDate);
+    return q;
+  };
+
+  const buildComissoesQuery = () => {
+    let q = supabase
       .from('promotor_comissoes')
       .select('tipo, valor_comissao')
-      .eq('promotor_id', promotorId),
+      .eq('promotor_id', promotorId);
+    if (startDate) q = q.gte('created_at', startDate);
+    if (endDate) q = q.lte('created_at', endDate);
+    return q;
+  };
+
+  const [depositosResult, apostasResult, comissoesResult] = await Promise.all([
+    buildDepQuery(),
+    buildApostasQuery(),
+    buildComissoesQuery(),
   ]);
 
   const totalDepositado = depositosResult.data?.reduce(
