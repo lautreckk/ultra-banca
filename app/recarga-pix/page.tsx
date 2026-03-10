@@ -11,6 +11,7 @@ import { AdPopup } from '@/components/shared/ad-popup';
 import { trackPurchase, trackInitiateCheckout, generateEventId } from '@/lib/tracking/facebook';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { usePaymentContext } from '@/components/shared/payment-watcher-provider';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface PaymentData {
   id: string;
@@ -160,7 +161,7 @@ export default function RecargaPixPage() {
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
       if (authError || !authUser) {
-        router.push('/login');
+        router.push(getUrlWithUtm('/login'));
         return;
       }
 
@@ -168,7 +169,7 @@ export default function RecargaPixPage() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        router.push('/login');
+        router.push(getUrlWithUtm('/login'));
         return;
       }
 
@@ -363,7 +364,7 @@ export default function RecargaPixPage() {
             <p className="text-sm text-zinc-500 mb-8">Pedido: {paymentData?.orderNumber}</p>
             <div className="space-y-3 max-w-xs mx-auto">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push(getUrlWithUtm('/'))}
                 className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] font-bold text-zinc-900 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                 aria-label="Voltar ao jogo"
               >

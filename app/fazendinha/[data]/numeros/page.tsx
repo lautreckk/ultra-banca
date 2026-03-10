@@ -9,6 +9,7 @@ import {
   getFazendinhaLoteriaById,
   formatPremio,
 } from '@/lib/constants';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface FazendinhaNumbersPageProps {
   params: Promise<{ data: string }>;
@@ -73,7 +74,7 @@ function NumbersContent({ data }: { data: string }) {
       data: data,
     });
 
-    router.push(`/fazendinha/confirmar?${params.toString()}`);
+    router.push(getUrlWithUtm(`/fazendinha/confirmar?${params.toString()}`));
   };
 
   return (

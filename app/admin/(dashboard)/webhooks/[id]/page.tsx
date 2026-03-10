@@ -35,6 +35,7 @@ import {
   Zap,
   Timer,
 } from 'lucide-react';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function WebhookDetailPage() {
   const params = useParams();
@@ -188,7 +189,7 @@ export default function WebhookDetailPage() {
     try {
       const result = await deleteWebhook(webhookId);
       if (result.success) {
-        router.push('/admin/webhooks');
+        router.push(getUrlWithUtm('/admin/webhooks'));
       } else {
         alert(result.error || 'Erro ao deletar webhook');
       }

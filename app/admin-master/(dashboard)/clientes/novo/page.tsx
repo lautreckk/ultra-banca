@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClientRecord } from '@/lib/admin/actions/clients';
 import { Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function NovoClientePage() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function NovoClientePage() {
     startTransition(async () => {
       const result = await createClientRecord(form);
       if (result.success) {
-        router.push('/admin-master/clientes');
+        router.push(getUrlWithUtm('/admin-master/clientes'));
       } else {
         setError(result.error || 'Erro ao criar cliente');
       }

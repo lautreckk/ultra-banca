@@ -48,6 +48,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { getPlatformDomain } from '@/lib/utils/platform';
+import { getUrlWithUtm } from '@/lib/utm';
 
 // =============================================
 // EDIT MODAL
@@ -582,7 +583,7 @@ export default function PromotorDetailPage() {
   const handleDelete = async () => {
     const result = await deletePromotor(promotorId);
     if (result.success) {
-      router.push('/admin/promotores');
+      router.push(getUrlWithUtm('/admin/promotores'));
     }
   };
 
@@ -819,27 +820,32 @@ export default function PromotorDetailPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 className="font-semibold text-white">Indicados ({referidosTotal})</h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-zinc-400">De:</span>
-              <input
+              <label className="text-xs text-zinc-400">De:</label>
+              <Input
                 type="date"
                 value={referidosDateFrom}
                 onChange={(e) => { setReferidosDateFrom(e.target.value); setReferidosPage(1); }}
-                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+                className="w-auto h-8 bg-zinc-800 border-zinc-700 text-white text-sm"
+                style={{ colorScheme: 'dark' }}
               />
-              <span className="text-xs text-zinc-400">Até:</span>
-              <input
+              <label className="text-xs text-zinc-400">Até:</label>
+              <Input
                 type="date"
                 value={referidosDateTo}
                 onChange={(e) => { setReferidosDateTo(e.target.value); setReferidosPage(1); }}
-                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+                className="w-auto h-8 bg-zinc-800 border-zinc-700 text-white text-sm"
+                style={{ colorScheme: 'dark' }}
               />
               {(referidosDateFrom || referidosDateTo) && (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => { setReferidosDateFrom(''); setReferidosDateTo(''); setReferidosPage(1); }}
-                  className="text-xs text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+                  className="h-8 border-zinc-700 text-zinc-400 hover:text-white text-xs"
                 >
+                  <X className="h-3 w-3 mr-1" />
                   Limpar
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -911,27 +917,32 @@ export default function PromotorDetailPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 className="font-semibold text-white">Histórico de Comissões ({comissoesTotal})</h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-zinc-400">De:</span>
-              <input
+              <label className="text-xs text-zinc-400">De:</label>
+              <Input
                 type="date"
                 value={comissoesDateFrom}
                 onChange={(e) => { setComissoesDateFrom(e.target.value); setComissoesPage(1); }}
-                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+                className="w-auto h-8 bg-zinc-800 border-zinc-700 text-white text-sm"
+                style={{ colorScheme: 'dark' }}
               />
-              <span className="text-xs text-zinc-400">Até:</span>
-              <input
+              <label className="text-xs text-zinc-400">Até:</label>
+              <Input
                 type="date"
                 value={comissoesDateTo}
                 onChange={(e) => { setComissoesDateTo(e.target.value); setComissoesPage(1); }}
-                className="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg px-2 py-1.5 [color-scheme:dark]"
+                className="w-auto h-8 bg-zinc-800 border-zinc-700 text-white text-sm"
+                style={{ colorScheme: 'dark' }}
               />
               {(comissoesDateFrom || comissoesDateTo) && (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => { setComissoesDateFrom(''); setComissoesDateTo(''); setComissoesPage(1); }}
-                  className="text-xs text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+                  className="h-8 border-zinc-700 text-zinc-400 hover:text-white text-xs"
                 >
+                  <X className="h-3 w-3 mr-1" />
                   Limpar
-                </button>
+                </Button>
               )}
             </div>
           </div>

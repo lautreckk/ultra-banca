@@ -30,6 +30,7 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface WebhookFormData {
   name: string;
@@ -375,7 +376,7 @@ export default function AdminWebhooksPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/admin/webhooks/${row.id}`);
+              router.push(getUrlWithUtm(`/admin/webhooks/${row.id}`));
             }}
             className="p-1.5 rounded-lg hover:bg-zinc-700/30 text-zinc-500 hover:text-white transition-colors"
             title="Ver detalhes"

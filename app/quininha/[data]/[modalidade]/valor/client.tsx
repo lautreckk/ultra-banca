@@ -6,6 +6,7 @@ import { ChevronLeft, Menu, RefreshCw, Info } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface QuininhaValorClientProps {
   data: string;
@@ -43,7 +44,7 @@ function QuininhaValorContent({ data, modalidade }: QuininhaValorClientProps) {
 
     // Navigate to resumo with mode
     router.push(
-      `/quininha/${data}/${modalidadeId}/resumo?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorNum}&mode=${mode}`
+      getUrlWithUtm(`/quininha/${data}/${modalidadeId}/resumo?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorNum}&mode=${mode}`)
     );
   };
 

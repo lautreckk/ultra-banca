@@ -571,6 +571,87 @@ export async function rejectWithdrawal(
   return { success: true };
 }
 
+export async function rejectAllPendingWithdrawals(): Promise<{ success: boolean; rejected: number; errors: number; error?: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: { user: admin } } = await supabase.auth.getUser();
+  const platformId = await getPlatformId();
+
+  // Fetch all PENDING withdrawals for this platform
+  const { data: pendingWithdrawals, error: fetchError } = await supabase
+    .from('saques')
+    .select('id, user_id, valor, chave_pix, tipo_chave, wallet_type')
+    .eq('platform_id', platformId)
+    .eq('status', 'PENDING');
+
+  if (fetchError || !pendingWithdrawals) {
+    return { success: false, rejected: 0, errors: 0, error: 'Erro ao buscar saques pendentes' };
+  }
+
+  if (pendingWithdrawals.length === 0) {
+    return { success: true, rejected: 0, errors: 0, error: 'Nenhum saque pendente encontrado' };
+  }
+
+  const adminClient = createAdminClient();
+  let rejected = 0;
+  let errors = 0;
+
+  for (const withdrawal of pendingWithdrawals) {
+    try {
+      // ATOMIC: Transition status PENDING→REJECTED
+      const { data: transitioned } = await adminClient.rpc('atomic_status_transition', {
+        p_table: 'saques',
+        p_id: withdrawal.id,
+        p_from_status: 'PENDING',
+        p_to_status: 'REJECTED',
+      });
+
+      if (!transitioned) {
+        errors++;
+        continue;
+      }
+
+      // Update error message
+      await adminClient.from('saques').update({
+        error_message: 'Rejeitado em lote pelo administrador',
+      }).eq('id', withdrawal.id);
+
+      // ATOMIC: Return balance to correct wallet
+      const walletType = withdrawal.wallet_type || 'tradicional';
+      const balanceField = walletType === 'cassino' ? 'saldo_cassino' : 'saldo';
+
+      await adminClient.rpc('atomic_credit_balance', {
+        p_user_id: withdrawal.user_id,
+        p_amount: Number(withdrawal.valor),
+        p_wallet: balanceField,
+      });
+
+      rejected++;
+    } catch (err) {
+      console.error(`Error rejecting withdrawal ${withdrawal.id}:`, err);
+      errors++;
+    }
+  }
+
+  // Audit log for bulk rejection
+  await logAudit({
+    actorId: admin?.id || null,
+    action: AuditActions.WITHDRAWAL_REJECTED,
+    entity: `bulk-reject`,
+    details: {
+      total_pending: pendingWithdrawals.length,
+      rejected,
+      errors,
+      platform_id: platformId,
+      reason: 'Rejeição em lote pelo administrador',
+      timestamp: new Date().toISOString(),
+    },
+  });
+
+  return { success: true, rejected, errors };
+}
+
 // =============================================
 // CHECK PENDING PAYMENTS (POLLING)
 // =============================================

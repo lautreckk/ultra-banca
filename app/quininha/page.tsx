@@ -5,6 +5,7 @@ import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
 import { BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 // Generate next 6 days
 function getNextDays(): { date: Date; dayNum: number; dayName: string }[] {
@@ -30,7 +31,7 @@ export default function QuininhaPage() {
 
   const handleSelectDay = (date: Date) => {
     const dateStr = date.toLocaleDateString('en-CA');
-    router.push(`/quininha/${dateStr}`);
+    router.push(getUrlWithUtm(`/quininha/${dateStr}`));
   };
 
   return (

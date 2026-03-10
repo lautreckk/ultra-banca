@@ -14,6 +14,7 @@ import {
   type CreatePromotorData,
   type UpdatePromotorData,
 } from '@/lib/admin/actions/promotores';
+import { getPlatformDomain } from '@/lib/utils/platform';
 import {
   Eye,
   Edit,
@@ -40,6 +41,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { getUrlWithUtm } from '@/lib/utm';
 
 // =============================================
 // CREATE/EDIT MODAL
@@ -706,6 +708,11 @@ export default function AdminPromotoresPage() {
   const [comissaoAutomatica, setComissaoAutomatica] = useState(true);
   const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [platformDomain, setPlatformDomain] = useState<string>('');
+
+  useEffect(() => {
+    getPlatformDomain().then(domain => setPlatformDomain(domain));
+  }, []);
 
   const fetchPromotores = useCallback(async () => {
     setIsLoading(true);
@@ -803,7 +810,7 @@ export default function AdminPromotoresPage() {
   };
 
   const handleCopyLink = (codigo: string) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const baseUrl = platformDomain ? `https://${platformDomain}` : (typeof window !== 'undefined' ? window.location.origin : '');
     const link = `${baseUrl}?ref=${codigo}`;
     navigator.clipboard.writeText(link);
     setCopied(codigo);
@@ -811,7 +818,7 @@ export default function AdminPromotoresPage() {
   };
 
   const handleView = (promotor: Promotor) => {
-    window.location.href = `/admin/promotores/${promotor.id}`;
+    window.location.href = getUrlWithUtm(`/admin/promotores/${promotor.id}`);
   };
 
   const totalPages = Math.ceil(total / pageSize);

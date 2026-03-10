@@ -6,6 +6,7 @@ import { getUsers, getUserById, updateUserProfile, type UserProfile, type Update
 import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface EditModalProps {
   user: UserProfile | null;
@@ -434,7 +435,7 @@ export default function AdminClientesPage() {
   };
 
   const handleView = (user: UserProfile) => {
-    window.location.href = `/admin/clientes/${user.id}`;
+    window.location.href = getUrlWithUtm(`/admin/clientes/${user.id}`);
   };
 
   const handleSaveUser = async (userId: string, data: UpdateUserProfileData): Promise<{ success: boolean; error?: string }> => {

@@ -9,6 +9,7 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface SeninhaFinalizarClientProps {
   data: string;
@@ -84,7 +85,7 @@ function SeninhaFinalizarContent({ data: dataJogo, modalidade }: SeninhaFinaliza
   };
 
   const handleVoltar = () => {
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
   };
 
   const handleShare = () => {

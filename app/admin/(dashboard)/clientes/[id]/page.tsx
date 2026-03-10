@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, User, Wallet, Receipt, Calendar, Save, X, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function AdminClienteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -67,7 +68,7 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
         // Refresh user data
         const data = await getUserById(id);
         setUser(data);
-        router.push(`/admin/clientes/${id}`);
+        router.push(getUrlWithUtm(`/admin/clientes/${id}`));
       }
     } catch {
       setError('Erro ao salvar alterações');

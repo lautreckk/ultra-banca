@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, UserPlus, Loader2 } from 'lucide-react';
 import { trackLogin } from '@/lib/actions/auth';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function PromotorLoginPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function PromotorLoginPage() {
         .single();
 
       if (promotorRole) {
-        router.push('/promotor');
+        router.push(getUrlWithUtm('/promotor'));
       }
     }
   };
@@ -84,7 +85,7 @@ export default function PromotorLoginPage() {
 
       // Sucesso - rastrear login e redirecionar para dashboard do promotor
       trackLogin().catch(() => {});
-      router.push('/promotor');
+      router.push(getUrlWithUtm('/promotor'));
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       setError('Erro ao fazer login. Tente novamente.');

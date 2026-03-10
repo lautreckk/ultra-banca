@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, User, Shield, Loader2, ArrowLeft } from 'lucide-react';
 import { trackLogin } from '@/lib/actions/auth';
+import { getUrlWithUtm } from '@/lib/utm';
 
 type LoginStep = 'credentials' | 'mfa';
 
@@ -40,7 +41,7 @@ export default function AdminLoginPage() {
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.currentLevel === 'aal2' || aalData?.nextLevel === 'aal1') {
         // Já está logado com nível adequado
-        window.location.href = '/admin/dashboard';
+        window.location.href = getUrlWithUtm('/admin/dashboard');
       }
     }
   };
@@ -105,7 +106,7 @@ export default function AdminLoginPage() {
         console.error('Erro ao verificar AAL:', aalError);
         // Continuar sem MFA se houver erro
         trackLogin().catch(() => {});
-        window.location.href = '/admin/dashboard';
+        window.location.href = getUrlWithUtm('/admin/dashboard');
         return;
       }
 
@@ -117,7 +118,7 @@ export default function AdminLoginPage() {
         if (factorsError || !factorsData?.totp || factorsData.totp.length === 0) {
           // Sem fatores, continuar normal
           trackLogin().catch(() => {});
-          window.location.href = '/admin/dashboard';
+          window.location.href = getUrlWithUtm('/admin/dashboard');
           return;
         }
 
@@ -127,7 +128,7 @@ export default function AdminLoginPage() {
         if (!verifiedFactor) {
           // Nenhum fator verificado, continuar normal
           trackLogin().catch(() => {});
-          window.location.href = '/admin/dashboard';
+          window.location.href = getUrlWithUtm('/admin/dashboard');
           return;
         }
 
@@ -140,7 +141,7 @@ export default function AdminLoginPage() {
 
       // Sem MFA ou já em aal2, rastrear login e redirecionar
       trackLogin().catch(() => {});
-      window.location.href = '/admin/dashboard';
+      window.location.href = getUrlWithUtm('/admin/dashboard');
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       setError('Erro ao fazer login. Tente novamente.');
@@ -187,7 +188,7 @@ export default function AdminLoginPage() {
       if (newAalData?.currentLevel === 'aal2') {
         // Rastrear login após MFA
         trackLogin().catch(() => {});
-        window.location.href = '/admin/dashboard';
+        window.location.href = getUrlWithUtm('/admin/dashboard');
       } else {
         setError('Erro na verificação. Tente fazer login novamente.');
         setStep('credentials');

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout';
 import { Search } from 'lucide-react';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function PuleCodigoPage() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function PuleCodigoPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (codigo.trim()) {
-      router.push(`/relatorios/pules/${codigo.trim()}`);
+      router.push(getUrlWithUtm(`/relatorios/pules/${codigo.trim()}`));
     }
   };
 

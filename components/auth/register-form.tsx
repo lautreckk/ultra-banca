@@ -11,6 +11,7 @@ import { trackCompleteRegistration, trackLead } from '@/lib/tracking/facebook';
 import { trackLeadCAPI } from '@/lib/tracking/facebook-capi';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { sanitizeInput } from '@/lib/utils/sanitize';
+import { getUrlWithUtm } from '@/lib/utm';
 
 function getPlatformIdFromCookie(): string | null {
   if (typeof document === 'undefined') return null;
@@ -133,7 +134,7 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
         email: cpfToEmail(formData.cpf, config.slug),
         phone: formData.telefone.replace(/\D/g, '') || undefined,
       }).catch(() => {});
-      window.location.replace('/login?cadastro=sucesso');
+      window.location.replace(getUrlWithUtm('/login?cadastro=sucesso'));
     } catch {
       setError('Erro ao criar conta. Tente novamente.');
       setLoading(false);
@@ -340,7 +341,7 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
       {/* Back to Login */}
       <button
         type="button"
-        onClick={() => router.push('/login')}
+        onClick={() => router.push(getUrlWithUtm('/login'))}
         className="w-full h-14 rounded-xl border-2 border-white/30 bg-white/5 backdrop-blur-sm text-base font-bold text-white transition-all hover:border-white/50 hover:bg-white/10 active:scale-[0.98]"
       >
         JÁ TENHO CONTA

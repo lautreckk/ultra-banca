@@ -8,6 +8,7 @@ import { getModalidadeById, getColocacaoById, calcularMultiplicadorEfetivo, BANC
 import { BetHeader } from '@/components/layout';
 import { ValueSelector, BetSummary, LotterySelector } from '@/components/loterias';
 import { TipoJogo } from '@/types/bet';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface ColocacaoClientProps {
   tipo: string;
@@ -122,7 +123,7 @@ export function ColocacaoClient({
       setStep('palpite');
     } else {
       // Navega para a rota da aposta sendo editada
-      router.push(`/loterias/${item.tipo}/${item.data}/${item.modalidade}/${item.colocacao}`);
+      router.push(getUrlWithUtm(`/loterias/${item.tipo}/${item.data}/${item.modalidade}/${item.colocacao}`));
     }
   };
 
@@ -162,7 +163,7 @@ export function ColocacaoClient({
     });
 
     // Navega para selecionar outra modalidade
-    router.push(`/loterias/${tipo}/${data}`);
+    router.push(getUrlWithUtm(`/loterias/${tipo}/${data}`));
   };
 
   // Adiciona aposta atual aos pendentes e vai para seleção de loterias
@@ -193,7 +194,7 @@ export function ColocacaoClient({
     // Finaliza todas as apostas pendentes com as loterias selecionadas
     finalizePendingItems(selectedLotteries, horarios);
 
-    router.push('/apostas/finalizar');
+    router.push(getUrlWithUtm('/apostas/finalizar'));
   };
 
   const handleBack = () => {

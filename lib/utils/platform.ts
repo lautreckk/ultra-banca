@@ -86,6 +86,15 @@ export async function getPlatformConfig() {
 }
 
 /**
+ * Obtém o domínio da plataforma atual (ex: bancacristal.com).
+ * Usado para gerar links de promotor com o domínio correto.
+ */
+export async function getPlatformDomain(): Promise<string> {
+  const platform = await getPlatformConfig();
+  return platform?.domain || '';
+}
+
+/**
  * Verifica se o usuário atual é admin da plataforma atual.
  */
 export async function isCurrentUserPlatformAdmin(): Promise<boolean> {

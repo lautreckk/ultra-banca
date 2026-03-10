@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Moon, Calculator, Clock, Dog, Loader2, X, Repeat } from 'lucide-react';
 import { getRecentBets, buildRepeatBetUrl, type BetSummary } from '@/lib/actions/apostas';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function LoteriasPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function LoteriasPage() {
     setSelectedBetLoading(bet.id);
     try {
       const url = await buildRepeatBetUrl(bet);
-      router.push(url);
+      router.push(getUrlWithUtm(url));
     } catch (err) {
       setError('Erro ao processar aposta');
       console.error('Error building bet URL:', err);

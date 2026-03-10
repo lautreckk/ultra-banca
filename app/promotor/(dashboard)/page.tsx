@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { getPromotorDashboard, type PromotorDashboardData } from '@/lib/promotor/actions/dashboard';
+import { getPlatformDomain } from '@/lib/utils/platform';
 import {
   Wallet,
   Users,
@@ -19,12 +20,17 @@ export default function PromotorDashboardPage() {
   const [data, setData] = useState<PromotorDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [platformDomain, setPlatformDomain] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await getPromotorDashboard();
+        const [result, domain] = await Promise.all([
+          getPromotorDashboard(),
+          getPlatformDomain(),
+        ]);
         setData(result);
+        setPlatformDomain(domain);
       } catch (error) {
         console.error('Error fetching dashboard:', error);
       } finally {
@@ -34,10 +40,15 @@ export default function PromotorDashboardPage() {
     fetchData();
   }, []);
 
+  const getPromotorLink = () => {
+    if (!data) return '';
+    const baseUrl = platformDomain ? `https://${platformDomain}` : (typeof window !== 'undefined' ? window.location.origin : '');
+    return `${baseUrl}?ref=${data.promotor.codigo_afiliado}`;
+  };
+
   const handleCopyLink = () => {
-    if (!data) return;
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const link = `${baseUrl}?ref=${data.promotor.codigo_afiliado}`;
+    const link = getPromotorLink();
+    if (!link) return;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -88,7 +99,7 @@ export default function PromotorDashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex-1 bg-zinc-800 rounded-xl px-4 py-3 font-mono text-sm text-zinc-300 truncate">
-            {typeof window !== 'undefined' ? `${window.location.origin}?ref=${data.promotor.codigo_afiliado}` : `...?ref=${data.promotor.codigo_afiliado}`}
+            {getPromotorLink() || `...?ref=${data.promotor.codigo_afiliado}`}
           </div>
           <button
             onClick={handleCopyLink}

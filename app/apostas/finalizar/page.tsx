@@ -10,6 +10,7 @@ import { getModalidadeById, getColocacaoById, getSubLoteriaById } from '@/lib/co
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function FinalizarApostaPage() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function FinalizarApostaPage() {
 
   // Redirect if no items
   if (items.length === 0) {
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
     return null;
   }
 
@@ -64,7 +65,7 @@ export default function FinalizarApostaPage() {
     if (isConfirmed) {
       clearCart();
     }
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
   };
 
   const handleFinalizar = async () => {

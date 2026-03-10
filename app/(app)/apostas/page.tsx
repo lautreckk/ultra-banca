@@ -7,6 +7,7 @@ import { BetSummaryCard } from '@/components/loterias';
 import { EmptyState } from '@/components/shared';
 import { useBetStore } from '@/stores/bet-store';
 import { formatCurrency } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function ApostasPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function ApostasPage() {
     // TODO: Submit bets to backend
     alert('Apostas confirmadas com sucesso!');
     clearCart();
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
   };
 
   if (items.length === 0) {
@@ -28,7 +29,7 @@ export default function ApostasPage() {
           title="Carrinho vazio"
           description="Adicione apostas para continuar"
           action={
-            <Button onClick={() => router.push('/loterias')}>
+            <Button onClick={() => router.push(getUrlWithUtm('/loterias'))}>
               Fazer Aposta
             </Button>
           }
@@ -77,7 +78,7 @@ export default function ApostasPage() {
           <Button
             variant="outline"
             fullWidth
-            onClick={() => router.push('/loterias')}
+            onClick={() => router.push(getUrlWithUtm('/loterias'))}
           >
             + Apostas
           </Button>

@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { getUrlWithUtm } from '@/lib/utm';
 
 const STORAGE_KEY = 'pwa-install-banner-dismissed';
 
@@ -38,7 +39,7 @@ export function PWAInstallBanner() {
       if (accepted) handleDismiss();
     } else {
       // iOS or manual — go to /baixar
-      router.push('/baixar');
+      router.push(getUrlWithUtm('/baixar'));
     }
   };
 

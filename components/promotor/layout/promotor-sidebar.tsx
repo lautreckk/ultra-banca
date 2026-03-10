@@ -15,6 +15,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { logoutPromotor } from '@/lib/promotor/actions/dashboard';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface NavItem {
   label: string;
@@ -54,7 +55,7 @@ export function PromotorSidebar({ isOpen, onToggle, promotorNome }: PromotorSide
   const handleLogout = () => {
     startTransition(async () => {
       await logoutPromotor();
-      router.push('/promotor/login');
+      router.push(getUrlWithUtm('/promotor/login'));
     });
   };
 

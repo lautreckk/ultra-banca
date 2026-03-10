@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Drawer, DrawerItem } from '@/components/ui/drawer';
 import { createClient } from '@/lib/supabase/client';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface MobileDrawerProps {
   open: boolean;
@@ -30,13 +31,13 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const supabase = createClient();
 
   const handleNavigate = (path: string) => {
-    router.push(path);
+    router.push(getUrlWithUtm(path));
     onClose();
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push(getUrlWithUtm('/login'));
     router.refresh();
     onClose();
   };

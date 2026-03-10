@@ -4,6 +4,7 @@ import { ChevronLeft, Home, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface HeaderProps {
   title?: string;
@@ -50,10 +51,10 @@ export function Header({
         )}
         {showHome && !showBack && (
           <button
-            onClick={() => router.push('/home')}
+            onClick={() => router.push(getUrlWithUtm('/home'))}
             onTouchEnd={(e) => {
               e.preventDefault();
-              router.push('/home');
+              router.push(getUrlWithUtm('/home'));
             }}
             className="flex h-11 w-11 items-center justify-center rounded-lg active:bg-white/10"
             style={{ WebkitTapHighlightColor: 'transparent' }}

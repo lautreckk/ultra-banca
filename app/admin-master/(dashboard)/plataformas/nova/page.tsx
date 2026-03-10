@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createPlatform, getClientsForSelect, type ClientOption } from '@/lib/admin/actions/master';
 import { Building2, ArrowLeft, Loader2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function NovaPlataformaPage() {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function NovaPlataformaPage() {
     startTransition(async () => {
       const result = await createPlatform(form);
       if (result.success) {
-        router.push('/admin-master/plataformas');
+        router.push(getUrlWithUtm('/admin-master/plataformas'));
       } else {
         setError(result.error || 'Erro ao criar plataforma');
       }

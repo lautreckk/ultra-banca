@@ -6,6 +6,7 @@ import { ChevronLeft, Menu, RefreshCw, ChevronUp, Clock } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface QuininhaDiasClientProps {
   data: string;
@@ -65,7 +66,7 @@ function QuininhaDiasContent({ data, modalidade }: QuininhaDiasClientProps) {
 
     // Navigate to finalizar
     router.push(
-      `/quininha/${data}/${modalidadeId}/finalizar?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorPorPalpite}&dias=${encodeURIComponent(selectedDays.join(','))}`
+      getUrlWithUtm(`/quininha/${data}/${modalidadeId}/finalizar?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorPorPalpite}&dias=${encodeURIComponent(selectedDays.join(','))}`)
     );
   };
 

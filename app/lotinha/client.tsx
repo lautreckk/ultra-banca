@@ -7,6 +7,7 @@ import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import { BrasiliaClock } from '@/components/layout';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface LotinhaClientProps {
   modalidades: ModalidadeDB[];
@@ -23,7 +24,7 @@ export function LotinhaClient({ modalidades }: LotinhaClientProps) {
 
   const handleSelectModalidade = (codigo: string) => {
     const today = new Date().toLocaleDateString('en-CA');
-    router.push(`/lotinha/${today}/${codigo}`);
+    router.push(getUrlWithUtm(`/lotinha/${today}/${codigo}`));
   };
 
   const formatMultiplicador = (mult: number): string => {

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { PageLayout } from '@/components/layout';
 import { BANCAS } from '@/lib/constants';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function SelecionarLoteriaPage() {
   const params = useParams();
@@ -39,7 +40,7 @@ export default function SelecionarLoteriaPage() {
   const handleAvancar = () => {
     if (selectedLoterias.length === 0) return;
     const loteriasParam = selectedLoterias.join(',');
-    router.push(`/resultados/${data}/ver?loterias=${loteriasParam}`);
+    router.push(getUrlWithUtm(`/resultados/${data}/ver?loterias=${loteriasParam}`));
   };
 
   return (

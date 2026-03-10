@@ -8,11 +8,12 @@ import { cpfToEmail, cpfToEmailLegacy, isValidCpf } from '@/lib/utils/cpf-to-ema
 import { createClient } from '@/lib/supabase/client';
 import { trackLogin } from '@/lib/actions/auth';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const codigoConvite = searchParams.get('p');
+  const codigoConvite = searchParams.get('p') || searchParams.get('ref');
   const supabase = createClient();
   const config = usePlatformConfig();
   const [cpf, setCpf] = useState('');
@@ -66,7 +67,7 @@ export function LoginForm() {
       }
 
       trackLogin().catch(() => {});
-      window.location.replace('/home');
+      window.location.replace(getUrlWithUtm('/home'));
     } catch {
       setError('Erro ao entrar. Tente novamente.');
       setLoading(false);
@@ -190,7 +191,7 @@ export function LoginForm() {
       {/* Register Button */}
       <button
         type="button"
-        onClick={() => router.push(codigoConvite ? `/cadastro?p=${codigoConvite}` : '/cadastro')}
+        onClick={() => router.push(getUrlWithUtm(codigoConvite ? `/cadastro?p=${codigoConvite}` : '/cadastro'))}
         className="w-full h-14 rounded-xl border-2 border-white/30 bg-white/5 backdrop-blur-sm text-base font-bold text-white transition-all hover:border-white/50 hover:bg-white/10 active:scale-[0.98]"
       >
         CADASTRE-SE

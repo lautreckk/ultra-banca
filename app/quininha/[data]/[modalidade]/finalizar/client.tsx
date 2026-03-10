@@ -9,6 +9,7 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface QuininhaFinalizarClientProps {
   data: string;
@@ -94,7 +95,7 @@ function QuininhaFinalizarContent({ data: dataJogo, modalidade }: QuininhaFinali
   };
 
   const handleVoltar = () => {
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
   };
 
   const handleShare = () => {

@@ -9,6 +9,7 @@ import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface LotinhaFinalizarClientProps {
   data: string;
@@ -84,7 +85,7 @@ function LotinhaFinalizarContent({ data: dataJogo, modalidade }: LotinhaFinaliza
   };
 
   const handleVoltar = () => {
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
   };
 
   const handleShare = () => {

@@ -174,6 +174,12 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
+        <script
+          src="https://cdn.jsdelivr.net/gh/xTracky/static@latest/utm-handler.js"
+          data-token="d29087d4-3cf8-4174-9544-5e61a9f4700e"
+          async
+          defer
+        />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Facebook Pixel - ID sanitizado para prevenir XSS */}

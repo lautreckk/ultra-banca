@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Menu, RefreshCw, ChevronUp, Clock } from 'lucide-react';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 function getNextSorteioDays(): { dateStr: string; dayName: string }[] {
   const days = [];
@@ -124,7 +125,7 @@ function LotinhaDiasContent() {
         <div className="p-4">
           <div className="border-t border-dashed border-zinc-700/40 pt-4">
             <button
-              onClick={() => selectedDays.length > 0 && router.push(`/lotinha/${data}/${modalidadeId}/finalizar?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorPorPalpite}&dias=${encodeURIComponent(selectedDays.join(','))}`)}
+              onClick={() => selectedDays.length > 0 && router.push(getUrlWithUtm(`/lotinha/${data}/${modalidadeId}/finalizar?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorPorPalpite}&dias=${encodeURIComponent(selectedDays.join(','))}`))}
               disabled={selectedDays.length === 0}
               className="w-full h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 disabled:opacity-50 disabled:bg-zinc-700 disabled:text-zinc-400 active:scale-[0.98] transition-all"
               aria-label="Confirmar aposta"

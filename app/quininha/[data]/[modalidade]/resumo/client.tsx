@@ -6,6 +6,7 @@ import { ChevronLeft, Menu, RefreshCw, Trash2 } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface QuininhaResumoClientProps {
   data: string;
@@ -33,14 +34,14 @@ function QuininhaResumoContent({ data, modalidade }: QuininhaResumoClientProps) 
   };
 
   const handleMaisApostas = () => {
-    router.push(`/quininha/${data}/${modalidadeId}`);
+    router.push(getUrlWithUtm(`/quininha/${data}/${modalidadeId}`));
   };
 
   const handleAvancar = () => {
     if (palpites.length === 0) return;
 
     router.push(
-      `/quininha/${data}/${modalidadeId}/dias?palpites=${encodeURIComponent(palpites.join('|'))}&valor=${valorPorPalpite}&total=${valorTotal}`
+      getUrlWithUtm(`/quininha/${data}/${modalidadeId}/dias?palpites=${encodeURIComponent(palpites.join('|'))}&valor=${valorPorPalpite}&total=${valorTotal}`)
     );
   };
 

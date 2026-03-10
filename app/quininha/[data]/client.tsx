@@ -5,6 +5,7 @@ import { ChevronLeft, Menu, RefreshCw } from 'lucide-react';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface QuininhaModalidadesClientProps {
   data: string;
@@ -16,7 +17,7 @@ export function QuininhaModalidadesClient({ data, modalidades }: QuininhaModalid
   const { saldo, saldoBonus } = useUserBalance();
 
   const handleSelectModalidade = (codigo: string) => {
-    router.push(`/quininha/${data}/${codigo}`);
+    router.push(getUrlWithUtm(`/quininha/${data}/${codigo}`));
   };
 
   return (

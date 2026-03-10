@@ -6,6 +6,7 @@ import { ChevronLeft, Menu, RefreshCw, Info } from 'lucide-react';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface LotinhaValorClientProps {
   data: string;
@@ -34,7 +35,7 @@ function LotinhaValorContent({ data, modalidade }: LotinhaValorClientProps) {
     if (!valor) return;
     const valorNum = parseFloat(valor.replace(',', '.'));
     if (isNaN(valorNum) || valorNum <= 0) return;
-    router.push(`/lotinha/${data}/${modalidadeId}/resumo?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorNum}&mode=${mode}`);
+    router.push(getUrlWithUtm(`/lotinha/${data}/${modalidadeId}/resumo?palpites=${encodeURIComponent(palpitesStr)}&valor=${valorNum}&mode=${mode}`));
   };
 
   return (

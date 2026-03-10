@@ -7,6 +7,7 @@ import { ArrowRightLeft, Wallet, Gamepad2, AlertCircle, CheckCircle, Loader2 } f
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
 import { transferBalance } from '@/lib/actions/transfer';
+import { getUrlWithUtm } from '@/lib/utm';
 
 export default function TransferenciaPage() {
   const router = useRouter();
@@ -132,7 +133,7 @@ export default function TransferenciaPage() {
                 Nova Transferencia
               </button>
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push(getUrlWithUtm('/'))}
                 className="w-full h-14 min-h-[56px] rounded-xl bg-zinc-900 border border-zinc-700/40 font-bold text-zinc-200 active:scale-[0.98] transition-all"
               >
                 Voltar ao Inicio

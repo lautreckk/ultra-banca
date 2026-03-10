@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getUrlWithUtm } from '@/lib/utm';
 
 // =============================================
 // STAT CARD COMPONENT
@@ -308,7 +309,7 @@ export default function LeadsInativosPage() {
   };
 
   const handleView = (lead: InactiveLead) => {
-    window.location.href = `/admin/clientes/${lead.id}`;
+    window.location.href = getUrlWithUtm(`/admin/clientes/${lead.id}`);
   };
 
   const handleWhatsApp = (lead: InactiveLead) => {

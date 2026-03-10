@@ -7,6 +7,7 @@ import { BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface SeninhaClientProps {
   modalidades: ModalidadeDB[];
@@ -23,7 +24,7 @@ export function SeninhaClient({ modalidades }: SeninhaClientProps) {
 
   const handleSelectModalidade = (codigo: string) => {
     const today = new Date().toLocaleDateString('en-CA');
-    router.push(`/seninha/${today}/${codigo}`);
+    router.push(getUrlWithUtm(`/seninha/${today}/${codigo}`));
   };
 
   const formatMultiplicador = (mult: number): string => {

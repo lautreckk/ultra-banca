@@ -20,6 +20,7 @@ import {
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { createClient } from '@/lib/supabase/client';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -51,7 +52,7 @@ export function Sidebar({ isCollapsed, onToggleCollapse, saldo, saldoBonus, sald
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push(getUrlWithUtm('/login'));
     router.refresh();
   };
 

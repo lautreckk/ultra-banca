@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DataTable, type Column, StatusBadge, ConfirmModal } from '@/components/admin/shared';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { getWithdrawals, approveWithdrawal, rejectWithdrawal, type Withdrawal } from '@/lib/admin/actions/financial';
+import { getWithdrawals, approveWithdrawal, rejectWithdrawal, rejectAllPendingWithdrawals, type Withdrawal } from '@/lib/admin/actions/financial';
 import { Button } from '@/components/ui/button';
-import { Check, X, Filter, Copy, CheckCheck } from 'lucide-react';
+import { Check, X, Filter, Copy, CheckCheck, XCircle } from 'lucide-react';
 
 export default function AdminSaquesPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -17,7 +17,7 @@ export default function AdminSaquesPage() {
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     withdrawalId: string | null;
-    action: 'approve' | 'reject';
+    action: 'approve' | 'reject' | 'reject-all';
   }>({
     open: false,
     withdrawalId: null,
@@ -56,6 +56,27 @@ export default function AdminSaquesPage() {
   };
 
   const handleAction = async () => {
+    if (confirmModal.action === 'reject-all') {
+      setIsProcessing(true);
+      try {
+        const result = await rejectAllPendingWithdrawals();
+        if (result.success) {
+          fetchWithdrawals();
+          if (result.rejected > 0) {
+            alert(`${result.rejected} saque(s) rejeitado(s) com sucesso.${result.errors > 0 ? ` ${result.errors} erro(s).` : ''}`);
+          }
+        } else {
+          alert(result.error || 'Erro ao rejeitar saques');
+        }
+      } catch {
+        alert('Erro ao rejeitar saques em lote');
+      } finally {
+        setIsProcessing(false);
+        setConfirmModal({ open: false, withdrawalId: null, action: 'approve' });
+      }
+      return;
+    }
+
     if (!confirmModal.withdrawalId) return;
 
     setIsProcessing(true);
@@ -198,7 +219,7 @@ export default function AdminSaquesPage() {
           <Filter className="h-4 w-4 text-zinc-500" />
           <span className="text-sm text-zinc-500">Status:</span>
         </div>
-        <div className="grid grid-cols-2 sm:flex gap-2">
+        <div className="grid grid-cols-2 sm:flex gap-2 flex-1">
           {['', 'PENDING', 'PROCESSING', 'PAID', 'REJECTED'].map((status) => (
             <button
               key={status}
@@ -216,6 +237,17 @@ export default function AdminSaquesPage() {
             </button>
           ))}
         </div>
+        {statusFilter === 'PENDING' && withdrawals.length > 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-red-900/30 text-red-400 hover:bg-red-900/50 border border-red-800/50"
+            onClick={() => setConfirmModal({ open: true, withdrawalId: null, action: 'reject-all' })}
+          >
+            <XCircle className="h-4 w-4 mr-1.5" />
+            Recusar Todos ({total})
+          </Button>
+        )}
       </div>
 
       <DataTable
@@ -240,13 +272,23 @@ export default function AdminSaquesPage() {
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, withdrawalId: null, action: 'approve' })}
         onConfirm={handleAction}
-        title={confirmModal.action === 'approve' ? 'Pagar Saque via PIX' : 'Recusar Saque'}
+        title={
+          confirmModal.action === 'approve' ? 'Pagar Saque via PIX'
+          : confirmModal.action === 'reject-all' ? `Recusar Todos os Saques (${total})`
+          : 'Recusar Saque'
+        }
         message={
           confirmModal.action === 'approve'
             ? 'O PIX será enviado automaticamente para a chave do usuário via WashPay. Deseja continuar?'
+            : confirmModal.action === 'reject-all'
+            ? `Tem certeza que deseja recusar TODOS os ${total} saques pendentes? O valor de cada saque será devolvido ao saldo do respectivo usuário. Esta ação não pode ser desfeita.`
             : 'Tem certeza que deseja recusar este saque? O valor será devolvido ao saldo do usuário.'
         }
-        confirmText={confirmModal.action === 'approve' ? 'Enviar PIX' : 'Recusar'}
+        confirmText={
+          confirmModal.action === 'approve' ? 'Enviar PIX'
+          : confirmModal.action === 'reject-all' ? 'Recusar Todos'
+          : 'Recusar'
+        }
         variant={confirmModal.action === 'approve' ? 'success' : 'danger'}
         isLoading={isProcessing}
       />

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { MobileDrawer, BrasiliaClock } from '@/components/layout';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface PageLayoutProps {
   title: string;
@@ -44,10 +45,10 @@ export function PageLayout({
           </button>
         ) : showHome ? (
           <button
-            onClick={() => router.push('/home')}
+            onClick={() => router.push(getUrlWithUtm('/home'))}
             onTouchEnd={(e) => {
               e.preventDefault();
-              router.push('/home');
+              router.push(getUrlWithUtm('/home'));
             }}
             className="flex h-11 w-11 items-center justify-center rounded-xl active:bg-white/10 active:scale-[0.98] transition-all"
             style={{ WebkitTapHighlightColor: 'transparent' }}

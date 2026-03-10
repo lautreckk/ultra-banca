@@ -6,6 +6,7 @@ import { ChevronLeft, Menu, RefreshCw, Trash2 } from 'lucide-react';
 import { useUserBalance } from '@/lib/hooks/use-user-balance';
 import { formatCurrencyCompact } from '@/lib/utils/format-currency';
 import type { ModalidadeDB } from '@/lib/actions/modalidades';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface SeninhaResumoClientProps {
   data: string;
@@ -95,14 +96,14 @@ function SeninhaResumoContent({ data, modalidade }: SeninhaResumoClientProps) {
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => router.push(`/seninha/${data}/${modalidadeId}`)}
+                onClick={() => router.push(getUrlWithUtm(`/seninha/${data}/${modalidadeId}`))}
                 className="h-14 min-h-[56px] bg-[#E5A220] rounded-xl font-bold text-zinc-900 active:scale-[0.98] transition-all"
                 aria-label="Adicionar mais apostas"
               >
                 Mais Apostas
               </button>
               <button
-                onClick={() => router.push(`/seninha/${data}/${modalidadeId}/dias?palpites=${encodeURIComponent(palpites.join('|'))}&valor=${valorPorPalpite}&total=${valorTotal}`)}
+                onClick={() => router.push(getUrlWithUtm(`/seninha/${data}/${modalidadeId}/dias?palpites=${encodeURIComponent(palpites.join('|'))}&valor=${valorPorPalpite}&total=${valorTotal}`))}
                 className="h-14 min-h-[56px] bg-zinc-900 border border-zinc-700/40 rounded-xl font-semibold text-white active:scale-[0.98] transition-all"
                 aria-label="Avancar para selecao de dias"
               >

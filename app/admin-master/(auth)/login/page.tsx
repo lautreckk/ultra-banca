@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, User, Shield, Loader2, ArrowLeft, Crown } from 'lucide-react';
 import { trackLogin } from '@/lib/actions/auth';
+import { getUrlWithUtm } from '@/lib/utm';
 
 type LoginStep = 'credentials' | 'mfa';
 
@@ -49,7 +50,7 @@ export default function AdminMasterLoginPage() {
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.currentLevel === 'aal2' || aalData?.nextLevel === 'aal1') {
         // Já está logado com nível adequado e é super_admin
-        router.push('/admin-master/dashboard');
+        router.push(getUrlWithUtm('/admin-master/dashboard'));
       }
     }
   };
@@ -114,7 +115,7 @@ export default function AdminMasterLoginPage() {
         console.error('Erro ao verificar AAL:', aalError);
         // Continuar sem MFA se houver erro
         trackLogin().catch(() => {});
-        router.push('/admin-master/dashboard');
+        router.push(getUrlWithUtm('/admin-master/dashboard'));
         return;
       }
 
@@ -126,7 +127,7 @@ export default function AdminMasterLoginPage() {
         if (factorsError || !factorsData?.totp || factorsData.totp.length === 0) {
           // Sem fatores, continuar normal
           trackLogin().catch(() => {});
-          router.push('/admin-master/dashboard');
+          router.push(getUrlWithUtm('/admin-master/dashboard'));
           return;
         }
 
@@ -136,7 +137,7 @@ export default function AdminMasterLoginPage() {
         if (!verifiedFactor) {
           // Nenhum fator verificado, continuar normal
           trackLogin().catch(() => {});
-          router.push('/admin-master/dashboard');
+          router.push(getUrlWithUtm('/admin-master/dashboard'));
           return;
         }
 
@@ -149,7 +150,7 @@ export default function AdminMasterLoginPage() {
 
       // Sem MFA ou já em aal2, rastrear login e redirecionar
       trackLogin().catch(() => {});
-      router.push('/admin-master/dashboard');
+      router.push(getUrlWithUtm('/admin-master/dashboard'));
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       setError('Erro ao fazer login. Tente novamente.');
@@ -196,7 +197,7 @@ export default function AdminMasterLoginPage() {
       if (newAalData?.currentLevel === 'aal2') {
         // Rastrear login após MFA
         trackLogin().catch(() => {});
-        router.push('/admin-master/dashboard');
+        router.push(getUrlWithUtm('/admin-master/dashboard'));
       } else {
         setError('Erro na verificação. Tente fazer login novamente.');
         setStep('credentials');

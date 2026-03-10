@@ -11,6 +11,7 @@ import {
   getValoresByModalidade,
   formatPremio,
 } from '@/lib/constants';
+import { getUrlWithUtm } from '@/lib/utm';
 
 interface FazendinhaSelectPageProps {
   params: Promise<{ data: string }>;
@@ -45,7 +46,7 @@ export default function FazendinhaSelectPage({ params }: FazendinhaSelectPagePro
 
     // Navegar para a página de seleção de números
     router.push(
-      `/fazendinha/${data}/numeros?modalidade=${selectedModalidade}&valor=${selectedValor}&loterias=${loteriaId}`
+      getUrlWithUtm(`/fazendinha/${data}/numeros?modalidade=${selectedModalidade}&valor=${selectedValor}&loterias=${loteriaId}`)
     );
   };
 

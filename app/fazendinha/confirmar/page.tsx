@@ -8,6 +8,7 @@ import { PageLayout } from '@/components/layout';
 import { getFazendinhaModalidadeById, getFazendinhaLoteriaById } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { getUrlWithUtm } from '@/lib/utm';
 
 function ConfirmarContent() {
   const router = useRouter();
@@ -44,7 +45,7 @@ function ConfirmarContent() {
     : new Date().toLocaleDateString('pt-BR');
 
   const handleVoltar = () => {
-    router.push('/');
+    router.push(getUrlWithUtm('/'));
   };
 
   const handleFinalizar = async () => {
