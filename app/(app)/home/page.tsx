@@ -20,6 +20,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
 import { SupportChat } from '@/components/shared/support-chat';
+import { CommunityChat } from '@/components/shared/community-chat';
 
 interface UltimoGanhador {
   unidade: string;
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [codigoConvite, setCodigoConvite] = useState('');
   const [ultimoGanhador, setUltimoGanhador] = useState<UltimoGanhador | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [communityOpen, setCommunityOpen] = useState(false);
   const config = usePlatformConfig();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('login');
 
@@ -168,9 +170,11 @@ export default function DashboardPage() {
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
           <div className="flex items-center gap-3 px-4 py-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-              <Trophy className="h-6 w-6 text-emerald-400" />
-            </div>
+            <img
+              src={`https://i.pravatar.cc/96?u=${ultimoGanhador.unidade}`}
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-full object-cover border-2 border-emerald-500/30"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
                 Último Ganhador
@@ -298,6 +302,25 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* Grupo de Palpites */}
+      <button
+        onClick={() => setCommunityOpen(true)}
+        className="w-full flex items-center gap-3 rounded-xl border border-amber-500/30 px-4 py-3.5 active:scale-[0.98] transition-transform"
+        style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
+          <Users className="h-5 w-5 text-amber-400" />
+        </div>
+        <div className="flex-1 text-left">
+          <p className="text-sm font-semibold text-white">Grupo de Palpites</p>
+          <p className="text-[11px] text-zinc-400">Veja os palpites da galera e compartilhe os seus</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] text-emerald-400">ao vivo</span>
+        </div>
+      </button>
+
       {/* Recarga PIX - Prominent */}
       <Link href="/recarga-pix" className="block">
         <div className="flex items-center justify-center gap-3 rounded-xl bg-emerald-500 py-5 shadow-lg active:scale-[0.98] transition-transform">
@@ -351,6 +374,9 @@ export default function DashboardPage() {
 
       {/* Support Chat */}
       <SupportChat open={chatOpen} onClose={() => setChatOpen(false)} />
+
+      {/* Community Chat */}
+      <CommunityChat open={communityOpen} onClose={() => setCommunityOpen(false)} />
     </div>
   );
 }
