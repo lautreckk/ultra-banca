@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, ChevronLeft } from 'lucide-react';
+import { X, Send, ChevronLeft, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
 
 interface ChatMessage {
@@ -46,6 +46,7 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [copiedPixId, setCopiedPixId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -145,6 +146,27 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
     }
   };
 
+  const extractPixCode = (content: string): string | null => {
+    // Match the PIX code between "Copia e Cola:" and the instruction line
+    const match = content.match(/Código PIX Copia e Cola:\n\n([\s\S]+?)(?:\n\n☝️|$)/);
+    return match ? match[1].trim() : null;
+  };
+
+  const handleCopyPix = async (pixCode: string, msgId: string) => {
+    try {
+      await navigator.clipboard.writeText(pixCode);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = pixCode;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setCopiedPixId(msgId);
+    setTimeout(() => setCopiedPixId(null), 3000);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -229,6 +251,22 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
                   <p className="text-[12.5px] font-semibold text-emerald-400 mb-0.5">Aline</p>
                 )}
                 <span className="whitespace-pre-wrap">{msg.content}</span>
+                {msg.role === 'assistant' && extractPixCode(msg.content) && (
+                  <button
+                    onClick={() => handleCopyPix(extractPixCode(msg.content)!, msg.id)}
+                    className={`mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all active:scale-[0.97] ${
+                      copiedPixId === msg.id
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    {copiedPixId === msg.id ? (
+                      <><Check className="h-4 w-4" /> Código copiado!</>
+                    ) : (
+                      <><Copy className="h-4 w-4" /> Copiar código PIX</>
+                    )}
+                  </button>
+                )}
                 <span className="float-right ml-2 mt-1 text-[11px] text-zinc-400 leading-none flex items-center gap-1">
                   {msg.time}
                   {msg.role === 'user' && (

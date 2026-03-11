@@ -60,6 +60,15 @@ SUPORTE:
 - Dúvidas sobre bilhete/resultado/prêmio: encaminhar para o gerente
 - Cancelamento de pule: encaminhar para a gerente
 
+GERAÇÃO DE PIX (DEPÓSITO):
+- Quando o usuário reclamar de dificuldade com recarga/depósito, pergunte qual o valor que ele deseja depositar
+- Quando o usuário informar o valor (ex: "100", "R$50", "quero depositar 200"), gere o PIX usando EXATAMENTE este formato: [GERAR_PIX:VALOR]
+- Exemplo: se o usuário quer depositar R$100, responda algo como "Vou gerar o PIX pra você agora! 😊|||[GERAR_PIX:100]"
+- O valor deve ser apenas o número, sem R$ ou pontuação (ex: [GERAR_PIX:100], [GERAR_PIX:50], [GERAR_PIX:25.50])
+- IMPORTANTE: o tag [GERAR_PIX:VALOR] será processado automaticamente e substituído pelo código PIX real
+- Após gerar, instrua o usuário: "Copie o código acima, abra o app do seu banco, escolha pagar com PIX, cole o código e confirme o pagamento"
+- Valor mínimo de depósito: R$10
+
 REGRAS:
 - Responda APENAS sobre a Banca Cristal, nada de assuntos externos
 - Nunca dê certeza sobre resultado ou valor de prêmio
@@ -98,6 +107,15 @@ SUPORTE:
 - Instalar app? Adicionar atalho na tela inicial
 - Dúvidas sobre bilhete/resultado: encaminhar para o gerente
 
+GERAÇÃO DE PIX (DEPÓSITO):
+- Quando o usuário reclamar de dificuldade com recarga/depósito, pergunte qual o valor que ele deseja depositar
+- Quando o usuário informar o valor (ex: "100", "R$50", "quero depositar 200"), gere o PIX usando EXATAMENTE este formato: [GERAR_PIX:VALOR]
+- Exemplo: se o usuário quer depositar R$100, responda algo como "Vou gerar o PIX pra você agora! 😊|||[GERAR_PIX:100]"
+- O valor deve ser apenas o número, sem R$ ou pontuação (ex: [GERAR_PIX:100], [GERAR_PIX:50], [GERAR_PIX:25.50])
+- IMPORTANTE: o tag [GERAR_PIX:VALOR] será processado automaticamente e substituído pelo código PIX real
+- Após gerar, instrua o usuário: "Copie o código acima, abra o app do seu banco, escolha pagar com PIX, cole o código e confirme o pagamento"
+- Valor mínimo de depósito: R$10
+
 REGRAS:
 - Responda APENAS sobre a Banca Magnata
 - Nunca dê certeza sobre resultado ou valor de prêmio
@@ -135,6 +153,15 @@ SUPORTE:
 - Instalar app? Adicionar atalho na tela inicial
 - Dúvidas sobre bilhete/resultado: encaminhar para o gerente
 
+GERAÇÃO DE PIX (DEPÓSITO):
+- Quando o usuário reclamar de dificuldade com recarga/depósito, pergunte qual o valor que ele deseja depositar
+- Quando o usuário informar o valor (ex: "100", "R$50", "quero depositar 200"), gere o PIX usando EXATAMENTE este formato: [GERAR_PIX:VALOR]
+- Exemplo: se o usuário quer depositar R$100, responda algo como "Vou gerar o PIX pra você agora! 😊|||[GERAR_PIX:100]"
+- O valor deve ser apenas o número, sem R$ ou pontuação (ex: [GERAR_PIX:100], [GERAR_PIX:50], [GERAR_PIX:25.50])
+- IMPORTANTE: o tag [GERAR_PIX:VALOR] será processado automaticamente e substituído pelo código PIX real
+- Após gerar, instrua o usuário: "Copie o código acima, abra o app do seu banco, escolha pagar com PIX, cole o código e confirme o pagamento"
+- Valor mínimo de depósito: R$10
+
 REGRAS:
 - Responda APENAS sobre a Banca Pantanal
 - Nunca dê certeza sobre resultado ou valor de prêmio
@@ -171,6 +198,15 @@ SUPORTE:
 - Depósito não caiu? Aguardar alguns minutos
 - Instalar app? Adicionar atalho na tela inicial
 - Dúvidas sobre bilhete/resultado: encaminhar para o gerente
+
+GERAÇÃO DE PIX (DEPÓSITO):
+- Quando o usuário reclamar de dificuldade com recarga/depósito, pergunte qual o valor que ele deseja depositar
+- Quando o usuário informar o valor (ex: "100", "R$50", "quero depositar 200"), gere o PIX usando EXATAMENTE este formato: [GERAR_PIX:VALOR]
+- Exemplo: se o usuário quer depositar R$100, responda algo como "Vou gerar o PIX pra você agora! 😊|||[GERAR_PIX:100]"
+- O valor deve ser apenas o número, sem R$ ou pontuação (ex: [GERAR_PIX:100], [GERAR_PIX:50], [GERAR_PIX:25.50])
+- IMPORTANTE: o tag [GERAR_PIX:VALOR] será processado automaticamente e substituído pelo código PIX real
+- Após gerar, instrua o usuário: "Copie o código acima, abra o app do seu banco, escolha pagar com PIX, cole o código e confirme o pagamento"
+- Valor mínimo de depósito: R$10
 
 REGRAS:
 - Responda APENAS sobre a Banca PegaBicho
@@ -249,7 +285,41 @@ export async function POST(req: NextRequest) {
 
       if (response.ok) {
         const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || 'Desculpe, tive um probleminha aqui. Tenta de novo? 😅';
+        let reply = data.choices?.[0]?.message?.content || 'Desculpe, tive um probleminha aqui. Tenta de novo? 😅';
+
+        // Detectar tag [GERAR_PIX:VALOR] e gerar PIX real
+        const pixMatch = reply.match(/\[GERAR_PIX:(\d+(?:\.\d{1,2})?)\]/);
+        if (pixMatch) {
+          const pixValor = parseFloat(pixMatch[1]);
+          if (pixValor >= 10) {
+            try {
+              const { data: pixData, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
+                body: {
+                  valor: pixValor,
+                  tipo: 'deposito',
+                  wallet_type: 'tradicional',
+                },
+              });
+
+              if (!pixError && pixData?.success && pixData?.pagamento?.pixCopyPaste) {
+                const pixCode = pixData.pagamento.pixCopyPaste;
+                const valorFormatado = pixValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const pixMessage = `💰 PIX de R$ ${valorFormatado} gerado com sucesso!\n\n📋 Código PIX Copia e Cola:\n\n${pixCode}\n\n☝️ Copie o código acima, abra o app do seu banco, escolha pagar com PIX, cole o código e confirme o pagamento. O saldo entra na hora! ✅`;
+                reply = reply.replace(pixMatch[0], pixMessage);
+              } else {
+                const errorMsg = pixData?.error || 'Erro ao gerar PIX';
+                console.error('[CHAT] PIX generation error:', errorMsg);
+                reply = reply.replace(pixMatch[0], `❌ Não consegui gerar o PIX agora. Tente pela página de Recarga PIX no menu principal, ou me chama de novo daqui a pouquinho! 😊`);
+              }
+            } catch (pixErr) {
+              console.error('[CHAT] PIX generation exception:', pixErr);
+              reply = reply.replace(pixMatch[0], `❌ Tive um probleminha ao gerar o PIX. Tente pela página de Recarga PIX no menu principal! 😊`);
+            }
+          } else {
+            reply = reply.replace(pixMatch[0], `⚠️ O valor mínimo para depósito é R$ 10,00. Me diz um valor a partir de R$ 10 que eu gero pra você! 😊`);
+          }
+        }
+
         return NextResponse.json({ reply });
       }
 
