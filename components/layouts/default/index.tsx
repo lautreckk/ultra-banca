@@ -16,8 +16,8 @@ export function DefaultLayout({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex justify-center">
-      <div className="w-full max-w-md min-h-screen shadow-xl" style={{ backgroundColor: '#111318' }}>
+    <div className="min-h-screen flex justify-center" style={{ backgroundColor: 'var(--color-background, #111318)' }}>
+      <div className="w-full max-w-md min-h-screen shadow-xl" style={{ backgroundColor: 'var(--color-background, #111318)' }}>
         <Header showHome showMenu onMenuClick={() => setDrawerOpen(true)} />
         <BalanceDisplay
           saldo={saldo}

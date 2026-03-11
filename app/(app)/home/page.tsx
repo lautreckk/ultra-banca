@@ -141,7 +141,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 px-4 py-4">
       {/* Invite Link */}
-      <div className="flex items-center gap-2 rounded-xl border border-zinc-700/40 px-3 py-2.5" style={{ backgroundColor: '#1A1F2B' }}>
+      <div className="flex items-center gap-2 rounded-xl border border-zinc-700/40 px-3 py-2.5" style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}>
         <span className="text-sm text-zinc-400 shrink-0">Convidar:</span>
         <div className="flex flex-1 items-center gap-2 rounded-lg bg-zinc-900/80 px-3 py-1.5 min-w-0">
           <span className="flex-1 truncate text-sm text-zinc-300">{inviteUrl}</span>
@@ -163,7 +163,7 @@ export default function DashboardPage() {
       {ultimoGanhador && (
         <div
           className="overflow-hidden rounded-xl border border-emerald-500/30"
-          style={{ backgroundColor: '#1A1F2B' }}
+          style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
           <div className="flex items-center gap-3 px-4 py-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
@@ -253,7 +253,7 @@ export default function DashboardPage() {
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <Phone className="h-5 w-5 text-emerald-400" />
             <span className="text-[11px] font-semibold text-zinc-300">Promotor</span>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
         ) : (
           <div
             className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 opacity-50"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <Phone className="h-5 w-5 text-zinc-500" />
             <span className="text-[11px] font-semibold text-zinc-500">Promotor</span>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <Headphones className="h-5 w-5 text-emerald-400" />
             <span className="text-[11px] font-semibold text-zinc-300">Suporte</span>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
         ) : (
           <div
             className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 opacity-50"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <Headphones className="h-5 w-5 text-zinc-500" />
             <span className="text-[11px] font-semibold text-zinc-500">Suporte</span>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
         <Link
           href="/resultados"
           className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
-          style={{ backgroundColor: '#1A1F2B' }}
+          style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
           <BarChart3 className="h-5 w-5 text-emerald-400" />
           <span className="text-[11px] font-semibold text-zinc-300">Cotações</span>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
         <Link
           href="/amigos"
           className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
-          style={{ backgroundColor: '#1A1F2B' }}
+          style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
           <Users className="h-5 w-5 text-emerald-400" />
           <span className="text-[11px] font-semibold text-zinc-300">Indique</span>
@@ -321,7 +321,7 @@ export default function DashboardPage() {
         <Link href="/saques" className="block">
           <div
             className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <DollarSign className="h-6 w-6 text-emerald-400" />
             <span className="text-xs font-semibold text-white">Saques</span>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
         <Link href="/premiadas" className="block">
           <div
             className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <Trophy className="h-6 w-6 text-amber-400" />
             <span className="text-xs font-semibold text-white">Premiadas</span>
@@ -341,7 +341,7 @@ export default function DashboardPage() {
         <Link href="/relatorios" className="block">
           <div
             className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 active:scale-[0.97] transition-transform"
-            style={{ backgroundColor: '#1A1F2B' }}
+            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <FileText className="h-6 w-6 text-blue-400" />
             <span className="text-xs font-semibold text-white">Relatórios</span>
