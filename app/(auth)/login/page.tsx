@@ -1,14 +1,16 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { LoginForm } from '@/components/auth';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
+import { PWAInstallModal } from '@/components/shared/pwa-install-modal';
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const cadastroSucesso = searchParams.get('cadastro') === 'sucesso';
+  const [showInstallModal, setShowInstallModal] = useState(cadastroSucesso);
 
   return (
     <>
@@ -20,6 +22,9 @@ function LoginContent() {
       <div className="w-full max-w-sm">
         <LoginForm />
       </div>
+      {showInstallModal && (
+        <PWAInstallModal onClose={() => setShowInstallModal(false)} />
+      )}
     </>
   );
 }
