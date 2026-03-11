@@ -96,46 +96,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Mensagem muito longa (máximo 500 caracteres)' }, { status: 400 });
     }
 
-    // Try Claude API first
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    // Try OpenAI API
+    const openaiKey = process.env.OPENAI_API_KEY;
 
-    if (anthropicKey) {
-      const messages = [];
+    if (openaiKey) {
+      const chatMessages: { role: string; content: string }[] = [
+        { role: 'system', content: SYSTEM_PROMPT },
+      ];
 
       // Add history (last 10 messages)
       if (Array.isArray(history)) {
         const recentHistory = history.slice(-10);
         for (const msg of recentHistory) {
           if (msg.role === 'user' || msg.role === 'assistant') {
-            messages.push({ role: msg.role, content: msg.content });
+            chatMessages.push({ role: msg.role, content: msg.content });
           }
         }
       }
 
-      messages.push({ role: 'user', content: message });
+      chatMessages.push({ role: 'user', content: message });
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01',
+          'Authorization': `Bearer ${openaiKey}`,
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
+          model: 'gpt-4o-mini',
           max_tokens: 512,
-          system: SYSTEM_PROMPT,
-          messages,
+          messages: chatMessages,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        const reply = data.content?.[0]?.text || 'Desculpe, não consegui processar sua mensagem.';
+        const reply = data.choices?.[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
         return NextResponse.json({ reply });
       }
 
-      console.error('[CHAT] Claude API error:', response.status);
+      console.error('[CHAT] OpenAI API error:', response.status);
     }
 
     // Fallback: FAQ-based responses
