@@ -25,56 +25,157 @@ const AGENTS = [
   { name: 'Valdir', avatar: 'https://randomuser.me/api/portraits/men/58.jpg', color: '#FF6F00' },
 ];
 
-const BICHOS = [
-  'Avestruz', 'Águia', 'Burro', 'Borboleta', 'Cachorro', 'Cabra', 'Carneiro',
-  'Camelo', 'Cobra', 'Coelho', 'Cavalo', 'Elefante', 'Galo', 'Gato',
-  'Jacaré', 'Leão', 'Macaco', 'Porco', 'Pavão', 'Peru', 'Touro',
-  'Tigre', 'Urso', 'Veado', 'Vaca',
+// Tabela oficial do Jogo do Bicho com dezenas corretas
+const BICHO_TABLE = [
+  { grupo: 1,  nome: 'Avestruz',   emoji: '🦆', dezenas: ['01','02','03','04'] },
+  { grupo: 2,  nome: 'Águia',      emoji: '🦅', dezenas: ['05','06','07','08'] },
+  { grupo: 3,  nome: 'Burro',      emoji: '🫏', dezenas: ['09','10','11','12'] },
+  { grupo: 4,  nome: 'Borboleta',  emoji: '🦋', dezenas: ['13','14','15','16'] },
+  { grupo: 5,  nome: 'Cachorro',   emoji: '🐕', dezenas: ['17','18','19','20'] },
+  { grupo: 6,  nome: 'Cabra',      emoji: '🐐', dezenas: ['21','22','23','24'] },
+  { grupo: 7,  nome: 'Carneiro',   emoji: '🐏', dezenas: ['25','26','27','28'] },
+  { grupo: 8,  nome: 'Camelo',     emoji: '🐫', dezenas: ['29','30','31','32'] },
+  { grupo: 9,  nome: 'Cobra',      emoji: '🐍', dezenas: ['33','34','35','36'] },
+  { grupo: 10, nome: 'Coelho',     emoji: '🐇', dezenas: ['37','38','39','40'] },
+  { grupo: 11, nome: 'Cavalo',     emoji: '🐴', dezenas: ['41','42','43','44'] },
+  { grupo: 12, nome: 'Elefante',   emoji: '🐘', dezenas: ['45','46','47','48'] },
+  { grupo: 13, nome: 'Galo',       emoji: '🐓', dezenas: ['49','50','51','52'] },
+  { grupo: 14, nome: 'Gato',       emoji: '🐱', dezenas: ['53','54','55','56'] },
+  { grupo: 15, nome: 'Jacaré',     emoji: '🐊', dezenas: ['57','58','59','60'] },
+  { grupo: 16, nome: 'Leão',       emoji: '🦁', dezenas: ['61','62','63','64'] },
+  { grupo: 17, nome: 'Macaco',     emoji: '🐒', dezenas: ['65','66','67','68'] },
+  { grupo: 18, nome: 'Porco',      emoji: '🐷', dezenas: ['69','70','71','72'] },
+  { grupo: 19, nome: 'Pavão',      emoji: '🦚', dezenas: ['73','74','75','76'] },
+  { grupo: 20, nome: 'Peru',       emoji: '🦃', dezenas: ['77','78','79','80'] },
+  { grupo: 21, nome: 'Touro',      emoji: '🐂', dezenas: ['81','82','83','84'] },
+  { grupo: 22, nome: 'Tigre',      emoji: '🐅', dezenas: ['85','86','87','88'] },
+  { grupo: 23, nome: 'Urso',       emoji: '🐻', dezenas: ['89','90','91','92'] },
+  { grupo: 24, nome: 'Veado',      emoji: '🦌', dezenas: ['93','94','95','96'] },
+  { grupo: 25, nome: 'Vaca',       emoji: '🐄', dezenas: ['97','98','99','00'] },
 ];
 
-const EMOJIS: Record<string, string> = {
-  'Avestruz': '🦆', 'Águia': '🦅', 'Burro': '🫏', 'Borboleta': '🦋', 'Cachorro': '🐕',
-  'Cabra': '🐐', 'Carneiro': '🐏', 'Camelo': '🐫', 'Cobra': '🐍', 'Coelho': '🐇',
-  'Cavalo': '🐴', 'Elefante': '🐘', 'Galo': '🐓', 'Gato': '🐱', 'Jacaré': '🐊',
-  'Leão': '🦁', 'Macaco': '🐒', 'Porco': '🐷', 'Pavão': '🦚', 'Peru': '🦃',
-  'Touro': '🐂', 'Tigre': '🐅', 'Urso': '🐻', 'Veado': '🦌', 'Vaca': '🐄',
-};
+type BichoEntry = typeof BICHO_TABLE[number];
 
-// Mensagens pré-definidas dos agentes - variadas e naturais
-const PALPITE_MESSAGES = [
-  (b: string) => `Tô sentindo o ${b} forte hoje ${EMOJIS[b] || ''}`,
-  (b: string) => `Galera, bora no ${b}! ${EMOJIS[b] || ''} Pressentimento bom demais`,
-  (b: string) => `Alguém mais vai no ${b}? ${EMOJIS[b] || ''} Acho que vem!`,
-  (b: string) => `${b} ${EMOJIS[b] || ''} tá pedindo pra sair, confia!`,
-  (b: string) => `Meu palpite do dia: ${b} ${EMOJIS[b] || ''} 🔥`,
-  (b: string) => `Sonhei com ${b} ${EMOJIS[b] || ''} ontem à noite, vou meter ficha!`,
-  (b: string) => `${b} ${EMOJIS[b] || ''} no grupo do 1º ao 5º, quem vai?`,
-  (b: string) => `Minha vizinha sonhou com ${b} ${EMOJIS[b] || ''}, vou apostar!`,
-  (b: string) => `Faz 3 dias que o ${b} ${EMOJIS[b] || ''} não sai, hj é o dia`,
-  (b: string) => `Olha, ${b} ${EMOJIS[b] || ''} na centena, quem cola?`,
-  (b: string) => `Pessoal, ${b} ${EMOJIS[b] || ''} na cabeça desde ontem, vou arriscar`,
-  (b: string) => `Semana passada perdi por pouco no ${b} ${EMOJIS[b] || ''}, hj vai!`,
-  (b: string) => `Recebi um pressentimento forte sobre ${b} ${EMOJIS[b] || ''}`,
-  (b: string) => `Quem tá comigo no ${b}? ${EMOJIS[b] || ''} Tô confiante demais`,
-  (b: string) => `Vi o ${b} ${EMOJIS[b] || ''} na rua hj kkkk é sinal`,
-  (b: string) => `Meu palpite certeiro: ${b} ${EMOJIS[b] || ''} na dezena 💪`,
-  (b: string) => `Apostei ${b} ${EMOJIS[b] || ''} no PT das 14h e das 16h`,
-  (b: string) => `Coloquei ${b} ${EMOJIS[b] || ''} em todas as modalidades kkk`,
+const SORTEIOS = ['PT 09h', 'PT 11h', 'PT 14h', 'PT 16h', 'PT 18h', 'PT 21h', 'Maluca 09h', 'Maluca 11h', 'Maluca 14h', 'Maluca 16h', 'Maluca 18h', 'Maluca 21h', 'Federal', 'Bahia 10h', 'Bahia 12h', 'Bahia 15h', 'Bahia 19h', 'Nacional'];
+
+// Gera milhar aleatória baseada nas dezenas do bicho
+function randomMilhar(bicho: BichoEntry): string {
+  const dez = randomItem(bicho.dezenas);
+  const prefix = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+  return `${prefix}${dez}`;
+}
+
+// Gera centena aleatória baseada nas dezenas do bicho
+function randomCentena(bicho: BichoEntry): string {
+  const dez = randomItem(bicho.dezenas);
+  const prefix = String(Math.floor(Math.random() * 10));
+  return `${prefix}${dez}`;
+}
+
+// Gera uma sequência de milhares "ate" no formato do jogo
+function randomMilharRange(bicho: BichoEntry): string {
+  const base = randomMilhar(bicho);
+  const baseNum = parseInt(base);
+  const end = String(baseNum + 3).padStart(4, '0');
+  return `${base}ate${end}`;
+}
+
+// Gera um LOOK (lista de emojis + dezenas de bichos variados)
+function generateLook(): string {
+  const count = 3 + Math.floor(Math.random() * 3); // 3-5 linhas
+  const lines: string[] = ['LOOK 👀'];
+  const rows = Math.ceil(count * 3 / 3);
+  for (let r = 0; r < rows; r++) {
+    const items: string[] = [];
+    for (let c = 0; c < 3; c++) {
+      const b = randomItem(BICHO_TABLE);
+      const dez = randomItem(b.dezenas);
+      items.push(`${b.emoji}${dez}`);
+    }
+    lines.push(items.join(' '));
+  }
+  return lines.join('\n');
+}
+
+// Gera palpite técnico com números reais do bicho
+function generatePalpiteTecnico(): string {
+  const bicho = randomItem(BICHO_TABLE);
+  const sorteio = randomItem(SORTEIOS);
+  const templates = [
+    // Formato "Nacional" com milhares
+    () => {
+      const b1 = randomItem(BICHO_TABLE);
+      const b2 = randomItem(BICHO_TABLE);
+      const lines = [
+        `${sorteio}`,
+        `${randomMilharRange(b1)} ${randomMilhar(b2)} ${randomMilhar(bicho)}`,
+        `${randomMilharRange(bicho)} ${randomMilhar(b1)}`,
+        `${randomMilharRange(b2)}`,
+      ];
+      return lines.join('\n');
+    },
+    // Formato "Hoje vamos atrás do BICHO"
+    () => {
+      const dezenas = bicho.dezenas.map(d => randomMilhar({ ...bicho, dezenas: [d] }));
+      return `Hoje nós vamos atrás do ${bicho.nome.toUpperCase()} ${bicho.emoji}\n${dezenas.join(' - ')}`;
+    },
+    // Formato LOOK
+    () => generateLook(),
+    // Palpite simples com dezenas
+    () => {
+      const dez = bicho.dezenas.join(' - ');
+      return `Meu palpite pro ${sorteio}:\n${bicho.emoji} ${bicho.nome} (${dez})\nConfia! 🔥`;
+    },
+    // Palpite com milhar e centena
+    () => {
+      const mil = randomMilhar(bicho);
+      const cen = randomCentena(bicho);
+      return `${sorteio}\n${bicho.emoji} ${bicho.nome}\nMilhar: ${mil}\nCentena: ${cen}\nBora! 💪`;
+    },
+    // Múltiplos bichos
+    () => {
+      const b2 = randomItem(BICHO_TABLE);
+      const b3 = randomItem(BICHO_TABLE);
+      return `Meus palpites de hoje:\n${bicho.emoji}${randomItem(bicho.dezenas)} ${b2.emoji}${randomItem(b2.dezenas)} ${b3.emoji}${randomItem(b3.dezenas)}\nQuem vai junto? 🎯`;
+    },
+    // Dezena com confiança
+    () => {
+      const dez = randomItem(bicho.dezenas);
+      return `Tô com a ${dez} na cabeça o dia todo ${bicho.emoji}\n${bicho.nome} vai sair, pode anotar!`;
+    },
+  ];
+  return randomItem(templates)();
+}
+
+// Mensagens de palpites simples (texto corrido sem números)
+const PALPITE_SIMPLES = [
+  (b: BichoEntry) => `Tô sentindo o ${b.nome} forte hoje ${b.emoji}`,
+  (b: BichoEntry) => `Galera, bora no ${b.nome}! ${b.emoji} Pressentimento bom demais`,
+  (b: BichoEntry) => `${b.nome} ${b.emoji} tá pedindo pra sair, confia!`,
+  (b: BichoEntry) => `Sonhei com ${b.nome} ${b.emoji} ontem à noite, vou meter ficha!`,
+  (b: BichoEntry) => `Minha vizinha sonhou com ${b.nome} ${b.emoji}, vou apostar!`,
+  (b: BichoEntry) => `Faz 3 dias que o ${b.nome} ${b.emoji} não sai, hj é o dia`,
+  (b: BichoEntry) => `Pessoal, ${b.nome} ${b.emoji} na cabeça desde ontem, vou arriscar`,
+  (b: BichoEntry) => `Vi ${b.nome} ${b.emoji} na rua hj kkkk é sinal`,
+  (b: BichoEntry) => `Quem tá comigo no ${b.nome}? ${b.emoji} Tô confiante demais`,
+  (b: BichoEntry) => `${b.nome} ${b.emoji} no grupo do 1º ao 5º, quem vai?`,
+  (b: BichoEntry) => { const dez = randomItem(b.dezenas); return `Dezena ${dez} do ${b.nome} ${b.emoji}, vou na centena e milhar tb`; },
+  (b: BichoEntry) => { const dez = b.dezenas.join(', '); return `${b.nome} ${b.emoji} (${dez}) não tem como errar hoje!`; },
 ];
 
 const WIN_MESSAGES = [
-  (b: string, v: string) => `GANHEI R$${v} no ${b}!! ${EMOJIS[b] || ''} 🎉🎉`,
-  (b: string, v: string) => `Olha isso galera!! R$${v} no ${b} ${EMOJIS[b] || ''} 💰💰`,
-  (b: string, v: string) => `SAIU! ${b} ${EMOJIS[b] || ''} veio certinho! +R$${v} na conta 🤑`,
-  (b: string, v: string) => `Peguei R$${v} agora no ${b} ${EMOJIS[b] || ''}!! Quem foi junto? 🏆`,
-  (b: string, v: string) => `Acertei ${b} ${EMOJIS[b] || ''}!! R$${v} caiu aqui 🔥🔥`,
-  (b: string, v: string) => `Meu Deus, ${b} ${EMOJIS[b] || ''} saiu!! R$${v} na minha conta agora 😭🙏`,
-  (b: string, v: string) => `Não acredito, R$${v} no ${b} ${EMOJIS[b] || ''}!! Esse grupo é abençoado`,
-  (b: string, v: string) => `Quem duvidou? ${b} ${EMOJIS[b] || ''} deu certinho! +R$${v} 💸`,
-  (b: string, v: string) => `Acabei de sacar R$${v} do ${b} ${EMOJIS[b] || ''}!! PIX já caiu ✅`,
-  (b: string, v: string) => `To tremendo aqui gente, R$${v} no ${b} ${EMOJIS[b] || ''} 😍`,
-  (b: string, v: string) => `Graças a Deus, ${b} ${EMOJIS[b] || ''} saiu, R$${v} pra conta!! 🙏🙏`,
-  (b: string, v: string) => `Eu avisei que o ${b} ${EMOJIS[b] || ''} ia sair! R$${v} na mão 🤩`,
+  (b: BichoEntry, v: string) => `GANHEI R$${v} no ${b.nome}!! ${b.emoji} 🎉🎉`,
+  (b: BichoEntry, v: string) => `Olha isso galera!! R$${v} no ${b.nome} ${b.emoji} 💰💰`,
+  (b: BichoEntry, v: string) => { const dez = randomItem(b.dezenas); return `SAIU! ${b.nome} ${b.emoji} dezena ${dez} veio certinho! +R$${v} na conta 🤑`; },
+  (b: BichoEntry, v: string) => `Peguei R$${v} agora no ${b.nome} ${b.emoji}!! Quem foi junto? 🏆`,
+  (b: BichoEntry, v: string) => { const mil = randomMilhar(b); return `Acertei a milhar ${mil} do ${b.nome} ${b.emoji}!! R$${v} caiu aqui 🔥🔥`; },
+  (b: BichoEntry, v: string) => `Meu Deus, ${b.nome} ${b.emoji} saiu!! R$${v} na minha conta agora 😭🙏`,
+  (b: BichoEntry, v: string) => { const cen = randomCentena(b); return `Centena ${cen} do ${b.nome} ${b.emoji}!! R$${v} pra conta 💸`; },
+  (b: BichoEntry, v: string) => `Acabei de sacar R$${v} do ${b.nome} ${b.emoji}!! PIX já caiu ✅`,
+  (b: BichoEntry, v: string) => `To tremendo aqui gente, R$${v} no ${b.nome} ${b.emoji} 😍`,
+  (b: BichoEntry, v: string) => `Graças a Deus, ${b.nome} ${b.emoji} saiu, R$${v} pra conta!! 🙏🙏`,
+  (b: BichoEntry, v: string) => `Eu avisei que o ${b.nome} ${b.emoji} ia sair! R$${v} na mão 🤩`,
+  (b: BichoEntry, v: string) => { const mil = randomMilhar(b); return `Milhar ${mil} saiu no ${b.nome} ${b.emoji}! R$${v} limpo 🤑🤑`; },
 ];
 
 const REACTION_MESSAGES = [
@@ -187,15 +288,18 @@ function generateAgentMessage(): CommunityMessage {
   const rand = Math.random();
   let content: string;
 
-  if (rand < 0.35) {
-    // Palpite
-    const bicho = randomItem(BICHOS);
-    content = randomItemNoRepeat(PALPITE_MESSAGES, 'palpite')(bicho);
-  } else if (rand < 0.55) {
+  if (rand < 0.25) {
+    // Palpite técnico com números reais
+    content = generatePalpiteTecnico();
+  } else if (rand < 0.40) {
+    // Palpite simples (texto)
+    const bicho = randomItem(BICHO_TABLE);
+    content = randomItemNoRepeat(PALPITE_SIMPLES, 'palpite_simples')(bicho);
+  } else if (rand < 0.60) {
     // Vitória
-    const bicho = randomItem(BICHOS);
+    const bicho = randomItem(BICHO_TABLE);
     content = randomItemNoRepeat(WIN_MESSAGES, 'win')(bicho, randomValue());
-  } else if (rand < 0.75) {
+  } else if (rand < 0.80) {
     // Reação
     content = randomItemNoRepeat(REACTION_MESSAGES, 'reaction');
   } else {
