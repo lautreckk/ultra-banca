@@ -11,7 +11,6 @@ import {
   Copy,
   Check,
   Users,
-  Phone,
   Headphones,
   BarChart3,
 } from 'lucide-react';
@@ -252,28 +251,7 @@ export default function DashboardPage() {
       </Link>
 
       {/* Quick Actions Row */}
-      <div className="grid grid-cols-4 gap-2">
-        {config.promotor_link ? (
-          <a
-            href={config.promotor_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
-            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
-          >
-            <Phone className="h-5 w-5 text-emerald-400" />
-            <span className="text-[11px] font-semibold text-zinc-300">Promotor</span>
-          </a>
-        ) : (
-          <div
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 opacity-50"
-            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
-          >
-            <Phone className="h-5 w-5 text-zinc-500" />
-            <span className="text-[11px] font-semibold text-zinc-500">Promotor</span>
-          </div>
-        )}
-
+      <div className="grid grid-cols-3 gap-2">
         <button
           onClick={() => setChatOpen(true)}
           className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
