@@ -19,6 +19,7 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { createClient } from '@/lib/supabase/client';
 import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
+import { SupportChat } from '@/components/shared/support-chat';
 
 interface UltimoGanhador {
   unidade: string;
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [codigoConvite, setCodigoConvite] = useState('');
   const [ultimoGanhador, setUltimoGanhador] = useState<UltimoGanhador | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
   const config = usePlatformConfig();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('login');
 
@@ -268,26 +270,14 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {config.social_whatsapp ? (
-          <a
-            href={config.social_whatsapp.startsWith('http') ? config.social_whatsapp : `https://wa.me/${config.social_whatsapp.replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
-            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
-          >
-            <Headphones className="h-5 w-5 text-emerald-400" />
-            <span className="text-[11px] font-semibold text-zinc-300">Suporte</span>
-          </a>
-        ) : (
-          <div
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 opacity-50"
-            style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
-          >
-            <Headphones className="h-5 w-5 text-zinc-500" />
-            <span className="text-[11px] font-semibold text-zinc-500">Suporte</span>
-          </div>
-        )}
+        <button
+          onClick={() => setChatOpen(true)}
+          className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
+          style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
+        >
+          <Headphones className="h-5 w-5 text-emerald-400" />
+          <span className="text-[11px] font-semibold text-zinc-300">Suporte</span>
+        </button>
 
         <Link
           href="/resultados"
@@ -358,6 +348,9 @@ export default function DashboardPage() {
       {isVisible && currentAd && (
         <AdPopup ad={currentAd} onClose={closeAd} />
       )}
+
+      {/* Support Chat */}
+      <SupportChat open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
