@@ -8,18 +8,21 @@ import { X, Send, ChevronLeft, Users } from 'lucide-react';
 // ============================================================================
 
 const AGENTS = [
-  { name: 'Carlos M.', avatar: 'https://i.pravatar.cc/150?img=11', color: '#E91E63' },
-  { name: 'Ana Paula', avatar: 'https://i.pravatar.cc/150?img=5', color: '#9C27B0' },
-  { name: 'Roberto S.', avatar: 'https://i.pravatar.cc/150?img=12', color: '#FF9800' },
-  { name: 'Fernanda L.', avatar: 'https://i.pravatar.cc/150?img=9', color: '#4CAF50' },
-  { name: 'Lucas B.', avatar: 'https://i.pravatar.cc/150?img=33', color: '#2196F3' },
-  { name: 'Mariana C.', avatar: 'https://i.pravatar.cc/150?img=25', color: '#FF5722' },
-  { name: 'João Pedro', avatar: 'https://i.pravatar.cc/150?img=53', color: '#00BCD4' },
-  { name: 'Juliana F.', avatar: 'https://i.pravatar.cc/150?img=47', color: '#E040FB' },
-  { name: 'Diego R.', avatar: 'https://i.pravatar.cc/150?img=59', color: '#FFEB3B' },
-  { name: 'Patrícia A.', avatar: 'https://i.pravatar.cc/150?img=44', color: '#8BC34A' },
-  { name: 'Marcos V.', avatar: 'https://i.pravatar.cc/150?img=60', color: '#03A9F4' },
-  { name: 'Camila S.', avatar: 'https://i.pravatar.cc/150?img=32', color: '#F44336' },
+  { name: 'Seu Carlos', avatar: 'https://randomuser.me/api/portraits/men/72.jpg', color: '#E91E63' },
+  { name: 'Dona Maria', avatar: 'https://randomuser.me/api/portraits/women/79.jpg', color: '#9C27B0' },
+  { name: 'Roberto S.', avatar: 'https://randomuser.me/api/portraits/men/62.jpg', color: '#FF9800' },
+  { name: 'Cláudia R.', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', color: '#4CAF50' },
+  { name: 'Toninho', avatar: 'https://randomuser.me/api/portraits/men/55.jpg', color: '#2196F3' },
+  { name: 'Vera Lúcia', avatar: 'https://randomuser.me/api/portraits/women/52.jpg', color: '#FF5722' },
+  { name: 'Seu Jorge', avatar: 'https://randomuser.me/api/portraits/men/45.jpg', color: '#00BCD4' },
+  { name: 'Neide F.', avatar: 'https://randomuser.me/api/portraits/women/58.jpg', color: '#E040FB' },
+  { name: 'Marcos V.', avatar: 'https://randomuser.me/api/portraits/men/41.jpg', color: '#FFEB3B' },
+  { name: 'Rosângela', avatar: 'https://randomuser.me/api/portraits/women/45.jpg', color: '#8BC34A' },
+  { name: 'Edson P.', avatar: 'https://randomuser.me/api/portraits/men/67.jpg', color: '#03A9F4' },
+  { name: 'Sandra M.', avatar: 'https://randomuser.me/api/portraits/women/62.jpg', color: '#F44336' },
+  { name: 'Zé Antônio', avatar: 'https://randomuser.me/api/portraits/men/74.jpg', color: '#795548' },
+  { name: 'Marlene', avatar: 'https://randomuser.me/api/portraits/women/71.jpg', color: '#607D8B' },
+  { name: 'Valdir', avatar: 'https://randomuser.me/api/portraits/men/58.jpg', color: '#FF6F00' },
 ];
 
 const BICHOS = [
@@ -37,7 +40,7 @@ const EMOJIS: Record<string, string> = {
   'Touro': '🐂', 'Tigre': '🐅', 'Urso': '🐻', 'Veado': '🦌', 'Vaca': '🐄',
 };
 
-// Mensagens pré-definidas dos agentes
+// Mensagens pré-definidas dos agentes - variadas e naturais
 const PALPITE_MESSAGES = [
   (b: string) => `Tô sentindo o ${b} forte hoje ${EMOJIS[b] || ''}`,
   (b: string) => `Galera, bora no ${b}! ${EMOJIS[b] || ''} Pressentimento bom demais`,
@@ -46,6 +49,17 @@ const PALPITE_MESSAGES = [
   (b: string) => `Meu palpite do dia: ${b} ${EMOJIS[b] || ''} 🔥`,
   (b: string) => `Sonhei com ${b} ${EMOJIS[b] || ''} ontem à noite, vou meter ficha!`,
   (b: string) => `${b} ${EMOJIS[b] || ''} no grupo do 1º ao 5º, quem vai?`,
+  (b: string) => `Minha vizinha sonhou com ${b} ${EMOJIS[b] || ''}, vou apostar!`,
+  (b: string) => `Faz 3 dias que o ${b} ${EMOJIS[b] || ''} não sai, hj é o dia`,
+  (b: string) => `Olha, ${b} ${EMOJIS[b] || ''} na centena, quem cola?`,
+  (b: string) => `Pessoal, ${b} ${EMOJIS[b] || ''} na cabeça desde ontem, vou arriscar`,
+  (b: string) => `Semana passada perdi por pouco no ${b} ${EMOJIS[b] || ''}, hj vai!`,
+  (b: string) => `Recebi um pressentimento forte sobre ${b} ${EMOJIS[b] || ''}`,
+  (b: string) => `Quem tá comigo no ${b}? ${EMOJIS[b] || ''} Tô confiante demais`,
+  (b: string) => `Vi o ${b} ${EMOJIS[b] || ''} na rua hj kkkk é sinal`,
+  (b: string) => `Meu palpite certeiro: ${b} ${EMOJIS[b] || ''} na dezena 💪`,
+  (b: string) => `Apostei ${b} ${EMOJIS[b] || ''} no PT das 14h e das 16h`,
+  (b: string) => `Coloquei ${b} ${EMOJIS[b] || ''} em todas as modalidades kkk`,
 ];
 
 const WIN_MESSAGES = [
@@ -54,6 +68,13 @@ const WIN_MESSAGES = [
   (b: string, v: string) => `SAIU! ${b} ${EMOJIS[b] || ''} veio certinho! +R$${v} na conta 🤑`,
   (b: string, v: string) => `Peguei R$${v} agora no ${b} ${EMOJIS[b] || ''}!! Quem foi junto? 🏆`,
   (b: string, v: string) => `Acertei ${b} ${EMOJIS[b] || ''}!! R$${v} caiu aqui 🔥🔥`,
+  (b: string, v: string) => `Meu Deus, ${b} ${EMOJIS[b] || ''} saiu!! R$${v} na minha conta agora 😭🙏`,
+  (b: string, v: string) => `Não acredito, R$${v} no ${b} ${EMOJIS[b] || ''}!! Esse grupo é abençoado`,
+  (b: string, v: string) => `Quem duvidou? ${b} ${EMOJIS[b] || ''} deu certinho! +R$${v} 💸`,
+  (b: string, v: string) => `Acabei de sacar R$${v} do ${b} ${EMOJIS[b] || ''}!! PIX já caiu ✅`,
+  (b: string, v: string) => `To tremendo aqui gente, R$${v} no ${b} ${EMOJIS[b] || ''} 😍`,
+  (b: string, v: string) => `Graças a Deus, ${b} ${EMOJIS[b] || ''} saiu, R$${v} pra conta!! 🙏🙏`,
+  (b: string, v: string) => `Eu avisei que o ${b} ${EMOJIS[b] || ''} ia sair! R$${v} na mão 🤩`,
 ];
 
 const REACTION_MESSAGES = [
@@ -68,9 +89,21 @@ const REACTION_MESSAGES = [
   'Quanto apostou?',
   'Vou apostar tbm! 🚀',
   'Mandou bem demais!! 💰',
-  'Sextou com lucro! 🤑',
   'Esse grupo é abençoado 🙏',
   'Confia no processo! 📈',
+  'Já saquei tb, caiu na hora ✅',
+  'Aeee! Me passa esse palpite sempre 😂',
+  'Caramba!! Que sorte, parabéns!',
+  'Queria ter ido junto 😩',
+  'Semana que vem eu vou tbm!',
+  'Vc joga em qual modalidade normalmente?',
+  'Me inspira demais esse grupo!',
+  'Tô aprendendo com vocês 📝',
+  'Mês passado ganhei seguindo palpite daqui',
+  'Amém! Que todos nós ganhemos 🙏',
+  'Bora galera, é nóis!! 💪',
+  'Show! Tô acompanhando aqui',
+  'Muito bom, parabéns a todos que acertaram!',
 ];
 
 const GENERAL_MESSAGES = [
@@ -84,6 +117,21 @@ const GENERAL_MESSAGES = [
   'Quem mais tá na Maluca? 🎰',
   'Galera, não esqueçam de conferir os resultados!',
   'Boa sorte pra todos nós! 🍀',
+  'Eae pessoal, já jogaram hoje?',
+  'Quem acertou ontem? Vi que saiu uns bons',
+  'Acabei de fazer minha recarga, bora jogar!',
+  'Alguém tem palpite pra PT das 16h?',
+  'To gostando desse grupo, sempre tem palpite bom',
+  'Fala galera! Cheguei agora, o que tá rolando?',
+  'Alguém jogou na Bahia hoje?',
+  'Resultado da Federal já saiu?',
+  'Hoje tô com fé, vai sair coisa boa!',
+  'Quem mais joga na centena aqui?',
+  'O grupo de ontem acertou em cheio hein!',
+  'Pessoal novo no grupo, bem vindos! 🤝',
+  'Bora compartilhar os palpites, juntos somos mais fortes!',
+  'Tô acompanhando os resultados aqui pelo app mesmo',
+  'Quem já ganhou essa semana? Conta aí!',
 ];
 
 interface CommunityMessage {
@@ -103,6 +151,28 @@ function getTimeNow(): string {
   return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Anti-repetição: rastreia últimos índices usados por categoria
+const usedIndices: Record<string, number[]> = {};
+
+function randomItemNoRepeat<T>(arr: T[], category: string): T {
+  if (!usedIndices[category]) usedIndices[category] = [];
+  const used = usedIndices[category];
+  // Manter histórico de metade dos itens para evitar repetição
+  const maxHistory = Math.max(Math.floor(arr.length / 2), 3);
+
+  let idx: number;
+  let attempts = 0;
+  do {
+    idx = Math.floor(Math.random() * arr.length);
+    attempts++;
+  } while (used.includes(idx) && attempts < 10);
+
+  used.push(idx);
+  if (used.length > maxHistory) used.shift();
+
+  return arr[idx];
+}
+
 function randomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -113,24 +183,24 @@ function randomValue(): string {
 }
 
 function generateAgentMessage(): CommunityMessage {
-  const agent = randomItem(AGENTS);
+  const agent = randomItemNoRepeat(AGENTS, 'agents');
   const rand = Math.random();
   let content: string;
 
   if (rand < 0.35) {
     // Palpite
     const bicho = randomItem(BICHOS);
-    content = randomItem(PALPITE_MESSAGES)(bicho);
+    content = randomItemNoRepeat(PALPITE_MESSAGES, 'palpite')(bicho);
   } else if (rand < 0.55) {
     // Vitória
     const bicho = randomItem(BICHOS);
-    content = randomItem(WIN_MESSAGES)(bicho, randomValue());
+    content = randomItemNoRepeat(WIN_MESSAGES, 'win')(bicho, randomValue());
   } else if (rand < 0.75) {
     // Reação
-    content = randomItem(REACTION_MESSAGES);
+    content = randomItemNoRepeat(REACTION_MESSAGES, 'reaction');
   } else {
     // Geral
-    content = randomItem(GENERAL_MESSAGES);
+    content = randomItemNoRepeat(GENERAL_MESSAGES, 'general');
   }
 
   return {
