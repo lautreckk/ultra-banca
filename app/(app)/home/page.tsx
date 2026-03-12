@@ -142,7 +142,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-5 px-4 py-4">
+    <div className="space-y-6 px-4 py-4">
       {/* Invite Link */}
       <div className="flex items-center gap-2 rounded-xl border border-zinc-700/40 px-3 py-2.5" style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}>
         <span className="text-sm text-zinc-400 shrink-0">Convidar:</span>
@@ -251,32 +251,32 @@ export default function DashboardPage() {
       </Link>
 
       {/* Quick Actions Row */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-3">
         <button
           onClick={() => setChatOpen(true)}
-          className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
+          className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
-          <Headphones className="h-5 w-5 text-emerald-400" />
-          <span className="text-[11px] font-semibold text-zinc-300">Suporte</span>
+          <Headphones className="h-6 w-6 text-emerald-400" />
+          <span className="text-xs font-semibold text-zinc-300">Suporte</span>
         </button>
 
         <Link
           href="/resultados"
-          className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
+          className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
-          <BarChart3 className="h-5 w-5 text-emerald-400" />
-          <span className="text-[11px] font-semibold text-zinc-300">Cotações</span>
+          <BarChart3 className="h-6 w-6 text-emerald-400" />
+          <span className="text-xs font-semibold text-zinc-300">Cotações</span>
         </Link>
 
         <Link
           href="/amigos"
-          className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-700/40 py-3.5 active:scale-[0.95] transition-transform"
+          className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
-          <Users className="h-5 w-5 text-emerald-400" />
-          <span className="text-[11px] font-semibold text-zinc-300">Indique</span>
+          <Users className="h-6 w-6 text-emerald-400" />
+          <span className="text-xs font-semibold text-zinc-300">Indique</span>
         </Link>
       </div>
 
@@ -311,7 +311,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-3 gap-3">
         <Link href="/saques" className="block">
           <div
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 active:scale-[0.97] transition-transform"
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 min-h-[72px] active:scale-[0.97] transition-transform"
             style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <DollarSign className="h-6 w-6 text-emerald-400" />
@@ -321,7 +321,7 @@ export default function DashboardPage() {
 
         <Link href="/premiadas" className="block">
           <div
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 active:scale-[0.97] transition-transform"
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 min-h-[72px] active:scale-[0.97] transition-transform"
             style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <Trophy className="h-6 w-6 text-amber-400" />
@@ -331,7 +331,7 @@ export default function DashboardPage() {
 
         <Link href="/relatorios" className="block">
           <div
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 active:scale-[0.97] transition-transform"
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 min-h-[72px] active:scale-[0.97] transition-transform"
             style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
           >
             <FileText className="h-6 w-6 text-blue-400" />

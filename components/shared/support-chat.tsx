@@ -60,10 +60,23 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
 
+  // Lock body scroll when chat is open
   useEffect(() => {
     if (open) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
       setTimeout(() => inputRef.current?.focus(), 300);
     }
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    };
   }, [open]);
 
   const addAssistantMessages = useCallback(async (fullReply: string) => {
@@ -177,12 +190,12 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ touchAction: 'none' }}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
       {/* Chat Window */}
-      <div className="relative w-full max-w-md h-[90vh] flex flex-col rounded-t-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md flex flex-col rounded-t-2xl shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
 
         {/* Header - WhatsApp style */}
         <div className="flex items-center gap-3 px-3 py-2.5 bg-[#075E54]">

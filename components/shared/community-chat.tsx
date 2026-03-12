@@ -8,21 +8,21 @@ import { X, Send, ChevronLeft, Users } from 'lucide-react';
 // ============================================================================
 
 const AGENTS = [
-  { name: 'Seu Carlos', avatar: 'https://randomuser.me/api/portraits/men/72.jpg', color: '#E91E63' },
-  { name: 'Dona Maria', avatar: 'https://randomuser.me/api/portraits/women/79.jpg', color: '#9C27B0' },
-  { name: 'Roberto S.', avatar: 'https://randomuser.me/api/portraits/men/62.jpg', color: '#FF9800' },
-  { name: 'Cláudia R.', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', color: '#4CAF50' },
-  { name: 'Toninho', avatar: 'https://randomuser.me/api/portraits/men/55.jpg', color: '#2196F3' },
-  { name: 'Vera Lúcia', avatar: 'https://randomuser.me/api/portraits/women/52.jpg', color: '#FF5722' },
-  { name: 'Seu Jorge', avatar: 'https://randomuser.me/api/portraits/men/45.jpg', color: '#00BCD4' },
-  { name: 'Neide F.', avatar: 'https://randomuser.me/api/portraits/women/58.jpg', color: '#E040FB' },
-  { name: 'Marcos V.', avatar: 'https://randomuser.me/api/portraits/men/41.jpg', color: '#FFEB3B' },
-  { name: 'Rosângela', avatar: 'https://randomuser.me/api/portraits/women/45.jpg', color: '#8BC34A' },
-  { name: 'Edson P.', avatar: 'https://randomuser.me/api/portraits/men/67.jpg', color: '#03A9F4' },
-  { name: 'Sandra M.', avatar: 'https://randomuser.me/api/portraits/women/62.jpg', color: '#F44336' },
-  { name: 'Zé Antônio', avatar: 'https://randomuser.me/api/portraits/men/74.jpg', color: '#795548' },
-  { name: 'Marlene', avatar: 'https://randomuser.me/api/portraits/women/71.jpg', color: '#607D8B' },
-  { name: 'Valdir', avatar: 'https://randomuser.me/api/portraits/men/58.jpg', color: '#FF6F00' },
+  { name: 'Seu Carlos', phone: '(21) 98745-3201', avatar: 'https://randomuser.me/api/portraits/men/72.jpg', color: '#E91E63' },
+  { name: 'Dona Maria', phone: '(11) 99632-4518', avatar: 'https://randomuser.me/api/portraits/women/79.jpg', color: '#9C27B0' },
+  { name: 'Roberto S.', phone: '(31) 97814-6230', avatar: 'https://randomuser.me/api/portraits/men/62.jpg', color: '#FF9800' },
+  { name: 'Cláudia R.', phone: '(85) 99421-7853', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', color: '#4CAF50' },
+  { name: 'Toninho', phone: '(71) 98536-1492', avatar: 'https://randomuser.me/api/portraits/men/55.jpg', color: '#2196F3' },
+  { name: 'Vera Lúcia', phone: '(19) 99187-3640', avatar: 'https://randomuser.me/api/portraits/women/52.jpg', color: '#FF5722' },
+  { name: 'Seu Jorge', phone: '(27) 98342-5917', avatar: 'https://randomuser.me/api/portraits/men/45.jpg', color: '#00BCD4' },
+  { name: 'Neide F.', phone: '(61) 99758-2034', avatar: 'https://randomuser.me/api/portraits/women/58.jpg', color: '#E040FB' },
+  { name: 'Marcos V.', phone: '(41) 98123-4567', avatar: 'https://randomuser.me/api/portraits/men/41.jpg', color: '#FFEB3B' },
+  { name: 'Rosângela', phone: '(51) 99647-8312', avatar: 'https://randomuser.me/api/portraits/women/45.jpg', color: '#8BC34A' },
+  { name: 'Edson P.', phone: '(13) 98456-7201', avatar: 'https://randomuser.me/api/portraits/men/67.jpg', color: '#03A9F4' },
+  { name: 'Sandra M.', phone: '(81) 99234-5618', avatar: 'https://randomuser.me/api/portraits/women/62.jpg', color: '#F44336' },
+  { name: 'Zé Antônio', phone: '(62) 98712-3490', avatar: 'https://randomuser.me/api/portraits/men/74.jpg', color: '#795548' },
+  { name: 'Marlene', phone: '(47) 99563-1278', avatar: 'https://randomuser.me/api/portraits/women/71.jpg', color: '#607D8B' },
+  { name: 'Valdir', phone: '(83) 98347-6521', avatar: 'https://randomuser.me/api/portraits/men/58.jpg', color: '#FF6F00' },
 ];
 
 // Tabela oficial do Jogo do Bicho com dezenas corretas
@@ -371,18 +371,31 @@ export function CommunityChat({ open, onClose }: CommunityChatProps) {
     };
   }, [open, scrollToBottom]);
 
+  // Lock body scroll when chat is open
   useEffect(() => {
     if (open) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 300);
     }
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    };
   }, [open, scrollToBottom]);
 
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || isSending) return;
 
-    const userAgent = { name: 'Você', avatar: '', color: '#00A884' };
+    const userAgent = { name: 'Você', phone: '', avatar: '', color: '#00A884' };
     const userMsg: CommunityMessage = {
       id: Math.random().toString(36).substring(2, 9),
       agent: userAgent,
@@ -433,10 +446,10 @@ export function CommunityChat({ open, onClose }: CommunityChatProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ touchAction: 'none' }}>
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
-      <div className="relative w-full max-w-md h-[90vh] flex flex-col rounded-t-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md flex flex-col rounded-t-2xl shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
 
         {/* Header */}
         <div className="flex items-center gap-3 px-3 py-2.5 bg-[#075E54]">
@@ -496,7 +509,7 @@ export function CommunityChat({ open, onClose }: CommunityChatProps) {
               >
                 {!msg.isUser && (
                   <p className="text-[12px] font-semibold mb-0.5" style={{ color: msg.agent.color }}>
-                    {msg.agent.name}
+                    {msg.agent.phone ? `${msg.agent.name} ~${msg.agent.phone}` : msg.agent.name}
                   </p>
                 )}
                 <span className="whitespace-pre-wrap">{msg.content}</span>
