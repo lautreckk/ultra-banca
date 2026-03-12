@@ -129,6 +129,7 @@ export function Drawer({ open, onClose, children, title = 'Escolha uma opcao' }:
             height: isDesktop ? 'auto' : 'calc(100% - 56px)',
             maxHeight: isDesktop ? 'calc(80vh - 56px)' : undefined,
             WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
           }}
         >
           {children}
@@ -146,24 +147,36 @@ interface DrawerItemProps {
 }
 
 export function DrawerItem({ icon, label, highlighted = false, onClick }: DrawerItemProps) {
-  const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    onClick?.();
-  };
+  const touchStartY = React.useRef<number | null>(null);
+  const touchStartTime = React.useRef<number>(0);
 
   return (
     <button
-      onClick={handleClick}
-      onTouchEnd={handleClick}
+      onClick={() => onClick?.()}
+      onTouchStart={(e) => {
+        touchStartY.current = e.touches[0].clientY;
+        touchStartTime.current = Date.now();
+      }}
+      onTouchEnd={(e) => {
+        if (touchStartY.current === null) return;
+        const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+        const deltaTime = Date.now() - touchStartTime.current;
+        // Only trigger if it was a tap (not a scroll): moved less than 10px and under 300ms
+        if (deltaY < 10 && deltaTime < 300) {
+          e.preventDefault();
+          onClick?.();
+        }
+        touchStartY.current = null;
+      }}
       className={cn(
-        'flex h-12 w-full items-center gap-3 px-4 min-h-[48px]',
-        'transition-all duration-200 active:bg-zinc-700/30 active:scale-[0.98]',
+        'flex w-full items-center gap-3 px-4 py-4 min-h-[52px]',
+        'transition-colors duration-150 active:bg-zinc-700/30',
         highlighted ? 'text-[var(--color-accent-orange)]' : 'text-white'
       )}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
-      {icon && <span className="w-6">{icon}</span>}
-      <span className="font-medium">{label}</span>
+      {icon && <span className="w-6 shrink-0">{icon}</span>}
+      <span className="font-medium text-[15px]">{label}</span>
     </button>
   );
 }
