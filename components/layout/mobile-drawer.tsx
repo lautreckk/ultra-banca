@@ -20,6 +20,7 @@ import {
 import { Drawer, DrawerItem } from '@/components/ui/drawer';
 import { createClient } from '@/lib/supabase/client';
 import { getUrlWithUtm } from '@/lib/utm';
+import { usePWAInstall } from '@/hooks/use-pwa-install';
 
 interface MobileDrawerProps {
   open: boolean;
@@ -29,9 +30,21 @@ interface MobileDrawerProps {
 export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { canInstall, isInstalled, promptInstall, isIOS } = usePWAInstall();
 
   const handleNavigate = (path: string) => {
     router.push(getUrlWithUtm(path));
+    onClose();
+  };
+
+  const handleInstallApp = async () => {
+    if (canInstall) {
+      await promptInstall();
+    } else if (isIOS && navigator.share) {
+      try {
+        await navigator.share({ title: document.title, url: window.location.origin });
+      } catch { /* cancelou */ }
+    }
     onClose();
   };
 
@@ -47,12 +60,14 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
       <div className="divide-y divide-[var(--color-border)]">
         {/* Highlighted items */}
         <div>
+          {!isInstalled && (
           <DrawerItem
             icon={<Download className="h-5 w-5" />}
-            label="Baixar APP"
+            label="Instalar App"
             highlighted
-            onClick={() => handleNavigate('/baixar')}
+            onClick={handleInstallApp}
           />
+          )}
           <DrawerItem
             icon={<Bell className="h-5 w-5" />}
             label="Notificacoes"
