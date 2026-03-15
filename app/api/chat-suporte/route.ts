@@ -23,7 +23,7 @@ CONHECIMENTO DA PLATAFORMA:
 - Saques 24h, liberados a qualquer horário. Sábados, domingos e feriados: próximo dia útil
 - Saques apenas com saldo de prêmios
 - CPF = conta PF, CNPJ = conta do mesmo CNPJ
-- Verificação de conta: taxa de R$14,92 (ressarcida após análise)
+- Verificação de conta: taxa de R$27,52 (ressarcida após análise)
 - Bônus de R$100 para depósitos acima de R$100
 - Programa "Indique e Ganhe": compartilhe código/link de indicação
 
