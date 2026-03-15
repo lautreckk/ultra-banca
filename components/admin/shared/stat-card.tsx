@@ -37,7 +37,7 @@ const iconMap: Record<string, LucideIcon> = {
 interface StatCardProps {
   title: string;
   value: string | number;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   icon?: string | LucideIcon | React.ReactNode;
   trend?: {
     value: number;

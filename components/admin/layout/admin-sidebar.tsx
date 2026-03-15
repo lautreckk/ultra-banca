@@ -35,6 +35,7 @@ import {
   Send,
   Webhook,
   ExternalLink,
+  Activity,
   BarChart3,
   Percent,
   UserPlus,
@@ -61,6 +62,11 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     href: '/admin/dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
+  },
+  {
+    label: 'Live',
+    href: '/admin/live',
+    icon: <Activity className="h-5 w-5" />,
   },
 
   // ========== GESTÃO DE USUÁRIOS ==========

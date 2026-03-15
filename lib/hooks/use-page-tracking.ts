@@ -16,6 +16,13 @@ function getSessionId(): string {
   return sessionId;
 }
 
+// Lê platform_id do cookie (setado pelo middleware)
+function getPlatformIdFromCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)platform_id=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 // Detecta tipo de dispositivo
 function getDeviceType(): string {
   if (typeof window === 'undefined') return 'unknown';
@@ -99,12 +106,14 @@ export function usePageTracking(userId: string | null) {
     if (!sessionId) return;
 
     try {
+      const platformId = getPlatformIdFromCookie();
       await supabaseRef.current.from('visitor_presence').upsert(
         {
           session_id: sessionId,
           user_id: userId,
           current_page: pathname,
           last_seen_at: new Date().toISOString(),
+          ...(platformId ? { platform_id: platformId } : {}),
         },
         {
           onConflict: 'session_id',
