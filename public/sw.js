@@ -1,34 +1,33 @@
-// Service Worker for Push Notifications
+// Service Worker for Push Notifications - v2
+
+// Push notification received
 self.addEventListener('push', function(event) {
   if (!event.data) return;
 
+  let data;
   try {
-    const data = event.data.json();
-    const options = {
-      body: data.body || '',
-      icon: data.icon || '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      vibrate: [200, 100, 200],
-      data: {
-        url: data.url || '/',
-      },
-      actions: data.actions || [],
-      tag: data.tag || 'default',
-      renotify: true,
-    };
-
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'Nova mensagem', options)
-    );
+    data = event.data.json();
   } catch (e) {
     // Fallback for plain text
-    event.waitUntil(
-      self.registration.showNotification('Nova mensagem', {
-        body: event.data.text(),
-        icon: '/icons/icon-192.png',
-      })
-    );
+    data = { title: 'Nova mensagem', body: event.data.text() };
   }
+
+  const options = {
+    body: data.body || '',
+    icon: data.icon || '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    vibrate: [200, 100, 200],
+    data: {
+      url: data.url || '/',
+    },
+    tag: data.tag || 'default',
+    renotify: true,
+    requireInteraction: true,
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Nova mensagem', options)
+  );
 });
 
 // Click handler - open the app
@@ -42,9 +41,11 @@ self.addEventListener('notificationclick', function(event) {
       // If a window is already open, focus it and navigate
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
+        if ('focus' in client) {
           client.focus();
-          client.navigate(url);
+          if ('navigate' in client) {
+            client.navigate(url);
+          }
           return;
         }
       }
@@ -56,7 +57,31 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-// Activate immediately
+// Install - skip waiting to activate immediately
+self.addEventListener('install', function(event) {
+  event.waitUntil(self.skipWaiting());
+});
+
+// Activate - claim clients immediately
 self.addEventListener('activate', function(event) {
   event.waitUntil(clients.claim());
+});
+
+// Periodic re-subscription check (when SW wakes up)
+self.addEventListener('pushsubscriptionchange', function(event) {
+  // When subscription expires or changes, re-subscribe
+  event.waitUntil(
+    self.registration.pushManager.subscribe(event.oldSubscription.options)
+      .then(function(subscription) {
+        // Notify the app to save the new subscription
+        return self.clients.matchAll().then(function(clients) {
+          clients.forEach(function(client) {
+            client.postMessage({
+              type: 'PUSH_SUBSCRIPTION_CHANGED',
+              subscription: subscription.toJSON(),
+            });
+          });
+        });
+      })
+  );
 });

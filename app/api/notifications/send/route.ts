@@ -77,15 +77,16 @@ export async function POST(req: NextRequest) {
       title,
       body,
       url: url || '/',
-      tag: notificationId || 'marketing',
+      tag: notificationId || `marketing-${Date.now()}`,
     });
 
     let sent = 0;
     let failed = 0;
     const expiredEndpoints: string[] = [];
+    const errors: string[] = [];
 
-    // Send to all subscribers
-    await Promise.allSettled(
+    // Send to all subscribers with timeout per notification
+    const results = await Promise.allSettled(
       subscriptions.map(async (sub) => {
         try {
           await webpush.sendNotification(
@@ -96,18 +97,50 @@ export async function POST(req: NextRequest) {
                 auth: sub.auth,
               },
             },
-            payload
+            payload,
+            {
+              TTL: 60 * 60 * 24, // 24 hours TTL
+              urgency: 'high',
+              topic: 'marketing',
+            }
           );
           sent++;
+          return { success: true, endpoint: sub.endpoint };
         } catch (err: unknown) {
-          const pushErr = err as { statusCode?: number };
+          const pushErr = err as { statusCode?: number; body?: string; message?: string };
           failed++;
-          if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
+
+          const statusCode = pushErr.statusCode || 0;
+          const errMsg = pushErr.message || pushErr.body || 'Unknown error';
+
+          // 410 Gone or 404 = subscription expired
+          if (statusCode === 410 || statusCode === 404) {
             expiredEndpoints.push(sub.endpoint);
           }
+          // 401/403 = VAPID auth issue
+          else if (statusCode === 401 || statusCode === 403) {
+            if (errors.length < 3) errors.push(`Auth error (${statusCode}): ${errMsg}`);
+          }
+          // Other errors
+          else {
+            if (errors.length < 3) errors.push(`Error ${statusCode}: ${errMsg}`);
+          }
+
+          return { success: false, endpoint: sub.endpoint, statusCode, error: errMsg };
         }
       })
     );
+
+    // Log summary
+    const failedResults = results
+      .filter(r => r.status === 'fulfilled' && !(r.value as { success: boolean }).success)
+      .map(r => (r as PromiseFulfilledResult<{ statusCode?: number }>).value);
+
+    console.log(`[PUSH] Send complete: ${sent}/${subscriptions.length} sent, ${failed} failed, ${expiredEndpoints.length} expired`);
+    if (failedResults.length > 0) {
+      const statusCodes = failedResults.map(r => r.statusCode).filter(Boolean);
+      console.log(`[PUSH] Failed status codes:`, [...new Set(statusCodes)]);
+    }
 
     // Clean up expired subscriptions
     if (expiredEndpoints.length > 0) {
@@ -115,6 +148,7 @@ export async function POST(req: NextRequest) {
         .from('push_subscriptions')
         .delete()
         .in('endpoint', expiredEndpoints);
+      console.log(`[PUSH] Cleaned ${expiredEndpoints.length} expired subscriptions`);
     }
 
     // Update notification record
@@ -130,6 +164,7 @@ export async function POST(req: NextRequest) {
       failed,
       total: subscriptions.length,
       expired: expiredEndpoints.length,
+      ...(errors.length > 0 ? { errors } : {}),
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);

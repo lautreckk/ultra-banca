@@ -22,6 +22,31 @@ function getPlatformIdFromCookie(): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+async function saveSubscription(subscription: PushSubscription, userId: string): Promise<boolean> {
+  const json = subscription.toJSON();
+  if (!json.endpoint || !json.keys) return false;
+
+  const supabase = createClient();
+  const platformId = getPlatformIdFromCookie();
+
+  const { error } = await supabase.from('push_subscriptions').upsert({
+    user_id: userId,
+    platform_id: platformId,
+    endpoint: json.endpoint,
+    p256dh: json.keys.p256dh,
+    auth: json.keys.auth,
+    user_agent: navigator.userAgent,
+  }, {
+    onConflict: 'user_id,endpoint',
+  });
+
+  if (error) {
+    console.error('[PUSH] Save subscription error:', error);
+    return false;
+  }
+  return true;
+}
+
 export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -34,10 +59,61 @@ export function usePushNotifications() {
     if (supported) {
       setPermission(Notification.permission);
 
-      // Check existing subscription
-      navigator.serviceWorker.ready.then(async (reg) => {
-        const sub = await reg.pushManager.getSubscription();
-        setIsSubscribed(!!sub);
+      // Register SW and check/refresh subscription
+      navigator.serviceWorker.register('/sw.js').then(async (registration) => {
+        await navigator.serviceWorker.ready;
+
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) {
+          setIsSubscribed(true);
+
+          // Force re-subscribe if using legacy FCM endpoint
+          if (existingSub.endpoint.includes('fcm.googleapis.com/fcm/send/')) {
+            console.log('[PUSH] Legacy FCM endpoint detected, re-subscribing...');
+            try {
+              await existingSub.unsubscribe();
+              const newSub = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+              });
+
+              const supabase = createClient();
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                // Delete old subscription
+                await supabase.from('push_subscriptions')
+                  .delete()
+                  .eq('endpoint', existingSub.endpoint);
+                // Save new one
+                await saveSubscription(newSub, user.id);
+                console.log('[PUSH] Re-subscribed with new endpoint');
+              }
+            } catch (err) {
+              console.error('[PUSH] Re-subscribe failed:', err);
+            }
+          }
+        }
+      });
+
+      // Listen for subscription changes from SW
+      navigator.serviceWorker.addEventListener('message', async (event) => {
+        if (event.data?.type === 'PUSH_SUBSCRIPTION_CHANGED') {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && event.data.subscription) {
+            const sub = event.data.subscription;
+            if (sub.endpoint && sub.keys) {
+              await supabase.from('push_subscriptions').upsert({
+                user_id: user.id,
+                platform_id: getPlatformIdFromCookie(),
+                endpoint: sub.endpoint,
+                p256dh: sub.keys.p256dh,
+                auth: sub.keys.auth,
+                user_agent: navigator.userAgent,
+              }, { onConflict: 'user_id,endpoint' });
+            }
+          }
+        }
       });
     }
   }, []);
@@ -56,37 +132,32 @@ export function usePushNotifications() {
 
       if (perm !== 'granted') return false;
 
-      // Subscribe to push
+      // Unsubscribe existing (to get fresh endpoint)
+      const existingSub = await registration.pushManager.getSubscription();
+      if (existingSub) {
+        await existingSub.unsubscribe();
+      }
+
+      // Subscribe to push with fresh endpoint
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
       });
-
-      const json = subscription.toJSON();
-      if (!json.endpoint || !json.keys) return false;
 
       // Save to Supabase
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const platformId = getPlatformIdFromCookie();
-
-      const { error } = await supabase.from('push_subscriptions').upsert({
-        user_id: user.id,
-        platform_id: platformId,
-        endpoint: json.endpoint,
-        p256dh: json.keys.p256dh,
-        auth: json.keys.auth,
-        user_agent: navigator.userAgent,
-      }, {
-        onConflict: 'user_id,endpoint',
-      });
-
-      if (error) {
-        console.error('[PUSH] Save subscription error:', error);
-        return false;
+      // Delete old subscriptions for this user
+      if (existingSub) {
+        await supabase.from('push_subscriptions')
+          .delete()
+          .eq('endpoint', existingSub.endpoint);
       }
+
+      const saved = await saveSubscription(subscription, user.id);
+      if (!saved) return false;
 
       setIsSubscribed(true);
       return true;
