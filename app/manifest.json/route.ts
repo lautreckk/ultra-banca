@@ -40,11 +40,16 @@ export async function GET() {
     name: config.site_name,
     short_name: config.site_name,
     description: config.site_description,
+    id: '/',
     start_url: '/',
+    scope: '/',
     display: 'standalone',
     background_color: config.color_background || '#000000',
     theme_color: config.color_primary || '#D4A84B',
     orientation: 'portrait',
+    gcm_sender_id: '103953800507',
+    prefer_related_applications: false,
+    categories: ['games', 'entertainment'],
     icons,
   };
 

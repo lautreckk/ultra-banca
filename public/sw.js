@@ -67,6 +67,12 @@ self.addEventListener('activate', function(event) {
   event.waitUntil(clients.claim());
 });
 
+// Fetch handler (required for beforeinstallprompt on Chrome)
+self.addEventListener('fetch', function(event) {
+  // Network-first strategy - let Next.js handle everything
+  event.respondWith(fetch(event.request));
+});
+
 // Periodic re-subscription check (when SW wakes up)
 self.addEventListener('pushsubscriptionchange', function(event) {
   // When subscription expires or changes, re-subscribe
