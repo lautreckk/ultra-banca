@@ -28,6 +28,8 @@ export interface ActiveUser {
   last_action: string;
   session_bet_total: number;
   last_deposit_value: number;
+  traffic_source: string | null;
+  promoter_code: string | null;
 }
 
 export interface HourlyMetric {
@@ -136,6 +138,8 @@ export async function getActiveUsers(page = 1, pageSize = 20): Promise<{ users: 
       last_action,
       session_bet_total,
       last_deposit_value,
+      traffic_source,
+      promoter_code,
       profiles(nome, telefone)
     `, { count: 'exact' })
     .gte('last_seen_at', twoMinAgo)
@@ -159,6 +163,8 @@ export async function getActiveUsers(page = 1, pageSize = 20): Promise<{ users: 
       last_action: row.last_action || 'browsing',
       session_bet_total: Number(row.session_bet_total) || 0,
       last_deposit_value: Number(row.last_deposit_value) || 0,
+      traffic_source: row.traffic_source || null,
+      promoter_code: row.promoter_code || null,
     };
   });
 

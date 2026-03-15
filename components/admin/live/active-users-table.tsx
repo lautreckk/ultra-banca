@@ -64,6 +64,37 @@ function StatusBadge() {
   );
 }
 
+const SOURCE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  'Meta Ads':  { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400', label: 'Meta' },
+  'Facebook':  { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400', label: 'Facebook' },
+  'Instagram': { bg: 'bg-pink-500/10 border-pink-500/20', text: 'text-pink-400', label: 'Instagram' },
+  'TikTok':    { bg: 'bg-fuchsia-500/10 border-fuchsia-500/20', text: 'text-fuchsia-400', label: 'TikTok' },
+  'Kwai':      { bg: 'bg-orange-500/10 border-orange-500/20', text: 'text-orange-400', label: 'Kwai' },
+  'Google':    { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', label: 'Google' },
+  'Google Ads':{ bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', label: 'Google Ads' },
+  'WhatsApp':  { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400', label: 'WhatsApp' },
+  'Telegram':  { bg: 'bg-sky-500/10 border-sky-500/20', text: 'text-sky-400', label: 'Telegram' },
+  'YouTube':   { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', label: 'YouTube' },
+  'Twitter/X': { bg: 'bg-zinc-500/10 border-zinc-500/20', text: 'text-zinc-300', label: 'X' },
+  'Promotor':  { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-400', label: 'Promotor' },
+  'Direto':    { bg: 'bg-zinc-700/30 border-zinc-600/20', text: 'text-zinc-400', label: 'Direto' },
+};
+
+function SourceBadge({ source, promoterCode }: { source: string | null; promoterCode: string | null }) {
+  if (!source) {
+    return <span className="text-xs text-zinc-600">-</span>;
+  }
+  const style = SOURCE_STYLES[source] || { bg: 'bg-zinc-700/30 border-zinc-600/20', text: 'text-zinc-400', label: source };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${style.bg} ${style.text}`}
+      title={promoterCode ? `Código: ${promoterCode}` : undefined}
+    >
+      {style.label}
+      {promoterCode && <span className="opacity-70">({promoterCode})</span>}
+    </span>
+  );
+}
+
 function WhatsAppButton({ phone }: { phone: string }) {
   if (!phone) return <span className="text-zinc-600 text-xs">-</span>;
   const formatted = formatPhone(phone);
@@ -133,6 +164,11 @@ export function ActiveUsersTable({ users, total, page, pageSize, onPageChange, l
       render: (_, row) => (
         <span className="text-sm text-zinc-300">{formatTimeActive(row.started_at)}</span>
       ),
+    },
+    {
+      key: 'traffic_source',
+      header: 'Origem',
+      render: (_, row) => <SourceBadge source={row.traffic_source} promoterCode={row.promoter_code} />,
     },
     {
       key: 'current_page',

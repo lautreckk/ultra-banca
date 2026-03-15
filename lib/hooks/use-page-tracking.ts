@@ -37,6 +37,116 @@ function getDeviceType(): string {
   return 'desktop';
 }
 
+// ============================================================================
+// DETECÇÃO DE ORIGEM DO TRÁFEGO
+// ============================================================================
+
+interface TrafficSource {
+  traffic_source: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  referrer_url: string | null;
+  promoter_code: string | null;
+}
+
+const TRAFFIC_SOURCE_KEY = '__traffic_source';
+
+function detectTrafficSource(): TrafficSource | null {
+  if (typeof window === 'undefined') return null;
+
+  // Verificar se já detectou nesta sessão (só captura na primeira vez)
+  const cached = sessionStorage.getItem(TRAFFIC_SOURCE_KEY);
+  if (cached) {
+    try { return JSON.parse(cached); } catch { /* ignore */ }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const referrer = document.referrer || '';
+
+  // UTM params
+  const utm_source = params.get('utm_source') || null;
+  const utm_medium = params.get('utm_medium') || null;
+  const utm_campaign = params.get('utm_campaign') || null;
+
+  // Código de promotor (p= ou ref=)
+  const promoter_code = params.get('p') || params.get('ref') || null;
+
+  // Detectar traffic_source automaticamente
+  let traffic_source: string | null = null;
+
+  if (utm_source) {
+    // Fonte explícita via UTM
+    const src = utm_source.toLowerCase();
+    if (src.includes('facebook') || src.includes('fb') || src.includes('meta') || src.includes('instagram') || src.includes('ig')) {
+      traffic_source = 'Meta Ads';
+    } else if (src.includes('tiktok') || src.includes('tt')) {
+      traffic_source = 'TikTok';
+    } else if (src.includes('kwai')) {
+      traffic_source = 'Kwai';
+    } else if (src.includes('google')) {
+      traffic_source = 'Google Ads';
+    } else if (src.includes('whatsapp') || src.includes('wpp')) {
+      traffic_source = 'WhatsApp';
+    } else if (src.includes('telegram')) {
+      traffic_source = 'Telegram';
+    } else {
+      traffic_source = utm_source; // Usa o valor direto
+    }
+  } else if (promoter_code) {
+    traffic_source = 'Promotor';
+  } else if (referrer) {
+    // Detectar pelo referrer
+    const ref = referrer.toLowerCase();
+    if (ref.includes('facebook.com') || ref.includes('fb.com') || ref.includes('fbclid')) {
+      traffic_source = 'Facebook';
+    } else if (ref.includes('instagram.com')) {
+      traffic_source = 'Instagram';
+    } else if (ref.includes('tiktok.com')) {
+      traffic_source = 'TikTok';
+    } else if (ref.includes('kwai.com')) {
+      traffic_source = 'Kwai';
+    } else if (ref.includes('google.com') || ref.includes('google.com.br')) {
+      traffic_source = 'Google';
+    } else if (ref.includes('youtube.com')) {
+      traffic_source = 'YouTube';
+    } else if (ref.includes('t.me') || ref.includes('telegram')) {
+      traffic_source = 'Telegram';
+    } else if (ref.includes('twitter.com') || ref.includes('x.com')) {
+      traffic_source = 'Twitter/X';
+    } else {
+      // Referrer externo desconhecido
+      try {
+        traffic_source = new URL(referrer).hostname;
+      } catch {
+        traffic_source = 'Externo';
+      }
+    }
+  } else {
+    traffic_source = 'Direto';
+  }
+
+  const source: TrafficSource = {
+    traffic_source,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    referrer_url: referrer || null,
+    promoter_code,
+  };
+
+  // Cache na sessão
+  try {
+    sessionStorage.setItem(TRAFFIC_SOURCE_KEY, JSON.stringify(source));
+  } catch { /* ignore */ }
+
+  return source;
+}
+
+// ============================================================================
+// DETECÇÃO DE TIPO DE PÁGINA
+// ============================================================================
+
 // Detecta tipo de jogo/página com base no pathname
 function getGameType(pathname: string): string | null {
   if (pathname.startsWith('/loterias')) return 'loterias';
@@ -71,6 +181,10 @@ function getPageType(pathname: string): string {
   return 'other';
 }
 
+// ============================================================================
+// HOOK PRINCIPAL
+// ============================================================================
+
 /**
  * Hook de tracking otimizado.
  * Recebe userId do layout pai para evitar chamar getUser() repetidamente.
@@ -80,6 +194,12 @@ export function usePageTracking(userId: string | null) {
   const supabaseRef = useRef(createClient());
   const lastPathRef = useRef<string>('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const trafficSourceRef = useRef<TrafficSource | null>(null);
+
+  // Detectar origem do tráfego uma vez por sessão
+  useEffect(() => {
+    trafficSourceRef.current = detectTrafficSource();
+  }, []);
 
   // Registra page view
   const trackPageView = useCallback(async () => {
@@ -111,6 +231,8 @@ export function usePageTracking(userId: string | null) {
 
     try {
       const platformId = getPlatformIdFromCookie();
+      const ts = trafficSourceRef.current;
+
       await supabaseRef.current.from('visitor_presence').upsert(
         {
           session_id: sessionId,
@@ -118,6 +240,15 @@ export function usePageTracking(userId: string | null) {
           current_page: pathname,
           last_seen_at: new Date().toISOString(),
           ...(platformId ? { platform_id: platformId } : {}),
+          // Origem do tráfego (só envia se tem dados)
+          ...(ts?.traffic_source ? {
+            traffic_source: ts.traffic_source,
+            utm_source: ts.utm_source,
+            utm_medium: ts.utm_medium,
+            utm_campaign: ts.utm_campaign,
+            referrer_url: ts.referrer_url,
+            promoter_code: ts.promoter_code,
+          } : {}),
         },
         {
           onConflict: 'session_id',
@@ -139,7 +270,7 @@ export function usePageTracking(userId: string | null) {
     }
   }, [pathname, trackPageView, updatePresence]);
 
-  // Atualizar presença a cada 60 segundos (era 30s - reduzido para menos carga)
+  // Atualizar presença a cada 60 segundos
   useEffect(() => {
     if (pathname.startsWith('/admin')) return;
 
