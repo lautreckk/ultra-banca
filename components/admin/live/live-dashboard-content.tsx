@@ -95,6 +95,17 @@ export function LiveDashboardContent({
     };
   }, [refreshMetrics, refreshUsers, usersPage]);
 
+  // Escutar evento de refresh global do header
+  useEffect(() => {
+    const handleAdminRefresh = () => {
+      refreshMetrics();
+      refreshUsers(usersPage);
+      refreshChartData(hasFilter ? dateFrom || undefined : undefined, hasFilter ? dateTo || undefined : undefined);
+    };
+    window.addEventListener('admin-refresh', handleAdminRefresh);
+    return () => window.removeEventListener('admin-refresh', handleAdminRefresh);
+  }, [refreshMetrics, refreshUsers, refreshChartData, usersPage, hasFilter, dateFrom, dateTo]);
+
   // Supabase Realtime: listen for new activity events
   useEffect(() => {
     const supabase = createClient();
