@@ -121,3 +121,33 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset;
   -webkit-text-fill-color: white;
 }
+
+/* ============================================================================
+   ADMIN LIGHT THEME
+   Ativado via classe .admin-light no <html>
+   Somente afeta páginas /admin/*
+   ============================================================================ */
+.admin-light [class*="bg-zinc-950"] { background-color: #f8fafc !important; }
+.admin-light [class*="bg-zinc-900/50"] { background-color: rgba(255,255,255,0.8) !important; }
+.admin-light [class*="bg-zinc-900"] { background-color: #ffffff !important; }
+.admin-light [class*="bg-zinc-800/30"] { background-color: rgba(241,245,249,0.5) !important; }
+.admin-light [class*="bg-zinc-800"] { background-color: #f1f5f9 !important; }
+
+.admin-light [class*="border-zinc-800/50"] { border-color: rgba(226,232,240,0.5) !important; }
+.admin-light [class*="border-zinc-800/30"] { border-color: rgba(226,232,240,0.3) !important; }
+.admin-light [class*="border-zinc-800"] { border-color: #e2e8f0 !important; }
+.admin-light [class*="border-zinc-700"] { border-color: #cbd5e1 !important; }
+
+.admin-light [class*="text-white"] { color: #0f172a !important; }
+.admin-light [class*="text-zinc-100"] { color: #1e293b !important; }
+.admin-light [class*="text-zinc-300"] { color: #334155 !important; }
+.admin-light [class*="text-zinc-400"] { color: #64748b !important; }
+.admin-light [class*="text-zinc-500"] { color: #94a3b8 !important; }
+
+.admin-light [class*="ring-zinc-900"] { --tw-ring-color: #ffffff !important; }
+
+.admin-light input[type="date"] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}

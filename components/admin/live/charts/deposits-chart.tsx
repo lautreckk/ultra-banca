@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { ChartWrapper } from './chart-wrapper';
 import { CHART_THEME } from './chart-theme';
 import type { HourlyMetric } from '@/lib/admin/actions/live';
@@ -12,19 +12,26 @@ interface Props {
 export function DepositsChart({ data }: Props) {
   return (
     <ChartWrapper title="Depósitos por Hora">
-      <BarChart data={data}>
+      <AreaChart data={data}>
+        <defs>
+          <linearGradient id="colorDeposits" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={CHART_THEME.colors.deposits} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={CHART_THEME.colors.deposits} stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <CartesianGrid {...CHART_THEME.grid} />
         <XAxis dataKey="hour_label" tick={CHART_THEME.axis} axisLine={false} tickLine={false} />
         <YAxis tick={CHART_THEME.axis} axisLine={false} tickLine={false} />
         <Tooltip {...CHART_THEME.tooltip} />
-        <Bar
+        <Area
+          type="monotone"
           dataKey="deposits_count"
           name="Depósitos"
-          fill={CHART_THEME.colors.deposits}
-          radius={[4, 4, 0, 0]}
-          opacity={0.8}
+          stroke={CHART_THEME.colors.deposits}
+          fill="url(#colorDeposits)"
+          strokeWidth={2}
         />
-      </BarChart>
+      </AreaChart>
     </ChartWrapper>
   );
 }

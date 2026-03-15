@@ -21,6 +21,7 @@ export interface ActiveUser {
   id: string;
   user_id: string | null;
   nome: string;
+  telefone: string;
   current_page: string;
   started_at: string;
   last_seen_at: string;
@@ -135,7 +136,7 @@ export async function getActiveUsers(page = 1, pageSize = 20): Promise<{ users: 
       last_action,
       session_bet_total,
       last_deposit_value,
-      profiles(nome)
+      profiles(nome, telefone)
     `, { count: 'exact' })
     .gte('last_seen_at', twoMinAgo)
     .order('last_seen_at', { ascending: false })
@@ -145,17 +146,21 @@ export async function getActiveUsers(page = 1, pageSize = 20): Promise<{ users: 
 
   const { data, count } = await query;
 
-  const users: ActiveUser[] = (data || []).map((row) => ({
-    id: row.id,
-    user_id: row.user_id,
-    nome: (row.profiles as unknown as { nome: string })?.nome || 'Visitante',
-    current_page: row.current_page || '/',
-    started_at: row.started_at || row.last_seen_at || '',
-    last_seen_at: row.last_seen_at || '',
-    last_action: row.last_action || 'browsing',
-    session_bet_total: Number(row.session_bet_total) || 0,
-    last_deposit_value: Number(row.last_deposit_value) || 0,
-  }));
+  const users: ActiveUser[] = (data || []).map((row) => {
+    const profile = row.profiles as unknown as { nome: string; telefone: string } | null;
+    return {
+      id: row.id,
+      user_id: row.user_id,
+      nome: profile?.nome || 'Visitante',
+      telefone: profile?.telefone || '',
+      current_page: row.current_page || '/',
+      started_at: row.started_at || row.last_seen_at || '',
+      last_seen_at: row.last_seen_at || '',
+      last_action: row.last_action || 'browsing',
+      session_bet_total: Number(row.session_bet_total) || 0,
+      last_deposit_value: Number(row.last_deposit_value) || 0,
+    };
+  });
 
   return { users, total: count || 0 };
 }
