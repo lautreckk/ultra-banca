@@ -113,8 +113,9 @@ export async function POST(req: NextRequest) {
           const statusCode = pushErr.statusCode || 0;
           const errMsg = pushErr.message || pushErr.body || 'Unknown error';
 
-          // 410 Gone or 404 = subscription expired
-          if (statusCode === 410 || statusCode === 404) {
+          // APENAS 410 Gone = subscription definitivamente expirada
+          // NÃO deletar em 404 ou outros erros (podem ser temporários)
+          if (statusCode === 410) {
             expiredEndpoints.push(sub.endpoint);
           }
           // 401/403 = VAPID auth issue
