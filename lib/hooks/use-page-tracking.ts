@@ -55,6 +55,8 @@ function getGameType(pathname: string): string | null {
 function getPageType(pathname: string): string {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/cadastro')) return 'register';
+  if (pathname.startsWith('/login')) return 'login';
   if (pathname.startsWith('/loterias')) return 'game';
   if (pathname.startsWith('/fazendinha')) return 'game';
   if (pathname.startsWith('/quininha')) return 'game';
@@ -64,6 +66,8 @@ function getPageType(pathname: string): string {
   if (pathname.startsWith('/amigos')) return 'referral';
   if (pathname.startsWith('/relatorios')) return 'reports';
   if (pathname.startsWith('/premiadas')) return 'winners';
+  if (pathname.startsWith('/recarga')) return 'deposit';
+  if (pathname.startsWith('/cassino')) return 'casino';
   return 'other';
 }
 

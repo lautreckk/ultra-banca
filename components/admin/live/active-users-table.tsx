@@ -26,14 +26,23 @@ function formatTimeActive(startedAt: string): string {
 
 function formatPageName(page: string): string {
   if (page === '/' || page === '/home') return 'Home';
+  if (page.startsWith('/cadastro')) return 'Cadastro';
+  if (page.startsWith('/login')) return 'Login';
   if (page.startsWith('/loterias')) return 'Loterias';
   if (page.startsWith('/fazendinha')) return 'Fazendinha';
   if (page.startsWith('/quininha')) return 'Quininha';
+  if (page.startsWith('/seninha')) return 'Seninha';
   if (page.startsWith('/resultados')) return 'Resultados';
   if (page.startsWith('/apostas')) return 'Apostas';
   if (page.startsWith('/saques')) return 'Saques';
   if (page.startsWith('/recarga')) return 'Recarga PIX';
-  if (page.startsWith('/amigos')) return 'Amigos';
+  if (page.startsWith('/amigos')) return 'Indicação';
+  if (page.startsWith('/cassino')) return 'Cassino';
+  if (page.startsWith('/transferencia')) return 'Transferência';
+  if (page.startsWith('/premiadas')) return 'Premiadas';
+  if (page.startsWith('/relatorios')) return 'Relatórios';
+  if (page.startsWith('/sonhos')) return 'Sonhos';
+  if (page.startsWith('/tabela')) return 'Tabela Bichos';
   return page;
 }
 

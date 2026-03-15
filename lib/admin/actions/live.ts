@@ -166,6 +166,56 @@ export async function getActiveUsers(page = 1, pageSize = 20): Promise<{ users: 
 }
 
 // ============================================================================
+// ATIVIDADES RECENTES (feed de eventos)
+// ============================================================================
+
+export interface RecentActivity {
+  id: string;
+  event_type: string;
+  event_value: number;
+  nome: string;
+  telefone: string;
+  created_at: string;
+}
+
+export async function getRecentActivities(limit = 15): Promise<RecentActivity[]> {
+  await requireAdmin();
+
+  const platformId = await getPlatformId();
+  const isAll = platformId === ALL_PLATFORMS_ID;
+  const supabase = isAll ? createAdminClient() : await createClient();
+
+  let query = supabase
+    .from('activity_events')
+    .select(`
+      id,
+      event_type,
+      event_value,
+      created_at,
+      profiles(nome, telefone)
+    `)
+    .in('event_type', ['bet_placed', 'deposit_made'])
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (!isAll) query = query.eq('platform_id', platformId);
+
+  const { data } = await query;
+
+  return (data || []).map((row) => {
+    const profile = row.profiles as unknown as { nome: string; telefone: string } | null;
+    return {
+      id: row.id,
+      event_type: row.event_type,
+      event_value: Number(row.event_value) || 0,
+      nome: profile?.nome || 'Usuário',
+      telefone: profile?.telefone || '',
+      created_at: row.created_at,
+    };
+  });
+}
+
+// ============================================================================
 // DADOS HORÁRIOS PARA GRÁFICOS
 // ============================================================================
 

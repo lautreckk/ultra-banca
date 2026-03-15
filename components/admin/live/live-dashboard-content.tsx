@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getLiveMetrics, getActiveUsers, getHourlyChartData } from '@/lib/admin/actions/live';
-import type { LiveMetrics, ActiveUser, HourlyMetric } from '@/lib/admin/actions/live';
+import { getLiveMetrics, getActiveUsers, getHourlyChartData, getRecentActivities } from '@/lib/admin/actions/live';
+import type { LiveMetrics, ActiveUser, HourlyMetric, RecentActivity } from '@/lib/admin/actions/live';
 import { LiveStatCards } from './live-stat-cards';
 import { ActiveUsersTable } from './active-users-table';
+import { LiveActivityFeed } from './live-activity-feed';
 import { LiveFilters } from './live-filters';
 import { HourlyUsersChart } from './charts/hourly-users-chart';
 import { BetsVolumeChart } from './charts/bets-volume-chart';
@@ -17,6 +18,7 @@ interface Props {
   initialUsers: ActiveUser[];
   initialUsersTotal: number;
   initialChartData: HourlyMetric[];
+  initialActivities: RecentActivity[];
   platformId: string;
 }
 
@@ -25,6 +27,7 @@ export function LiveDashboardContent({
   initialUsers,
   initialUsersTotal,
   initialChartData,
+  initialActivities,
   platformId,
 }: Props) {
   // State
@@ -33,6 +36,7 @@ export function LiveDashboardContent({
   const [usersTotal, setUsersTotal] = useState(initialUsersTotal);
   const [usersPage, setUsersPage] = useState(1);
   const [chartData, setChartData] = useState<HourlyMetric[]>(initialChartData);
+  const [activities, setActivities] = useState<RecentActivity[]>(initialActivities);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
@@ -70,6 +74,16 @@ export function LiveDashboardContent({
     }
   }, []);
 
+  // Refresh activities
+  const refreshActivities = useCallback(async () => {
+    try {
+      const data = await getRecentActivities(15);
+      setActivities(data);
+    } catch (e) {
+      console.debug('Activities refresh error:', e);
+    }
+  }, []);
+
   // Refresh chart data
   const refreshChartData = useCallback(async (from?: string, to?: string) => {
     setChartLoading(true);
@@ -83,28 +97,30 @@ export function LiveDashboardContent({
     }
   }, []);
 
-  // Polling: refresh metrics every 30s, users every 30s
+  // Polling: refresh metrics every 30s
   useEffect(() => {
     pollRef.current = setInterval(() => {
       refreshMetrics();
       refreshUsers(usersPage);
+      refreshActivities();
     }, 30000);
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [refreshMetrics, refreshUsers, usersPage]);
+  }, [refreshMetrics, refreshUsers, refreshActivities, usersPage]);
 
   // Escutar evento de refresh global do header
   useEffect(() => {
     const handleAdminRefresh = () => {
       refreshMetrics();
       refreshUsers(usersPage);
+      refreshActivities();
       refreshChartData(hasFilter ? dateFrom || undefined : undefined, hasFilter ? dateTo || undefined : undefined);
     };
     window.addEventListener('admin-refresh', handleAdminRefresh);
     return () => window.removeEventListener('admin-refresh', handleAdminRefresh);
-  }, [refreshMetrics, refreshUsers, refreshChartData, usersPage, hasFilter, dateFrom, dateTo]);
+  }, [refreshMetrics, refreshUsers, refreshActivities, refreshChartData, usersPage, hasFilter, dateFrom, dateTo]);
 
   // Supabase Realtime: listen for new activity events
   useEffect(() => {
@@ -125,6 +141,7 @@ export function LiveDashboardContent({
           if (debounceRef.current) clearTimeout(debounceRef.current);
           debounceRef.current = setTimeout(() => {
             refreshMetrics();
+            refreshActivities();
           }, 1000);
         }
       )
@@ -134,7 +151,7 @@ export function LiveDashboardContent({
       supabase.removeChannel(channel);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [platformId, refreshMetrics]);
+  }, [platformId, refreshMetrics, refreshActivities]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -176,15 +193,25 @@ export function LiveDashboardContent({
       {/* Stat Cards */}
       <LiveStatCards metrics={metrics} loading={metricsLoading} />
 
-      {/* Active Users */}
-      <ActiveUsersTable
-        users={users}
-        total={usersTotal}
-        page={usersPage}
-        pageSize={20}
-        onPageChange={handlePageChange}
-        loading={usersLoading}
-      />
+      {/* Grid: Active Users + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Active Users - 2/3 */}
+        <div className="lg:col-span-2">
+          <ActiveUsersTable
+            users={users}
+            total={usersTotal}
+            page={usersPage}
+            pageSize={20}
+            onPageChange={handlePageChange}
+            loading={usersLoading}
+          />
+        </div>
+
+        {/* Activity Feed - 1/3 */}
+        <div>
+          <LiveActivityFeed activities={activities} />
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="pt-2">
