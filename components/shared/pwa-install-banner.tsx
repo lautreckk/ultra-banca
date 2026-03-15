@@ -2,24 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
-import { getUrlWithUtm } from '@/lib/utm';
 
 const STORAGE_KEY = 'pwa-install-banner-dismissed';
 
 export function PWAInstallBanner() {
   const { canInstall, isInstalled, promptInstall, isIOS } = usePWAInstall();
   const { site_name, logo_url, color_primary } = usePlatformConfig();
-  const router = useRouter();
-  const [dismissed, setDismissed] = useState(true); // start hidden to avoid flash
+  const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Re-show after 3 days
       if (Date.now() - parsed.timestamp > 3 * 24 * 60 * 60 * 1000) {
         setDismissed(false);
       }
@@ -35,18 +31,25 @@ export function PWAInstallBanner() {
 
   const handleInstall = async () => {
     if (canInstall) {
+      // Android/Chrome — prompt nativo direto
       const accepted = await promptInstall();
       if (accepted) handleDismiss();
-    } else {
-      // iOS or manual — go to /baixar
-      router.push(getUrlWithUtm('/baixar'));
+    } else if (isIOS && navigator.share) {
+      // iOS — abre share sheet para "Tela de Início"
+      try {
+        await navigator.share({
+          title: site_name,
+          url: window.location.origin,
+        });
+        handleDismiss();
+      } catch {
+        // Usuário cancelou
+      }
     }
   };
 
-  // Don't show if already installed or dismissed
   if (isInstalled || dismissed) return null;
 
-  // Show for: native install prompt available, OR iOS (manual instructions)
   const shouldShow = canInstall || isIOS;
   if (!shouldShow) return null;
 
