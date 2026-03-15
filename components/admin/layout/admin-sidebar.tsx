@@ -42,6 +42,7 @@ import {
   Check,
   Gamepad2,
   Globe,
+  Bell,
 } from 'lucide-react';
 import { logoutAdmin } from '@/lib/auth/logout';
 import { getUserAdminPlatforms, switchPlatform, getPlatformId, isSuperAdmin } from '@/lib/utils/platform';
@@ -138,6 +139,11 @@ const navItems: NavItem[] = [
     label: 'Propaganda',
     href: '/admin/propaganda',
     icon: <Megaphone className="h-5 w-5" />,
+  },
+  {
+    label: 'Notificações',
+    href: '/admin/notificacoes',
+    icon: <Bell className="h-5 w-5" />,
   },
   {
     label: 'WhatsApp',

@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { PWAInstallBanner } from '@/components/shared/pwa-install-banner';
+import { PushPermissionPrompt } from '@/components/shared/push-permission-prompt';
 import type { LayoutProps } from '@/lib/layouts/types';
 
 const layouts = {
@@ -18,6 +19,7 @@ export function LayoutWrapper(props: LayoutProps) {
     <>
       <Layout {...props} />
       <PWAInstallBanner />
+      <PushPermissionPrompt />
     </>
   );
 }

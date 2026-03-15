@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { getUsers, getUserById, updateUserProfile, type UserProfile, type UpdateUserProfileData, type UsersListParams } from '@/lib/admin/actions/users';
-import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown, Gamepad2 } from 'lucide-react';
+import { getUsers, getUserById, updateUserProfile, exportAllUsers, type UserProfile, type UpdateUserProfileData, type UsersListParams } from '@/lib/admin/actions/users';
+import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown, Gamepad2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getUrlWithUtm } from '@/lib/utm';
@@ -385,6 +385,8 @@ export default function AdminClientesPage() {
   const [ultimaApostaFiltro, setUltimaApostaFiltro] = useState<UsersListParams['ultimaApostaFiltro']>('todos');
   const [statusFiltro, setStatusFiltro] = useState<UsersListParams['statusFiltro']>('todos');
 
+  const [isExporting, setIsExporting] = useState(false);
+
   const hasActiveFilters = ultimoLoginFiltro !== 'todos' || ultimaApostaFiltro !== 'todos' || statusFiltro !== 'todos';
 
   const fetchUsers = useCallback(async () => {
@@ -446,15 +448,58 @@ export default function AdminClientesPage() {
     return result;
   };
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const { csv, total: exportTotal } = await exportAllUsers({
+        search,
+        ultimoLoginFiltro,
+        ultimaApostaFiltro,
+        statusFiltro,
+      });
+      if (!csv) {
+        alert('Nenhum cliente encontrado para exportar');
+        return;
+      }
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Erro ao exportar clientes');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / pageSize);
   const formatCPF = (cpf: string) => cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold text-white">Clientes</h1>
-        <p className="text-sm md:text-base text-zinc-400">Gerenciamento de usuários da plataforma</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-white">Clientes</h1>
+          <p className="text-sm md:text-base text-zinc-400">Gerenciamento de usuários da plataforma</p>
+        </div>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-colors disabled:opacity-50 text-sm font-medium"
+        >
+          {isExporting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          <span className="hidden sm:inline">{isExporting ? 'Exportando...' : 'Exportar CSV'}</span>
+        </button>
       </div>
 
       {/* Search and Filters */}

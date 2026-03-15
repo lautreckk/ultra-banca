@@ -514,7 +514,7 @@ export async function updateSession(request: NextRequest) {
     const mfaPending = aalData?.nextLevel === 'aal2' && aalData?.currentLevel === 'aal1';
     const mfaComplete = aalData?.currentLevel === 'aal2' || aalData?.nextLevel === 'aal1';
 
-    if (!isAdminRoute(pathname)) {
+    if (!isAdminRoute(pathname) && !pathname.startsWith('/api/')) {
       if (mfaPending) {
         return redirect(request, '/admin/login');
       }

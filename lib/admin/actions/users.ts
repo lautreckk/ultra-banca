@@ -332,6 +332,98 @@ export async function getUserById(id: string): Promise<UserProfile | null> {
   };
 }
 
+export async function exportAllUsers(params: {
+  search?: string;
+  ultimoLoginFiltro?: UsersListParams['ultimoLoginFiltro'];
+  ultimaApostaFiltro?: UsersListParams['ultimaApostaFiltro'];
+  statusFiltro?: UsersListParams['statusFiltro'];
+} = {}): Promise<{ csv: string; total: number }> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const platformId = await getPlatformId();
+
+  const now = new Date();
+  const BRT_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowBRT = new Date(now.getTime() - BRT_OFFSET_MS);
+  const hoje = new Date(Date.UTC(nowBRT.getUTCFullYear(), nowBRT.getUTCMonth(), nowBRT.getUTCDate(), 3)).toISOString();
+  const seteDiasAtras = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const trintaDiasAtras = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const sessentaDiasAtras = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
+
+  let query = supabase
+    .from('profiles')
+    .select('id, nome, cpf, telefone, saldo, saldo_bonus, saldo_cassino, saldo_bonus_cassino, codigo_convite, created_at, last_login')
+    .eq('platform_id', platformId)
+    .order('created_at', { ascending: false });
+
+  if (params.search) {
+    const safe = sanitizeSearchParam(params.search);
+    if (safe.length > 0) {
+      query = query.or(`nome.ilike.%${safe}%,cpf.ilike.%${safe}%`);
+    }
+  }
+
+  const { ultimoLoginFiltro = 'todos', ultimaApostaFiltro = 'todos', statusFiltro = 'todos' } = params;
+
+  if (ultimoLoginFiltro === 'hoje') query = query.gte('last_login', hoje);
+  else if (ultimoLoginFiltro === '7dias') query = query.gte('last_login', seteDiasAtras);
+  else if (ultimoLoginFiltro === '30dias') query = query.gte('last_login', trintaDiasAtras);
+  else if (ultimoLoginFiltro === '60mais') query = query.or(`last_login.lt.${sessentaDiasAtras},last_login.is.null`);
+
+  const { data: allUsers } = await query;
+  if (!allUsers || allUsers.length === 0) {
+    return { csv: '', total: 0 };
+  }
+
+  // Filtros de aposta se necessário
+  const needsApostaFilter = ultimaApostaFiltro !== 'todos' || statusFiltro !== 'todos';
+  let filteredUsers = allUsers;
+
+  if (needsApostaFilter) {
+    const allUserIds = allUsers.map(u => u.id);
+    const ultimaApostaMap = new Map<string, string | null>();
+    const { data: apostasData } = await supabase
+      .from('apostas')
+      .select('user_id, created_at')
+      .in('user_id', allUserIds)
+      .order('created_at', { ascending: false });
+
+    apostasData?.forEach(a => {
+      if (!ultimaApostaMap.has(a.user_id)) {
+        ultimaApostaMap.set(a.user_id, a.created_at);
+      }
+    });
+
+    if (ultimaApostaFiltro !== 'todos') {
+      filteredUsers = filteredUsers.filter(user => {
+        const ua = ultimaApostaMap.get(user.id);
+        if (ultimaApostaFiltro === 'nunca') return !ua;
+        if (ultimaApostaFiltro === '7dias') return ua && ua >= seteDiasAtras;
+        if (ultimaApostaFiltro === '30dias') return ua && ua >= trintaDiasAtras;
+        if (ultimaApostaFiltro === '60mais') return !ua || ua < sessentaDiasAtras;
+        return true;
+      });
+    }
+
+    if (statusFiltro !== 'todos') {
+      filteredUsers = filteredUsers.filter(user => {
+        const ua = ultimaApostaMap.get(user.id);
+        const isAtivo = ua && ua >= seteDiasAtras;
+        return statusFiltro === 'ativos' ? isAtivo : !isAtivo;
+      });
+    }
+  }
+
+  const header = 'Nome,Telefone';
+  const rows = filteredUsers.map(u => {
+    const nome = `"${(u.nome || '').replace(/"/g, '""')}"`;
+    const tel = u.telefone || '';
+    return `${nome},${tel}`;
+  });
+
+  return { csv: [header, ...rows].join('\n'), total: filteredUsers.length };
+}
+
 export async function updateUserBalance(
   userId: string,
   saldo: number,

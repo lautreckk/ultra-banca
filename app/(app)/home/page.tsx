@@ -283,20 +283,13 @@ export default function DashboardPage() {
       {/* Grupo de Palpites */}
       <button
         onClick={() => setCommunityOpen(true)}
-        className="w-full flex items-center gap-3 rounded-xl border border-amber-500/30 px-4 py-3.5 active:scale-[0.98] transition-transform"
-        style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
+        className="w-full rounded-xl overflow-hidden active:scale-[0.98] transition-transform"
       >
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
-          <Users className="h-5 w-5 text-amber-400" />
-        </div>
-        <div className="flex-1 text-left">
-          <p className="text-sm font-semibold text-white">Grupo de Palpites</p>
-          <p className="text-[11px] text-zinc-400">Veja os palpites da galera e compartilhe os seus</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] text-emerald-400">ao vivo</span>
-        </div>
+        <img
+          src="/WPP.webp"
+          alt="Grupo de Palpites ao Vivo"
+          className="w-full h-auto object-cover"
+        />
       </button>
 
       {/* Recarga PIX - Prominent */}
