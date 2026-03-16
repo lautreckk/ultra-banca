@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import {
   ElitePixButton,
-  ElitePromoBanner,
+  ElitePromoCarousel,
   EliteJogosSection,
-  EliteCassinoSection,
   EliteWinnersTicker,
   EliteQuickActions,
   EliteGrupoPalpites,
@@ -20,9 +19,8 @@ export function EliteHome() {
       <div className="space-y-0">
         <ElitePixButton />
         <EliteWinnersTicker />
-        <ElitePromoBanner />
+        <ElitePromoCarousel />
         <EliteJogosSection />
-        <EliteCassinoSection />
         <EliteGrupoPalpites onOpen={() => setCommunityOpen(true)} />
         <EliteQuickActions />
         <div className="h-6" />

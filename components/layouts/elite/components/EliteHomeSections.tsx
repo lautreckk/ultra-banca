@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { QrCode, Sparkles } from 'lucide-react';
+import { QrCode, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 
@@ -22,33 +22,86 @@ export function ElitePixButton() {
 }
 
 // ============================================================================
-// PROMO BANNER
+// PROMO CAROUSEL (3 banners, auto-slide a cada 3s)
 // ============================================================================
-export function ElitePromoBanner() {
+const PROMO_SLIDES = [
+  {
+    bg: 'from-violet-600/80 via-purple-700/60 to-indigo-800/80',
+    badge: 'Promoção',
+    badgeColor: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400',
+    title: 'GANHE 100%\nNO PRIMEIRO PIX',
+    cta: 'APROVEITAR',
+    href: '/recarga-pix',
+  },
+  {
+    bg: 'from-amber-600/80 via-orange-700/60 to-red-800/80',
+    badge: 'Especial',
+    badgeColor: 'bg-amber-500/20 border-amber-500/30 text-amber-400',
+    title: 'INDIQUE AMIGOS\nE GANHE BÔNUS',
+    cta: 'INDICAR',
+    href: '/amigos',
+  },
+  {
+    bg: 'from-emerald-600/80 via-teal-700/60 to-cyan-800/80',
+    badge: 'Novo',
+    badgeColor: 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400',
+    title: 'APOSTE E\nGANHE PRÊMIOS',
+    cta: 'APOSTAR',
+    href: '/loterias',
+  },
+];
+
+export function ElitePromoCarousel() {
+  const [current, setCurrent] = useState(0);
+
+  const next = useCallback(() => {
+    setCurrent(prev => (prev + 1) % PROMO_SLIDES.length);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(next, 3000);
+    return () => clearInterval(timer);
+  }, [next]);
+
+  const slide = PROMO_SLIDES[current];
+
   return (
     <div className="px-5 mt-5">
-      <Link href="/recarga-pix" className="block">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600/80 via-purple-700/60 to-indigo-800/80 p-6 min-h-[160px] active:scale-[0.98] transition-transform">
+      <Link href={slide.href} className="block">
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${slide.bg} p-6 min-h-[150px] active:scale-[0.98] transition-all duration-500`}>
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
           <div className="absolute -right-4 bottom-0 h-24 w-24 rounded-full bg-white/5" />
 
-          <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider mb-3">
-            Promoção
+          <span className={`inline-block px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-3 ${slide.badgeColor}`}>
+            {slide.badge}
           </span>
-          <h3 className="text-2xl font-black text-white leading-tight">
-            GANHE 100%<br />NO PRIMEIRO PIX
+          <h3 className="text-2xl font-black text-white leading-tight whitespace-pre-line">
+            {slide.title}
           </h3>
           <div className="mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white text-black text-sm font-bold">
-            APROVEITAR
+            {slide.cta}
           </div>
         </div>
       </Link>
+
+      {/* Dots */}
+      <div className="flex items-center justify-center gap-2 mt-3">
+        {PROMO_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              i === current ? 'w-6 bg-emerald-400' : 'w-1.5 bg-zinc-700'
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
 // ============================================================================
-// JOGOS (com imagens existentes)
+// JOGOS (imagens novas - Jogo do Bicho, Loterias, Cassino, Bingo)
 // ============================================================================
 export function EliteJogosSection() {
   return (
@@ -58,111 +111,79 @@ export function EliteJogosSection() {
         <h2 className="text-lg font-black text-white italic">JOGOS</h2>
       </div>
 
-      {/* Grid 2x2 - Loterias e Fazendinha */}
+      {/* Grid 2x2 */}
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/loterias"
           className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
         >
-          <div className="relative aspect-[4/3]">
-            <Image
-              src="/images/loterias-banner.webp"
-              alt="Loterias"
-              fill
-              className="object-cover object-top scale-105"
-              priority
-            />
-          </div>
-        </Link>
-
-        <Link
-          href="/fazendinha"
-          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
-        >
-          <div className="relative aspect-[4/3]">
-            <Image
-              src="/images/fazendinha-banner.webp"
-              alt="Fazendinha"
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        </Link>
-      </div>
-
-      {/* Grid 3 - Quininha, Seninha, Lotinha */}
-      <div className="grid grid-cols-3 gap-3 mt-3">
-        <Link
-          href="/quininha"
-          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
-        >
-          <div className="relative aspect-square">
-            <Image
-              src="/images/QUININHA.webp"
-              alt="Quininha"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </Link>
-
-        <Link
-          href="/seninha"
-          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
-        >
-          <div className="relative aspect-square">
-            <Image
-              src="/images/SENINHA.webp"
-              alt="Seninha"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </Link>
-
-        <Link
-          href="/lotinha"
-          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
-        >
-          <div className="relative aspect-square">
-            <Image
-              src="/images/LOTINHA.webp"
-              alt="Lotinha"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// CASSINO AO VIVO (com banner existente)
-// ============================================================================
-export function EliteCassinoSection() {
-  return (
-    <div className="px-5 mt-6">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-1 h-6 rounded-full bg-purple-500" />
-        <h2 className="text-lg font-black text-white italic">CASSINO AO VIVO</h2>
-        <span className="flex items-center gap-1 ml-auto">
-          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-[10px] text-zinc-400 font-semibold">AO VIVO</span>
-        </span>
-      </div>
-
-      <Link href="/cassino" className="block">
-        <div className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.98] transition-transform">
           <Image
-            src="/images/cassino-banner.webp"
-            alt="Cassino Online"
-            width={2700}
-            height={910}
+            src="/images/elite-jb.webp"
+            alt="Jogo do Bicho"
+            width={600}
+            height={600}
             className="w-full h-auto object-cover rounded-2xl"
             priority
+          />
+        </Link>
+
+        <Link
+          href="/loterias"
+          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
+        >
+          <Image
+            src="/images/elite-loterias.webp"
+            alt="Loterias"
+            width={600}
+            height={600}
+            className="w-full h-auto object-cover rounded-2xl"
+            priority
+          />
+        </Link>
+
+        <Link
+          href="/cassino"
+          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
+        >
+          <Image
+            src="/images/elite-casino.webp"
+            alt="Cassino Online"
+            width={600}
+            height={400}
+            className="w-full h-auto object-cover rounded-2xl"
+            priority
+          />
+        </Link>
+
+        <Link
+          href="#"
+          className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
+        >
+          <Image
+            src="/images/elite-bingo.webp"
+            alt="Bingo"
+            width={600}
+            height={600}
+            className="w-full h-auto object-cover rounded-2xl"
+          />
+          {/* Em breve badge */}
+          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/90 text-[9px] font-bold text-black">
+            EM BREVE
+          </div>
+        </Link>
+      </div>
+
+      {/* Fazendinha full width */}
+      <Link
+        href="/fazendinha"
+        className="block mt-3 relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.98] transition-transform"
+      >
+        <div className="relative aspect-[16/7]">
+          <Image
+            src="/images/fazendinha-banner.webp"
+            alt="Fazendinha"
+            fill
+            className="object-cover rounded-2xl"
           />
         </div>
       </Link>
@@ -171,7 +192,7 @@ export function EliteCassinoSection() {
 }
 
 // ============================================================================
-// GRUPO DE PALPITES (reutiliza WPP.webp)
+// GRUPO DE PALPITES (imagem nova)
 // ============================================================================
 interface EliteGrupoPalpitesProps {
   onOpen: () => void;
@@ -184,9 +205,11 @@ export function EliteGrupoPalpites({ onOpen }: EliteGrupoPalpitesProps) {
         onClick={onOpen}
         className="w-full rounded-2xl overflow-hidden active:scale-[0.98] transition-transform shadow-lg"
       >
-        <img
-          src="/WPP.webp"
-          alt="Grupo de Palpites ao Vivo"
+        <Image
+          src="/images/elite-palpites.webp"
+          alt="Palpites ao Vivo"
+          width={1200}
+          height={600}
           className="w-full h-auto object-cover"
         />
       </button>
@@ -217,11 +240,7 @@ export function EliteWinnersTicker() {
         .single();
 
       if (data) {
-        setWinner({
-          nome: data.nome || 'Jogador',
-          valor: Number(data.valor) || 0,
-          unidade: data.unidade || '',
-        });
+        setWinner({ nome: data.nome || 'Jogador', valor: Number(data.valor) || 0, unidade: data.unidade || '' });
       }
     };
 
@@ -229,9 +248,7 @@ export function EliteWinnersTicker() {
 
     const channel = supabase
       .channel('elite-winner')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ultimo_ganhador' }, () => {
-        fetchWinner();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ultimo_ganhador' }, () => fetchWinner())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -241,22 +258,19 @@ export function EliteWinnersTicker() {
 
   return (
     <div className="px-5 mt-4">
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
         <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
-        <div className="flex-1 overflow-hidden">
-          <p className="text-xs text-amber-300 font-semibold truncate">
-            <span className="text-amber-400">{winner.nome}</span> ganhou{' '}
-            <span className="text-amber-400 font-black">R$ {winner.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-            {winner.unidade ? ` na unidade ${winner.unidade}` : ''}
-          </p>
-        </div>
+        <p className="text-xs text-amber-300 font-semibold truncate flex-1">
+          <span className="text-amber-400">{winner.nome}</span> ganhou{' '}
+          <span className="text-amber-400 font-black">R$ {winner.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+        </p>
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// QUICK ACTIONS (Suporte, Cotações, Indique, Resultados)
+// QUICK ACTIONS
 // ============================================================================
 export function EliteQuickActions() {
   return (
