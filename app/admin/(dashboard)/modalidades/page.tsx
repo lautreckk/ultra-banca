@@ -262,6 +262,12 @@ export default function AdminModalidadesPage() {
                         1º-7º
                       </th>
                       <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        1º-8º
+                      </th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        1º-9º
+                      </th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
                         1º-10º
                       </th>
                       <th className="px-4 py-2 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider">
@@ -340,6 +346,28 @@ export default function AdminModalidadesPage() {
                               <ToggleSwitch
                                 checked={getValue(modalidade, 'posicoes_1_7') as boolean}
                                 onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_7', checked)}
+                                size="sm"
+                                disabled={!isSuperAdmin}
+                              />
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-2 text-center">
+                            <div className="flex justify-center">
+                              <ToggleSwitch
+                                checked={getValue(modalidade, 'posicoes_1_8') as boolean}
+                                onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_8', checked)}
+                                size="sm"
+                                disabled={!isSuperAdmin}
+                              />
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-2 text-center">
+                            <div className="flex justify-center">
+                              <ToggleSwitch
+                                checked={getValue(modalidade, 'posicoes_1_9') as boolean}
+                                onChange={(checked) => handleChange(modalidade.id, 'posicoes_1_9', checked)}
                                 size="sm"
                                 disabled={!isSuperAdmin}
                               />

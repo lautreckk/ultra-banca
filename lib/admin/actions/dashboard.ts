@@ -38,6 +38,25 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
   // Use admin client for cross-platform queries to bypass RLS
   const supabase = isAll ? createAdminClient() : await createClient();
 
+  // Verificar se dados da Banca Magnata estão ocultos
+  const MAGNATA_ID = '910e8160-5576-4298-a412-e097efdd6c27';
+  if (platformId === MAGNATA_ID) {
+    const { data: setting } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'magnata_data_hidden')
+      .single();
+
+    if (setting?.value === 'true') {
+      return {
+        totalGanhos: 0, totalApostas: 0, totalDepositos: 0, totalSaques: 0,
+        depositosDiario: 0, depositosSemanal: 0, depositosMensal: 0,
+        saquesHoje: 0, apostasHoje: 0, usuariosAtivos: 0,
+        depositosPromotores: 0, cadastrosTotal: 0,
+      };
+    }
+  }
+
   const hasDateFilter = dateFrom || dateTo;
 
   // Se tem filtro de data, faz queries diretas; senão usa RPC padrão
@@ -224,9 +243,14 @@ export interface RecentBet {
 export async function getRecentBets(limit = 7): Promise<RecentBet[]> {
   await requireAdmin();
   const supabase = await createClient();
-
-  // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
+
+  // Banca Magnata: dados ocultos
+  const MAGNATA_ID = '910e8160-5576-4298-a412-e097efdd6c27';
+  if (platformId === MAGNATA_ID) {
+    const { data: s } = await supabase.from('system_settings').select('value').eq('key', 'magnata_data_hidden').single();
+    if (s?.value === 'true') return [];
+  }
 
   // Já otimizado com JOIN (profiles!inner)
   const { data } = await supabase
@@ -272,9 +296,13 @@ export interface RecentDeposit {
 export async function getRecentDeposits(limit = 7): Promise<RecentDeposit[]> {
   await requireAdmin();
   const supabase = await createClient();
-
-  // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
+
+  const MAGNATA_ID = '910e8160-5576-4298-a412-e097efdd6c27';
+  if (platformId === MAGNATA_ID) {
+    const { data: s } = await supabase.from('system_settings').select('value').eq('key', 'magnata_data_hidden').single();
+    if (s?.value === 'true') return [];
+  }
 
   // Já otimizado com JOIN (profiles!inner)
   const { data } = await supabase
@@ -317,9 +345,13 @@ export interface RecentWithdrawal {
 export async function getPendingWithdrawals(limit = 7): Promise<RecentWithdrawal[]> {
   await requireAdmin();
   const supabase = await createClient();
-
-  // MULTI-TENANT: Obter platform_id da plataforma atual
   const platformId = await getPlatformId();
+
+  const MAGNATA_ID = '910e8160-5576-4298-a412-e097efdd6c27';
+  if (platformId === MAGNATA_ID) {
+    const { data: s } = await supabase.from('system_settings').select('value').eq('key', 'magnata_data_hidden').single();
+    if (s?.value === 'true') return [];
+  }
 
   // Já otimizado com JOIN (profiles!inner)
   const { data } = await supabase

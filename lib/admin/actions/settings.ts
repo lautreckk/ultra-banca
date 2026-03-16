@@ -218,6 +218,8 @@ export interface ModalidadeConfig {
   posicoes_1_5: boolean;
   posicoes_1_6: boolean;
   posicoes_1_7: boolean;
+  posicoes_1_8: boolean;
+  posicoes_1_9: boolean;
   posicoes_1_10: boolean;
   posicoes_5_6: boolean;
   ativo: boolean;
@@ -237,7 +239,7 @@ export async function getModalidades(): Promise<ModalidadeConfig[]> {
   // 1. Buscar estrutura global das modalidades
   const { data: globalData, error: globalError } = await supabase
     .from('modalidades_config')
-    .select('id, categoria, nome, codigo, multiplicador, valor_minimo, valor_maximo, posicoes_1_5, posicoes_1_6, posicoes_1_7, posicoes_1_10, posicoes_5_6, ativo, ordem, updated_at')
+    .select('id, categoria, nome, codigo, multiplicador, valor_minimo, valor_maximo, posicoes_1_5, posicoes_1_6, posicoes_1_7, posicoes_1_8, posicoes_1_9, posicoes_1_10, posicoes_5_6, ativo, ordem, updated_at')
     .order('ordem', { ascending: true });
 
   if (globalError) {
@@ -290,6 +292,8 @@ export async function getModalidades(): Promise<ModalidadeConfig[]> {
       posicoes_1_5: global.posicoes_1_5,
       posicoes_1_6: global.posicoes_1_6,
       posicoes_1_7: global.posicoes_1_7,
+      posicoes_1_8: global.posicoes_1_8 ?? false,
+      posicoes_1_9: global.posicoes_1_9 ?? false,
       posicoes_1_10: global.posicoes_1_10,
       posicoes_5_6: global.posicoes_5_6,
       // Ativo e ordem da plataforma (se existir)
@@ -313,6 +317,8 @@ export async function updateModalidade(
     posicoes_1_5?: boolean;
     posicoes_1_6?: boolean;
     posicoes_1_7?: boolean;
+    posicoes_1_8?: boolean;
+    posicoes_1_9?: boolean;
     posicoes_1_10?: boolean;
     posicoes_5_6?: boolean;
     ativo?: boolean;
@@ -377,6 +383,8 @@ export async function updateModalidade(
   const hasPositionChanges = config.posicoes_1_5 !== undefined ||
     config.posicoes_1_6 !== undefined ||
     config.posicoes_1_7 !== undefined ||
+    config.posicoes_1_8 !== undefined ||
+    config.posicoes_1_9 !== undefined ||
     config.posicoes_1_10 !== undefined ||
     config.posicoes_5_6 !== undefined;
 
@@ -403,6 +411,8 @@ export async function updateModalidade(
           if (config.posicoes_1_5 !== undefined) positionUpdate.posicoes_1_5 = config.posicoes_1_5;
           if (config.posicoes_1_6 !== undefined) positionUpdate.posicoes_1_6 = config.posicoes_1_6;
           if (config.posicoes_1_7 !== undefined) positionUpdate.posicoes_1_7 = config.posicoes_1_7;
+          if (config.posicoes_1_8 !== undefined) positionUpdate.posicoes_1_8 = config.posicoes_1_8;
+          if (config.posicoes_1_9 !== undefined) positionUpdate.posicoes_1_9 = config.posicoes_1_9;
           if (config.posicoes_1_10 !== undefined) positionUpdate.posicoes_1_10 = config.posicoes_1_10;
           if (config.posicoes_5_6 !== undefined) positionUpdate.posicoes_5_6 = config.posicoes_5_6;
 
