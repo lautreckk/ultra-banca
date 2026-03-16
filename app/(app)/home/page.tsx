@@ -20,6 +20,7 @@ import { useAdPopup } from '@/hooks/use-ad-popup';
 import { AdPopup } from '@/components/shared/ad-popup';
 import { SupportChat } from '@/components/shared/support-chat';
 import { CommunityChat } from '@/components/shared/community-chat';
+import { EliteHome } from '@/components/layouts/elite/EliteHome';
 
 interface UltimoGanhador {
   unidade: string;
@@ -140,6 +141,16 @@ export default function DashboardPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Layout Elite (layout_id === 3) - renderiza home diferente
+  if (config.layout_id === 3) {
+    return (
+      <>
+        <EliteHome />
+        {currentAd && <AdPopup ad={currentAd} onClose={closeAd} />}
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6 px-4 py-4">
