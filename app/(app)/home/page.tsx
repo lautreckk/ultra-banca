@@ -262,7 +262,7 @@ export default function DashboardPage() {
         </button>
 
         <Link
-          href="/resultados"
+          href="/relatorios/cotacoes"
           className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
