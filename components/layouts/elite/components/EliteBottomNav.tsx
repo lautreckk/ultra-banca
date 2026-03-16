@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 const NAV_ITEMS = [
   { icon: Home, label: 'Início', href: '/home' },
   { icon: Trophy, label: 'Prêmios', href: '/premiadas' },
-  { icon: null, label: 'Apostar', href: '/loterias' }, // Center button
+  { icon: null, label: 'Apostar', href: '/loterias' },
   { icon: Wallet, label: 'Carteira', href: '/recarga-pix' },
   { icon: User, label: 'Perfil', href: '/perfil' },
 ];
@@ -18,8 +18,12 @@ export function EliteBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-zinc-800/50"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl border-t"
+      style={{
+        backgroundColor: 'rgba(13, 21, 13, 0.95)',
+        borderColor: 'rgba(255, 215, 0, 0.1)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
     >
       <div className="max-w-md mx-auto flex items-end justify-around px-2 pt-1 pb-2">
         {NAV_ITEMS.map((item) => {
@@ -28,37 +32,32 @@ export function EliteBottomNav() {
 
           if (isCenter) {
             return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="flex flex-col items-center -mt-5"
-              >
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 active:scale-90 transition-transform border-4 border-[#0a0a0a]">
-                  <Plus className="h-7 w-7 text-white" strokeWidth={3} />
+              <Link key={item.label} href={item.href} className="flex flex-col items-center -mt-5">
+                <div
+                  className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform border-4"
+                  style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+                    borderColor: '#0d150d',
+                    boxShadow: '0 4px 20px rgba(255, 215, 0, 0.3)',
+                  }}
+                >
+                  <Plus className="h-7 w-7 text-black" strokeWidth={3} />
                 </div>
-                <span className="text-[10px] font-bold text-emerald-400 mt-1">{item.label}</span>
+                <span className="text-[10px] font-bold mt-1" style={{ color: '#FFD700' }}>{item.label}</span>
               </Link>
             );
           }
 
           const Icon = item.icon!;
           return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex flex-col items-center py-2 px-3 min-w-[56px]"
-            >
+            <Link key={item.label} href={item.href} className="flex flex-col items-center py-2 px-3 min-w-[56px]">
               <Icon
-                className={cn(
-                  'h-5 w-5 transition-colors',
-                  isActive ? 'text-emerald-400' : 'text-zinc-500'
-                )}
+                className="h-5 w-5 transition-colors"
+                style={{ color: isActive ? '#FFD700' : '#4a5a4a' }}
               />
               <span
-                className={cn(
-                  'text-[10px] font-semibold mt-1 transition-colors',
-                  isActive ? 'text-emerald-400' : 'text-zinc-500'
-                )}
+                className="text-[10px] font-semibold mt-1 transition-colors"
+                style={{ color: isActive ? '#FFD700' : '#4a5a4a' }}
               >
                 {item.label}
               </span>

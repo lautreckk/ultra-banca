@@ -17,8 +17,8 @@ export function EliteLayout({
   const totalSaldo = saldo + saldoBonus + saldoCassino + saldoBonusCassino;
 
   return (
-    <div className="min-h-screen flex justify-center" style={{ backgroundColor: '#080808' }}>
-      <div className="w-full max-w-md min-h-screen" style={{ backgroundColor: '#080808' }}>
+    <div className="min-h-screen flex justify-center" style={{ backgroundColor: '#0d150d' }}>
+      <div className="w-full max-w-md min-h-screen" style={{ backgroundColor: '#0d150d' }}>
         <EliteHeader saldo={totalSaldo} />
         <main className="pb-24">{children}</main>
         <EliteBottomNav />

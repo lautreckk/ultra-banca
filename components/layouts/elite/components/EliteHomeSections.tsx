@@ -12,8 +12,15 @@ import { usePlatformConfig } from '@/contexts/platform-config-context';
 // ============================================================================
 export function ElitePixButton() {
   return (
-    <Link href="/recarga-pix" className="block px-5 mt-2">
-      <div className="flex items-center justify-center gap-3 h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-400 text-black font-black text-base tracking-wide shadow-lg shadow-emerald-500/25 active:scale-[0.97] transition-transform">
+    <Link href="/recarga-pix" className="block px-5 mt-3">
+      <div
+        className="flex items-center justify-center gap-3 h-14 rounded-2xl font-black text-base tracking-wide shadow-lg active:scale-[0.97] transition-transform"
+        style={{
+          background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+          color: '#1a1a0a',
+          boxShadow: '0 4px 20px rgba(255, 215, 0, 0.25)',
+        }}
+      >
         <QrCode className="h-6 w-6" strokeWidth={2.5} />
         RECARGA PIX IMEDIATA
       </div>
@@ -26,25 +33,25 @@ export function ElitePixButton() {
 // ============================================================================
 const PROMO_SLIDES = [
   {
-    bg: 'from-violet-600/80 via-purple-700/60 to-indigo-800/80',
+    gradient: 'linear-gradient(135deg, #1a3a1a 0%, #0d200d 50%, #2a1a0a 100%)',
     badge: 'Promoção',
-    badgeColor: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400',
+    badgeStyle: { backgroundColor: 'rgba(255,215,0,0.15)', borderColor: 'rgba(255,215,0,0.3)', color: '#FFD700' },
     title: 'GANHE 100%\nNO PRIMEIRO PIX',
     cta: 'APROVEITAR',
     href: '/recarga-pix',
   },
   {
-    bg: 'from-amber-600/80 via-orange-700/60 to-red-800/80',
+    gradient: 'linear-gradient(135deg, #2a1a0a 0%, #1a0d00 50%, #1a2a0a 100%)',
     badge: 'Especial',
-    badgeColor: 'bg-amber-500/20 border-amber-500/30 text-amber-400',
+    badgeStyle: { backgroundColor: 'rgba(255,165,0,0.15)', borderColor: 'rgba(255,165,0,0.3)', color: '#FFA500' },
     title: 'INDIQUE AMIGOS\nE GANHE BÔNUS',
     cta: 'INDICAR',
     href: '/amigos',
   },
   {
-    bg: 'from-emerald-600/80 via-teal-700/60 to-cyan-800/80',
+    gradient: 'linear-gradient(135deg, #0d2a0d 0%, #1a3a1a 50%, #0d150d 100%)',
     badge: 'Novo',
-    badgeColor: 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400',
+    badgeStyle: { backgroundColor: 'rgba(50,205,50,0.15)', borderColor: 'rgba(50,205,50,0.3)', color: '#32CD32' },
     title: 'APOSTE E\nGANHE PRÊMIOS',
     cta: 'APOSTAR',
     href: '/loterias',
@@ -68,17 +75,26 @@ export function ElitePromoCarousel() {
   return (
     <div className="px-5 mt-5">
       <Link href={slide.href} className="block">
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${slide.bg} p-6 min-h-[150px] active:scale-[0.98] transition-all duration-500`}>
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
-          <div className="absolute -right-4 bottom-0 h-24 w-24 rounded-full bg-white/5" />
+        <div
+          className="relative overflow-hidden rounded-2xl p-6 min-h-[150px] active:scale-[0.98] transition-all duration-500 border"
+          style={{ background: slide.gradient, borderColor: 'rgba(255, 215, 0, 0.1)' }}
+        >
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full" style={{ backgroundColor: 'rgba(255,215,0,0.04)' }} />
+          <div className="absolute -right-4 bottom-0 h-24 w-24 rounded-full" style={{ backgroundColor: 'rgba(255,215,0,0.04)' }} />
 
-          <span className={`inline-block px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-3 ${slide.badgeColor}`}>
+          <span
+            className="inline-block px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider mb-3"
+            style={slide.badgeStyle}
+          >
             {slide.badge}
           </span>
           <h3 className="text-2xl font-black text-white leading-tight whitespace-pre-line">
             {slide.title}
           </h3>
-          <div className="mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white text-black text-sm font-bold">
+          <div
+            className="mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-bold"
+            style={{ background: 'linear-gradient(135deg, #FFD700, #DAA520)', color: '#1a1a0a' }}
+          >
             {slide.cta}
           </div>
         </div>
@@ -90,9 +106,11 @@ export function ElitePromoCarousel() {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === current ? 'w-6 bg-emerald-400' : 'w-1.5 bg-zinc-700'
-            }`}
+            className="h-1.5 rounded-full transition-all duration-300"
+            style={{
+              width: i === current ? '24px' : '6px',
+              backgroundColor: i === current ? '#FFD700' : '#2a3a2a',
+            }}
           />
         ))}
       </div>
@@ -107,7 +125,7 @@ export function EliteJogosSection() {
   return (
     <div className="px-5 mt-6">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-1 h-6 rounded-full bg-emerald-500" />
+        <div className="w-1 h-6 rounded-full" style={{ backgroundColor: '#FFD700' }} />
         <h2 className="text-lg font-black text-white italic">JOGOS</h2>
       </div>
 
@@ -260,7 +278,7 @@ export function EliteWinnersTicker() {
 
   return (
     <div className="px-5 mt-4">
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ backgroundColor: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.15)' }}>
         <Sparkles className="h-4 w-4 text-amber-400 flex-shrink-0" />
         <p className="text-xs text-amber-300 font-semibold truncate flex-1">
           <span className="text-amber-400">{winner.nome}</span> ganhou{' '}
@@ -287,10 +305,11 @@ export function EliteQuickActions() {
           <Link
             key={item.label}
             href={item.href}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-zinc-900/80 border border-zinc-800/60 active:scale-[0.93] transition-all"
+            className="flex flex-col items-center gap-1.5 py-3 rounded-2xl active:scale-[0.93] transition-all"
+            style={{ backgroundColor: '#131f13', border: '1px solid rgba(255,215,0,0.1)' }}
           >
             <span className="text-xl">{item.emoji}</span>
-            <span className="text-[10px] font-bold text-zinc-400">{item.label}</span>
+            <span className="text-[10px] font-bold" style={{ color: '#8a9a7a' }}>{item.label}</span>
           </Link>
         ))}
       </div>
