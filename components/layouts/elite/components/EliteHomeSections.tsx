@@ -101,7 +101,7 @@ export function ElitePromoCarousel() {
 }
 
 // ============================================================================
-// JOGOS (imagens novas - Jogo do Bicho, Loterias, Cassino, Bingo)
+// JOGOS (Grid 2x2 alinhado + Cassino banner)
 // ============================================================================
 export function EliteJogosSection() {
   return (
@@ -111,81 +111,83 @@ export function EliteJogosSection() {
         <h2 className="text-lg font-black text-white italic">JOGOS</h2>
       </div>
 
-      {/* Grid 2x2 */}
+      {/* Grid 2x2 - todos alinhados */}
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/loterias"
           className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
         >
-          <Image
-            src="/images/elite-jb.webp"
-            alt="Jogo do Bicho"
-            width={600}
-            height={600}
-            className="w-full h-auto object-cover rounded-2xl"
-            priority
-          />
+          <div className="relative aspect-square">
+            <Image
+              src="/images/elite-jb.webp"
+              alt="Jogo do Bicho"
+              fill
+              className="object-cover rounded-2xl"
+              priority
+            />
+          </div>
         </Link>
 
         <Link
           href="/loterias"
           className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
         >
-          <Image
-            src="/images/elite-loterias.webp"
-            alt="Loterias"
-            width={600}
-            height={600}
-            className="w-full h-auto object-cover rounded-2xl"
-            priority
-          />
+          <div className="relative aspect-square">
+            <Image
+              src="/images/elite-loterias.webp"
+              alt="Loterias"
+              fill
+              className="object-cover rounded-2xl"
+              priority
+            />
+          </div>
         </Link>
 
         <Link
-          href="/cassino"
+          href="/fazendinha"
           className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
         >
-          <Image
-            src="/images/elite-casino.webp"
-            alt="Cassino Online"
-            width={600}
-            height={400}
-            className="w-full h-auto object-cover rounded-2xl"
-            priority
-          />
+          <div className="relative aspect-square">
+            <Image
+              src="/images/fazendinha-banner.webp"
+              alt="Fazendinha"
+              fill
+              className="object-cover rounded-2xl"
+            />
+          </div>
         </Link>
 
         <Link
           href="#"
           className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
         >
-          <Image
-            src="/images/elite-bingo.webp"
-            alt="Bingo"
-            width={600}
-            height={600}
-            className="w-full h-auto object-cover rounded-2xl"
-          />
-          {/* Em breve badge */}
+          <div className="relative aspect-square">
+            <Image
+              src="/images/elite-bingo.webp"
+              alt="Bingo"
+              fill
+              className="object-cover rounded-2xl"
+            />
+          </div>
           <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/90 text-[9px] font-bold text-black">
             EM BREVE
           </div>
         </Link>
       </div>
 
-      {/* Fazendinha full width */}
+      {/* Cassino - banner full width */}
       <Link
-        href="/fazendinha"
+        href="/cassino"
         className="block mt-3 relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.98] transition-transform"
       >
-        <div className="relative aspect-[16/7]">
-          <Image
-            src="/images/fazendinha-banner.webp"
-            alt="Fazendinha"
-            fill
-            className="object-cover rounded-2xl"
-          />
-        </div>
+        <Image
+          src="/images/elite-casino.webp"
+          alt="Cassino Online"
+          width={1200}
+          height={600}
+          className="w-full h-auto object-cover rounded-2xl"
+          priority
+        />
       </Link>
     </div>
   );
