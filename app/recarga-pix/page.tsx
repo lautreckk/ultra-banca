@@ -173,47 +173,63 @@ export default function RecargaPixPage() {
         return;
       }
 
-      // Call Supabase Edge Function with explicit fresh token
-      const { data, error: fnError } = await supabase.functions.invoke('create-pix-payment', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: {
-          valor: valorNum,
-          tipo: 'deposito',
-          wallet_type: walletType,
-        },
-      });
+      let paymentResult;
 
-      if (fnError) {
-        // Extract detailed error from response if available
-        const errorMsg = (data as Record<string, string>)?.error || fnError.message || 'Erro ao criar pagamento';
-        throw new Error(errorMsg);
-      }
+      if (config.active_gateway === 'expfypay') {
+        // EXPFY Pay - API route local
+        const res = await fetch('/api/payments/expfypay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ valor: valorNum, tipo: 'deposito', wallet_type: walletType }),
+        });
+        const resData = await res.json();
+        if (!res.ok || !resData.pagamento) {
+          throw new Error(resData.error || 'Erro ao gerar PIX');
+        }
+        paymentResult = resData.pagamento;
+      } else {
+        // Outros gateways - Supabase Edge Function
+        const { data, error: fnError } = await supabase.functions.invoke('create-pix-payment', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: {
+            valor: valorNum,
+            tipo: 'deposito',
+            wallet_type: walletType,
+          },
+        });
 
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao criar pagamento');
+        if (fnError) {
+          const errorMsg = (data as Record<string, string>)?.error || fnError.message || 'Erro ao criar pagamento';
+          throw new Error(errorMsg);
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Erro ao criar pagamento');
+        }
+
+        paymentResult = data.pagamento;
       }
 
       setPaymentData({
-        id: data.pagamento.id,
-        valor: data.pagamento.valor,
-        status: data.pagamento.status,
-        pixQrCode: data.pagamento.pixQrCode,
-        pixCopyPaste: data.pagamento.pixCopyPaste,
-        orderNumber: data.pagamento.orderNumber,
+        id: paymentResult.id,
+        valor: paymentResult.valor,
+        status: paymentResult.status,
+        pixQrCode: paymentResult.pixQrCode,
+        pixCopyPaste: paymentResult.pixCopyPaste,
+        orderNumber: paymentResult.orderNumber,
       });
       setStatus('PENDING');
 
-      // Adiciona ao sistema global de verificacao em background
       addPayment({
-        id: data.pagamento.id,
-        valor: data.pagamento.valor,
-        orderNumber: data.pagamento.orderNumber,
+        id: paymentResult.id,
+        valor: paymentResult.valor,
+        orderNumber: paymentResult.orderNumber,
       });
 
       // Dispara evento InitiateCheckout no Facebook Pixel
-      const eventId = generateEventId('checkout', data.pagamento.id);
+      const eventId = generateEventId('checkout', paymentResult.id);
       trackInitiateCheckout(valorNum, eventId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar pagamento');

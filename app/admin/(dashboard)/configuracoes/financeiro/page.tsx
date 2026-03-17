@@ -24,6 +24,7 @@ function FinanceiroContent() {
           <option value="bspay">BSPay / PixUp</option>
           <option value="washpay">WashPay</option>
           <option value="infinitypay">InfinityPay</option>
+          <option value="expfypay">EXPFY Pay</option>
         </select>
         <Link
           href="/admin/pagamentos"
