@@ -292,16 +292,50 @@ export function EliteWinnersTicker() {
 // ============================================================================
 // QUICK ACTIONS
 // ============================================================================
-export function EliteQuickActions() {
+interface EliteQuickActionsProps {
+  onOpenSupport?: () => void;
+  onOpenPalpites?: () => void;
+}
+
+export function EliteQuickActions({ onOpenSupport, onOpenPalpites }: EliteQuickActionsProps) {
+  const linkItems = [
+    { label: 'Resultados', emoji: '📊', href: '/resultados' },
+    { label: 'Cotações', emoji: '💰', href: '/relatorios/cotacoes' },
+    { label: 'Indique', emoji: '🤝', href: '/amigos' },
+    { label: 'Saques', emoji: '💸', href: '/saques' },
+  ];
+
   return (
-    <div className="px-5 mt-6">
+    <div className="px-5 mt-6 space-y-3">
+      {/* Suporte IA + Palpites ao Vivo */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={onOpenSupport}
+          className="flex items-center gap-3 p-4 rounded-2xl active:scale-[0.95] transition-all"
+          style={{ backgroundColor: '#131f13', border: '1px solid rgba(255,215,0,0.15)' }}
+        >
+          <span className="text-2xl">🤖</span>
+          <div className="text-left">
+            <p className="text-sm font-bold text-white">Suporte IA</p>
+            <p className="text-[10px] font-medium" style={{ color: '#8a9a7a' }}>Atendimento 24h</p>
+          </div>
+        </button>
+        <button
+          onClick={onOpenPalpites}
+          className="flex items-center gap-3 p-4 rounded-2xl active:scale-[0.95] transition-all"
+          style={{ backgroundColor: '#131f13', border: '1px solid rgba(255,215,0,0.15)' }}
+        >
+          <span className="text-2xl">💬</span>
+          <div className="text-left">
+            <p className="text-sm font-bold text-white">Palpites</p>
+            <p className="text-[10px] font-medium" style={{ color: '#8a9a7a' }}>Grupo ao vivo</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Links rápidos */}
       <div className="grid grid-cols-4 gap-2">
-        {[
-          { label: 'Resultados', emoji: '📊', href: '/resultados' },
-          { label: 'Cotações', emoji: '💰', href: '/relatorios/cotacoes' },
-          { label: 'Indique', emoji: '🤝', href: '/amigos' },
-          { label: 'Saques', emoji: '💸', href: '/saques' },
-        ].map((item) => (
+        {linkItems.map((item) => (
           <Link
             key={item.label}
             href={item.href}

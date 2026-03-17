@@ -25,7 +25,10 @@ export function EliteHome() {
         <ElitePromoCarousel />
         <EliteJogosSection />
         <EliteGrupoPalpites onOpen={() => setCommunityOpen(true)} />
-        <EliteQuickActions />
+        <EliteQuickActions
+          onOpenSupport={() => setChatOpen(true)}
+          onOpenPalpites={() => setCommunityOpen(true)}
+        />
         <div className="h-6" />
       </div>
 
