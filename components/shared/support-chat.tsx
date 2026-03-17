@@ -190,12 +190,12 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ touchAction: 'none' }}>
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center" style={{ touchAction: 'none' }}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
       {/* Chat Window */}
-      <div className="relative w-full max-w-md flex flex-col rounded-t-2xl shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
+      <div className="relative w-full max-w-md flex flex-col shadow-2xl overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
 
         {/* Header - WhatsApp style */}
         <div className="flex items-center gap-3 px-3 py-2.5 bg-[#075E54]">
@@ -311,7 +311,7 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
         </div>
 
         {/* Input area - WhatsApp style */}
-        <div className="flex items-center gap-2 px-2 py-2 bg-[#1F2C34]">
+        <div className="flex items-center gap-2 px-2 py-2 bg-[#1F2C34]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' }}>
           <div className="flex-1 flex items-center bg-[#2A3942] rounded-full px-4 py-2">
             <input
               ref={inputRef}
