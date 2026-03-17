@@ -8,6 +8,7 @@ import {
   updatePromotor,
   addBonusToPromotor,
   resetPromotorPassword,
+  deletePromotor,
   getComissaoAutomaticaSetting,
   updateComissaoAutomaticaSetting,
   type Promotor,
@@ -37,6 +38,7 @@ import {
   ToggleLeft,
   ToggleRight,
   DollarSign,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1026,6 +1028,22 @@ export default function AdminPromotoresPage() {
                             title="Editar"
                           >
                             <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm(`Tem certeza que deseja excluir o promotor "${promotor.nome}"? Esta ação não pode ser desfeita.`)) {
+                                const result = await deletePromotor(promotor.id);
+                                if (result.success) {
+                                  fetchPromotores();
+                                } else {
+                                  alert(result.error || 'Erro ao excluir promotor');
+                                }
+                              }
+                            }}
+                            className="p-1.5 rounded-xl hover:bg-zinc-700 text-zinc-400 hover:text-red-400 transition-colors"
+                            title="Excluir promotor"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
