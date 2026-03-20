@@ -70,8 +70,8 @@ export async function POST(req: NextRequest) {
     const { error: transitionError } = await supabase.rpc('atomic_status_transition', {
       p_table: 'pagamentos',
       p_id: external_id,
-      p_from: 'PENDING',
-      p_to: 'PAID',
+      p_from_status: 'PENDING',
+      p_to_status: 'PAID',
     });
 
     if (transitionError) {
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     const { error: creditError } = await supabase.rpc('atomic_credit_balance', {
       p_user_id: pagamento.user_id,
       p_amount: pagamento.valor,
-      p_field: walletField,
+      p_wallet: walletField,
     });
 
     if (creditError) {

@@ -235,7 +235,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { message, history } = await req.json();
+    const { message, history, sessionId } = await req.json();
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return NextResponse.json({ error: 'Mensagem inválida' }, { status: 400 });
@@ -249,6 +249,16 @@ export async function POST(req: NextRequest) {
     const cookieStore = await cookies();
     const platformId = cookieStore.get('platform_id')?.value || '';
     const systemPrompt = getPromptForPlatform(platformId);
+
+    // Persist user message
+    const chatSessionId = sessionId || crypto.randomUUID();
+    supabase.from('support_chat_messages').insert({
+      session_id: chatSessionId,
+      user_id: user.id,
+      platform_id: platformId || null,
+      role: 'user',
+      content: message.trim(),
+    }).then();
 
     // OpenAI API
     const openaiKey = process.env.OPENAI_API_KEY;
@@ -320,15 +330,34 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        return NextResponse.json({ reply });
+        // Persist assistant reply
+        supabase.from('support_chat_messages').insert({
+          session_id: chatSessionId,
+          user_id: user.id,
+          platform_id: platformId || null,
+          role: 'assistant',
+          content: reply,
+        }).then();
+
+        return NextResponse.json({ reply, sessionId: chatSessionId });
       }
 
       console.error('[CHAT] OpenAI API error:', response.status);
     }
 
     // Fallback genérico
+    const fallbackReply = 'Oi! Tô aqui pra te ajudar 😊 Me conta o que você precisa: depósito, saque, como apostar, ou qualquer outra dúvida!';
+    supabase.from('support_chat_messages').insert({
+      session_id: chatSessionId,
+      user_id: user.id,
+      platform_id: platformId || null,
+      role: 'assistant',
+      content: fallbackReply,
+    }).then();
+
     return NextResponse.json({
-      reply: 'Oi! Tô aqui pra te ajudar 😊 Me conta o que você precisa: depósito, saque, como apostar, ou qualquer outra dúvida!',
+      reply: fallbackReply,
+      sessionId: chatSessionId,
     });
   } catch (error) {
     console.error('[CHAT] Error:', error);

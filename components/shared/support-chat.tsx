@@ -47,6 +47,7 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [copiedPixId, setCopiedPixId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -145,10 +146,12 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
         body: JSON.stringify({
           message: text,
           history: messages.map(m => ({ role: m.role, content: m.content })),
+          sessionId,
         }),
       });
 
       const data = await res.json();
+      if (data.sessionId) setSessionId(data.sessionId);
       const reply = data.reply || 'Desculpa, tive um probleminha aqui 😅 Tenta de novo?';
 
       await addAssistantMessages(reply);

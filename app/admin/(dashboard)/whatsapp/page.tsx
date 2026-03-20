@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MessageSquare, Settings, Smartphone, Zap, Send, ArrowRight, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { MessageSquare, Settings, Smartphone, Zap, Send, ArrowRight, CheckCircle, XCircle, Clock, Bot } from 'lucide-react';
 import { StatCard } from '@/components/admin/shared';
 import { MessageLogTable } from '@/components/admin/whatsapp';
 import { getEvolutionStats, getEvolutionConfig } from '@/lib/admin/actions/evolution';
@@ -61,6 +61,12 @@ export default function WhatsAppDashboardPage() {
       href: '/admin/whatsapp/enviar',
       icon: Send,
       color: 'bg-cyan-500/20 text-cyan-400'
+    },
+    {
+      label: 'Conversas Suporte IA',
+      href: '/admin/whatsapp/conversas',
+      icon: Bot,
+      color: 'bg-amber-500/20 text-amber-400'
     }
   ];
 
@@ -127,7 +133,7 @@ export default function WhatsAppDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-5 gap-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
