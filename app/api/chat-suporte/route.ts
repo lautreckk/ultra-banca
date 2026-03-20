@@ -226,6 +226,35 @@ function getPromptForPlatform(platformId: string): string {
   return PLATFORM_PROMPTS[platformId] || PROMPT_PEGABICHO;
 }
 
+const ADMIN_TAKEOVER_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
+
+async function getOrCreateSession(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, platformId: string) {
+  // Buscar sessão existente do usuário nesta plataforma
+  const { data: existing } = await supabase
+    .from('support_chat_sessions')
+    .select('id, taken_over_by, taken_over_at, last_admin_reply_at')
+    .eq('user_id', userId)
+    .eq('platform_id', platformId)
+    .single();
+
+  if (existing) return existing;
+
+  // Criar nova sessão
+  const { data: created } = await supabase
+    .from('support_chat_sessions')
+    .insert({ user_id: userId, platform_id: platformId })
+    .select('id, taken_over_by, taken_over_at, last_admin_reply_at')
+    .single();
+
+  return created;
+}
+
+function isAdminTakeoverActive(session: { taken_over_by: string | null; last_admin_reply_at: string | null }): boolean {
+  if (!session.taken_over_by || !session.last_admin_reply_at) return false;
+  const elapsed = Date.now() - new Date(session.last_admin_reply_at).getTime();
+  return elapsed < ADMIN_TAKEOVER_TIMEOUT_MS;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -235,7 +264,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { message, history, sessionId } = await req.json();
+    const { message, history } = await req.json();
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return NextResponse.json({ error: 'Mensagem inválida' }, { status: 400 });
@@ -250,8 +279,14 @@ export async function POST(req: NextRequest) {
     const platformId = cookieStore.get('platform_id')?.value || '';
     const systemPrompt = getPromptForPlatform(platformId);
 
+    // Get or create single session per user+platform
+    const session = await getOrCreateSession(supabase, user.id, platformId);
+    if (!session) {
+      return NextResponse.json({ error: 'Erro ao criar sessão' }, { status: 500 });
+    }
+    const chatSessionId = session.id;
+
     // Persist user message
-    const chatSessionId = sessionId || crypto.randomUUID();
     supabase.from('support_chat_messages').insert({
       session_id: chatSessionId,
       user_id: user.id,
@@ -259,6 +294,24 @@ export async function POST(req: NextRequest) {
       role: 'user',
       content: message.trim(),
     }).then();
+
+    // Update session timestamp
+    supabase.from('support_chat_sessions')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', chatSessionId).then();
+
+    // Check if admin has taken over this conversation
+    if (isAdminTakeoverActive(session)) {
+      // Admin is handling - don't generate AI reply, just save user msg
+      return NextResponse.json({ reply: null, sessionId: chatSessionId, takenOver: true });
+    }
+
+    // If takeover expired, release it
+    if (session.taken_over_by && !isAdminTakeoverActive(session)) {
+      supabase.from('support_chat_sessions')
+        .update({ taken_over_by: null, taken_over_at: null, last_admin_reply_at: null })
+        .eq('id', chatSessionId).then();
+    }
 
     // OpenAI API
     const openaiKey = process.env.OPENAI_API_KEY;

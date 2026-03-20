@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, ChevronLeft, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 
 interface ChatMessage {
   id: string;
@@ -48,6 +49,7 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
   const [isSending, setIsSending] = useState(false);
   const [copiedPixId, setCopiedPixId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [takenOver, setTakenOver] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,6 +62,40 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping, scrollToBottom]);
+
+  // Listen for admin replies in realtime
+  useEffect(() => {
+    if (!sessionId || !open) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`support-reply-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'support_chat_messages',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const msg = payload.new as { role: string; content: string; user_id: string };
+          // Only process admin messages (role=assistant but from a different user_id = admin)
+          if (msg.role === 'admin') {
+            const adminMsg: ChatMessage = {
+              id: generateId(),
+              role: 'assistant',
+              content: msg.content,
+              time: getTimeNow(),
+              status: 'read',
+            };
+            setMessages(prev => [...prev, adminMsg]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [sessionId, open]);
 
   // Lock body scroll when chat is open
   useEffect(() => {
@@ -152,9 +188,15 @@ export function SupportChat({ open, onClose }: SupportChatProps) {
 
       const data = await res.json();
       if (data.sessionId) setSessionId(data.sessionId);
-      const reply = data.reply || 'Desculpa, tive um probleminha aqui 😅 Tenta de novo?';
 
-      await addAssistantMessages(reply);
+      // If admin took over, don't show AI reply - admin will respond via realtime
+      if (data.takenOver) {
+        setTakenOver(true);
+      } else {
+        setTakenOver(false);
+        const reply = data.reply || 'Desculpa, tive um probleminha aqui 😅 Tenta de novo?';
+        await addAssistantMessages(reply);
+      }
     } catch {
       await addAssistantMessages('Eita, deu um erro na conexão 😔 Tenta de novo em uns minutinhos?');
     } finally {
