@@ -18,6 +18,8 @@ export interface DashboardStats {
   usuariosAtivos: number;
   depositosPromotores: number;
   cadastrosTotal: number;
+  totalComissoes: number;
+  lucroLiquido: number;
 }
 
 /**
@@ -52,7 +54,7 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
         totalGanhos: 0, totalApostas: 0, totalDepositos: 0, totalSaques: 0,
         depositosDiario: 0, depositosSemanal: 0, depositosMensal: 0,
         saquesHoje: 0, apostasHoje: 0, usuariosAtivos: 0,
-        depositosPromotores: 0, cadastrosTotal: 0,
+        depositosPromotores: 0, cadastrosTotal: 0, totalComissoes: 0, lucroLiquido: 0,
       };
     }
   }
@@ -86,14 +88,22 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
         usuariosAtivos: 0,
         depositosPromotores,
         cadastrosTotal,
+        totalComissoes: 0,
+        lucroLiquido: 0,
       };
     }
 
+    const totalDepositos = Number(data.totalDepositos) || 0;
+    const totalGanhos = Number(data.totalGanhos) || 0;
+    const totalSaques = Number(data.totalSaques) || 0;
+    const totalComissoes = Number(data.totalComissoes) || 0;
+    const lucroLiquido = totalDepositos - totalGanhos - totalSaques - totalComissoes;
+
     return {
-      totalGanhos: Number(data.totalGanhos) || 0,
+      totalGanhos,
       totalApostas: Number(data.totalApostas) || 0,
-      totalDepositos: Number(data.totalDepositos) || 0,
-      totalSaques: Number(data.totalSaques) || 0,
+      totalDepositos,
+      totalSaques,
       depositosDiario: Number(data.depositosDiario) || 0,
       depositosSemanal: Number(data.depositosSemanal) || 0,
       depositosMensal: Number(data.depositosMensal) || 0,
@@ -102,6 +112,8 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
       usuariosAtivos: Number(data.usuariosAtivos) || 0,
       depositosPromotores,
       cadastrosTotal,
+      totalComissoes,
+      lucroLiquido,
     };
   }
 
@@ -154,12 +166,20 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
   const saquesResult = saquesData.reduce((sum, s) => sum + (Number(s.valor_liquido) || 0), 0);
   const usuariosResult = (usuariosRes.data || []).length;
 
+  // Buscar comissões com filtro de data
+  let comQuery = supabase.from('promotor_comissoes').select('valor_comissao');
+  if (startDate) comQuery = comQuery.gte('created_at', startDate);
+  if (endDate) comQuery = comQuery.lte('created_at', endDate);
+  const { data: comData } = await comQuery;
+  const totalComissoes = (comData || []).reduce((s: number, r: { valor_comissao: number }) => s + (Number(r.valor_comissao) || 0), 0);
+  const lucroLiquido = depositosResult - ganhosResult - saquesResult - totalComissoes;
+
   return {
     totalGanhos: ganhosResult,
     totalApostas: apostasResult,
     totalDepositos: depositosResult,
     totalSaques: saquesResult,
-    depositosDiario: depositosResult, // No filtro de data, diário = total filtrado
+    depositosDiario: depositosResult,
     depositosSemanal: depositosResult,
     depositosMensal: depositosResult,
     saquesHoje: saquesResult,
@@ -167,6 +187,8 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
     usuariosAtivos: usuariosResult,
     depositosPromotores,
     cadastrosTotal,
+    totalComissoes,
+    lucroLiquido,
   };
 }
 

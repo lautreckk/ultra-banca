@@ -70,7 +70,9 @@ export function DashboardContent({ initialStats }: DashboardContentProps) {
   const totalEntradas = stats.totalDepositos;
   const totalPremios = stats.totalGanhos;
   const totalSaques = stats.totalSaques;
+  const totalComissoes = stats.totalComissoes;
   const lucroOperacional = totalEntradas - totalPremios - totalSaques;
+  const lucroLiquido = lucroOperacional - totalComissoes;
 
   return (
     <div className="space-y-4">
@@ -138,7 +140,7 @@ export function DashboardContent({ initialStats }: DashboardContentProps) {
       {/* Bloco Financeiro: Prêmios x Recebimentos */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 md:p-5">
         <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">Resumo Financeiro</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {/* Entradas */}
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 md:p-4">
             <p className="text-[10px] md:text-xs text-emerald-400/70 font-medium uppercase tracking-wider">Recebimentos</p>
@@ -166,7 +168,16 @@ export function DashboardContent({ initialStats }: DashboardContentProps) {
             <p className="text-[10px] text-zinc-500 mt-1">Saques efetuados</p>
           </div>
 
-          {/* Resultado */}
+          {/* Comissões */}
+          <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-3 md:p-4">
+            <p className="text-[10px] md:text-xs text-purple-400/70 font-medium uppercase tracking-wider">Comissões</p>
+            <p className="text-lg md:text-2xl font-bold text-purple-400 mt-1">
+              {fv(formatCurrency(totalComissoes))}
+            </p>
+            <p className="text-[10px] text-zinc-500 mt-1">Comissão de promotores</p>
+          </div>
+
+          {/* Resultado Bruto */}
           <div className={`rounded-xl p-3 md:p-4 border ${
             lucroOperacional >= 0
               ? 'bg-cyan-500/5 border-cyan-500/20'
@@ -175,7 +186,7 @@ export function DashboardContent({ initialStats }: DashboardContentProps) {
             <p className={`text-[10px] md:text-xs font-medium uppercase tracking-wider ${
               lucroOperacional >= 0 ? 'text-cyan-400/70' : 'text-red-400/70'
             }`}>
-              Resultado
+              Resultado Bruto
             </p>
             <div className="flex items-center gap-1.5 mt-1">
               {lucroOperacional > 0 ? (
@@ -191,9 +202,35 @@ export function DashboardContent({ initialStats }: DashboardContentProps) {
                 {fv(formatCurrency(Math.abs(lucroOperacional)))}
               </p>
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">
-              {lucroOperacional >= 0 ? 'Entradas - Prêmios - Saques' : 'Déficit operacional'}
+            <p className="text-[10px] text-zinc-500 mt-1">Entradas - Prêmios - Saques</p>
+          </div>
+
+          {/* Lucro Líquido */}
+          <div className={`rounded-xl p-3 md:p-4 border ${
+            lucroLiquido >= 0
+              ? 'bg-emerald-500/10 border-emerald-500/30'
+              : 'bg-red-500/10 border-red-500/30'
+          }`}>
+            <p className={`text-[10px] md:text-xs font-medium uppercase tracking-wider ${
+              lucroLiquido >= 0 ? 'text-emerald-300/70' : 'text-red-300/70'
+            }`}>
+              Lucro Líquido
             </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              {lucroLiquido > 0 ? (
+                <TrendingUp className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+              ) : lucroLiquido < 0 ? (
+                <TrendingDown className="h-5 w-5 text-red-400 flex-shrink-0" />
+              ) : (
+                <Minus className="h-5 w-5 text-zinc-400 flex-shrink-0" />
+              )}
+              <p className={`text-lg md:text-2xl font-black ${
+                lucroLiquido >= 0 ? 'text-emerald-400' : 'text-red-400'
+              }`}>
+                {fv(formatCurrency(Math.abs(lucroLiquido)))}
+              </p>
+            </div>
+            <p className="text-[10px] text-zinc-500 mt-1">Bruto - Comissões promotores</p>
           </div>
         </div>
       </div>
