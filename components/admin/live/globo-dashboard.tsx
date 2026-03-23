@@ -2,19 +2,22 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Globe, RefreshCw } from 'lucide-react';
-import { getLocationData, getInsightsData } from '@/lib/admin/actions/live';
-import type { LocationDataPoint, InsightData } from '@/lib/admin/actions/live';
+import { getLocationData, getInsightsData, getRecentAccessLogs } from '@/lib/admin/actions/live';
+import type { LocationDataPoint, InsightData, AccessLog } from '@/lib/admin/actions/live';
 import { BrazilMap } from './brazil-map';
 import { InsightsPanel } from './insights-panel';
+import { AccessLogs } from './access-logs';
 
 interface Props {
   initialLocationData: LocationDataPoint[];
   initialInsights: InsightData;
+  initialLogs: AccessLog[];
 }
 
-export function GloboDashboard({ initialLocationData, initialInsights }: Props) {
+export function GloboDashboard({ initialLocationData, initialInsights, initialLogs }: Props) {
   const [locationData, setLocationData] = useState<LocationDataPoint[]>(initialLocationData);
   const [insights, setInsights] = useState<InsightData>(initialInsights);
+  const [logs, setLogs] = useState<AccessLog[]>(initialLogs);
   const [mapLoading, setMapLoading] = useState(false);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
@@ -24,12 +27,14 @@ export function GloboDashboard({ initialLocationData, initialInsights }: Props) 
     setMapLoading(true);
     setInsightsLoading(true);
     try {
-      const [loc, ins] = await Promise.all([
+      const [loc, ins, accessLogs] = await Promise.all([
         getLocationData(from, to),
         getInsightsData(),
+        getRecentAccessLogs(30),
       ]);
       setLocationData(loc);
       setInsights(ins);
+      setLogs(accessLogs);
     } catch (e) {
       console.debug('Globo refresh error:', e);
     } finally {
@@ -38,16 +43,13 @@ export function GloboDashboard({ initialLocationData, initialInsights }: Props) 
     }
   }, []);
 
-  // Auto-refresh every 30s
   useEffect(() => {
     const interval = setInterval(() => refreshAll(dateFrom || undefined, dateTo || undefined), 30000);
     return () => clearInterval(interval);
   }, [refreshAll, dateFrom, dateTo]);
 
   const handleFilter = () => {
-    if (dateFrom || dateTo) {
-      refreshAll(dateFrom || undefined, dateTo || undefined);
-    }
+    if (dateFrom || dateTo) refreshAll(dateFrom || undefined, dateTo || undefined);
   };
 
   const handleClear = () => {
@@ -79,33 +81,21 @@ export function GloboDashboard({ initialLocationData, initialInsights }: Props) 
       <div className="flex flex-wrap items-end gap-3 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
         <div>
           <label className="text-xs text-zinc-500 block mb-1">De</label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white"
-          />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white" />
         </div>
         <div>
           <label className="text-xs text-zinc-500 block mb-1">Até</label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white"
-          />
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white" />
         </div>
-        <button
-          onClick={handleFilter}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors"
-        >
+        <button onClick={handleFilter}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors">
           Filtrar
         </button>
         {(dateFrom || dateTo) && (
-          <button
-            onClick={handleClear}
-            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-sm rounded-lg transition-colors"
-          >
+          <button onClick={handleClear}
+            className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-sm rounded-lg transition-colors">
             Limpar
           </button>
         )}
@@ -114,8 +104,11 @@ export function GloboDashboard({ initialLocationData, initialInsights }: Props) 
       {/* Map */}
       <BrazilMap data={locationData} loading={mapLoading} />
 
-      {/* Insights */}
-      <InsightsPanel data={insights} loading={insightsLoading} />
+      {/* Insights + Logs side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <InsightsPanel data={insights} loading={insightsLoading} />
+        <AccessLogs logs={logs} loading={mapLoading} />
+      </div>
     </div>
   );
 }

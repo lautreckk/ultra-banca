@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { getLocationData, getInsightsData } from '@/lib/admin/actions/live';
+import { getLocationData, getInsightsData, getRecentAccessLogs } from '@/lib/admin/actions/live';
 import { GloboDashboard } from '@/components/admin/live/globo-dashboard';
 
 function LoadingFallback() {
@@ -13,15 +13,17 @@ function LoadingFallback() {
 }
 
 async function GloboContent() {
-  const [locationData, insightsData] = await Promise.all([
+  const [locationData, insightsData, logs] = await Promise.all([
     getLocationData(),
     getInsightsData(),
+    getRecentAccessLogs(30),
   ]);
 
   return (
     <GloboDashboard
       initialLocationData={locationData}
       initialInsights={insightsData}
+      initialLogs={logs}
     />
   );
 }

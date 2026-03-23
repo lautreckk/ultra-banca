@@ -102,5 +102,61 @@ export function findCityCoords(city: string): { lat: number; lng: number } | nul
     }
   }
 
+  // Fallback: try state capital
+  return null;
+}
+
+// Fallback: get approximate coords from state/region name
+const STATE_CAPITAL_COORDS: Record<string, { lat: number; lng: number }> = {
+  'Acre': { lat: -9.97, lng: -67.81 },
+  'Alagoas': { lat: -9.67, lng: -35.74 },
+  'Amapá': { lat: 0.03, lng: -51.07 },
+  'Amazonas': { lat: -3.12, lng: -60.02 },
+  'Bahia': { lat: -12.97, lng: -38.51 },
+  'Ceará': { lat: -3.72, lng: -38.53 },
+  'Distrito Federal': { lat: -15.79, lng: -47.88 },
+  'Espírito Santo': { lat: -20.32, lng: -40.34 },
+  'Goiás': { lat: -16.68, lng: -49.25 },
+  'Maranhão': { lat: -2.53, lng: -44.28 },
+  'Mato Grosso': { lat: -15.60, lng: -56.10 },
+  'Mato Grosso do Sul': { lat: -20.44, lng: -54.65 },
+  'Minas Gerais': { lat: -19.92, lng: -43.94 },
+  'Pará': { lat: -1.46, lng: -48.50 },
+  'Paraíba': { lat: -7.12, lng: -34.86 },
+  'Paraná': { lat: -25.43, lng: -49.27 },
+  'Pernambuco': { lat: -8.05, lng: -34.87 },
+  'Piauí': { lat: -5.09, lng: -42.80 },
+  'Rio de Janeiro': { lat: -22.91, lng: -43.17 },
+  'Rio Grande do Norte': { lat: -5.79, lng: -35.21 },
+  'Rio Grande do Sul': { lat: -30.03, lng: -51.23 },
+  'Rondônia': { lat: -8.76, lng: -63.90 },
+  'Roraima': { lat: 2.82, lng: -60.67 },
+  'Santa Catarina': { lat: -27.60, lng: -48.55 },
+  'São Paulo': { lat: -23.55, lng: -46.63 },
+  'Sergipe': { lat: -10.91, lng: -37.07 },
+  'Tocantins': { lat: -10.18, lng: -48.33 },
+  // Non-accented versions
+  'Ceara': { lat: -3.72, lng: -38.53 },
+  'Espirito Santo': { lat: -20.32, lng: -40.34 },
+  'Goias': { lat: -16.68, lng: -49.25 },
+  'Maranhao': { lat: -2.53, lng: -44.28 },
+  'Para': { lat: -1.46, lng: -48.50 },
+  'Paraiba': { lat: -7.12, lng: -34.86 },
+  'Parana': { lat: -25.43, lng: -49.27 },
+  'Piaui': { lat: -5.09, lng: -42.80 },
+  'Rondonia': { lat: -8.76, lng: -63.90 },
+  'Sao Paulo': { lat: -23.55, lng: -46.63 },
+  // Portugal (for international users)
+  'Coimbra': { lat: 40.21, lng: -8.43 },
+  'Lisboa': { lat: 38.72, lng: -9.14 },
+  'Porto': { lat: 41.15, lng: -8.61 },
+};
+
+export function findCoordsFromRegion(region: string): { lat: number; lng: number } | null {
+  if (STATE_CAPITAL_COORDS[region]) return STATE_CAPITAL_COORDS[region];
+  const normalizedRegion = normalize(region);
+  for (const [key, coords] of Object.entries(STATE_CAPITAL_COORDS)) {
+    if (normalize(key) === normalizedRegion) return coords;
+  }
   return null;
 }

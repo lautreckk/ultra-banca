@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 import { ALL_PLATFORMS_ID } from '@/lib/utils/platform-constants';
-import { findCityCoords } from '@/lib/utils/brazil-cities-coords';
+import { findCityCoords, findCoordsFromRegion } from '@/lib/utils/brazil-cities-coords';
 
 // ============================================================================
 // TIPOS
@@ -323,11 +323,11 @@ export async function getLocationData(dateFrom?: string, dateTo?: string): Promi
       groups[key].count++;
     }
 
-    // Map to coords and filter
+    // Map to coords — try city first, then fallback to state capital
     const result: LocationDataPoint[] = [];
 
     for (const g of Object.values(groups)) {
-      const coords = findCityCoords(g.city);
+      const coords = findCityCoords(g.city) || findCoordsFromRegion(g.region);
       if (coords) {
         result.push({ city: g.city, region: g.region, count: g.count, lat: coords.lat, lng: coords.lng });
       }
@@ -479,5 +479,61 @@ export async function getInsightsData(): Promise<InsightData> {
   } catch (e) {
     console.error('getInsightsData error:', e);
     return { topModalidade: null, peakHour: null, topCity: null, avgBetValue: 0, totalBetsToday: 0 };
+  }
+}
+
+// ============================================================================
+// LOGS DE ACESSO RECENTES
+// ============================================================================
+
+export interface AccessLog {
+  nome: string;
+  city: string;
+  region: string;
+  last_login: string;
+}
+
+export async function getRecentAccessLogs(limit = 20): Promise<AccessLog[]> {
+  try {
+    await requireAdmin();
+
+    const platformId = await getPlatformId();
+    const isAll = platformId === ALL_PLATFORMS_ID;
+    const supabase = isAll ? createAdminClient() : await createClient();
+
+    let query = supabase
+      .from('profiles')
+      .select('nome, last_location, last_login')
+      .not('last_location', 'is', null)
+      .neq('last_location', '{}')
+      .not('last_login', 'is', null)
+      .order('last_login', { ascending: false })
+      .limit(limit);
+
+    if (!isAll) {
+      query = query.eq('platform_id', platformId);
+    }
+
+    const { data } = await query;
+    if (!data) return [];
+
+    return data
+      .map(row => {
+        const loc = row.last_location as { city?: string; region?: string } | null;
+        if (!loc || typeof loc !== 'object') return null;
+        const city = loc.city?.trim() || '';
+        const region = loc.region?.trim() || '';
+        if (!city || city === 'Desconhecida') return null;
+        return {
+          nome: row.nome || 'Usuário',
+          city,
+          region,
+          last_login: row.last_login,
+        };
+      })
+      .filter((r): r is AccessLog => r !== null);
+  } catch (e) {
+    console.error('getRecentAccessLogs error:', e);
+    return [];
   }
 }
