@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { updateUserLocation } from '@/lib/actions/auth';
 
 // Gera ou recupera session_id do sessionStorage
 function getSessionId(): string {
@@ -200,6 +201,15 @@ export function usePageTracking(userId: string | null) {
   useEffect(() => {
     trafficSourceRef.current = detectTrafficSource();
   }, []);
+
+  // Atualizar IP e localização do usuário uma vez por sessão
+  useEffect(() => {
+    if (!userId || pathname.startsWith('/admin')) return;
+    const key = '__location_tracked';
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    updateUserLocation().catch(() => {});
+  }, [userId, pathname]);
 
   // Registra page view
   const trackPageView = useCallback(async () => {

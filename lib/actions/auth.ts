@@ -93,6 +93,22 @@ export async function trackSignup(): Promise<{ success: boolean }> {
 }
 
 /**
+ * Atualiza IP e localização do usuário (chamado pelo hook de tracking uma vez por sessão)
+ */
+export async function updateUserLocation(): Promise<{ success: boolean }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false };
+
+    await trackUserLogin(user.id);
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
+/**
  * Rastreia solicitação de saque pelo usuário
  */
 export async function trackWithdrawalRequest(
