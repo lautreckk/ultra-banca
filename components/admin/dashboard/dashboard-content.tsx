@@ -177,32 +177,13 @@ export function DashboardContent({ initialStats }: DashboardContentProps) {
             <p className="text-[10px] text-zinc-500 mt-1">Comissão de promotores</p>
           </div>
 
-          {/* Resultado Bruto */}
-          <div className={`rounded-xl p-3 md:p-4 border ${
-            lucroOperacional >= 0
-              ? 'bg-cyan-500/5 border-cyan-500/20'
-              : 'bg-red-500/5 border-red-500/20'
-          }`}>
-            <p className={`text-[10px] md:text-xs font-medium uppercase tracking-wider ${
-              lucroOperacional >= 0 ? 'text-cyan-400/70' : 'text-red-400/70'
-            }`}>
-              Resultado Bruto
+          {/* Resultado Bruto = Total de Recebimentos */}
+          <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 md:p-4">
+            <p className="text-[10px] md:text-xs text-cyan-400/70 font-medium uppercase tracking-wider">Resultado Bruto</p>
+            <p className="text-lg md:text-2xl font-bold text-cyan-400 mt-1">
+              {fv(formatCurrency(totalEntradas))}
             </p>
-            <div className="flex items-center gap-1.5 mt-1">
-              {lucroOperacional > 0 ? (
-                <TrendingUp className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-              ) : lucroOperacional < 0 ? (
-                <TrendingDown className="h-4 w-4 text-red-400 flex-shrink-0" />
-              ) : (
-                <Minus className="h-4 w-4 text-zinc-400 flex-shrink-0" />
-              )}
-              <p className={`text-lg md:text-2xl font-bold ${
-                lucroOperacional >= 0 ? 'text-cyan-400' : 'text-red-400'
-              }`}>
-                {fv(formatCurrency(Math.abs(lucroOperacional)))}
-              </p>
-            </div>
-            <p className="text-[10px] text-zinc-500 mt-1">Entradas - Prêmios - Saques</p>
+            <p className="text-[10px] text-zinc-500 mt-1">Total de recebimentos</p>
           </div>
 
           {/* Lucro Líquido */}
