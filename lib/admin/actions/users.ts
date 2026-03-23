@@ -394,6 +394,53 @@ export async function getUserFinancials(userId: string): Promise<UserFinancials 
   }
 }
 
+export interface UserFinancialRow {
+  user_id: string;
+  depositos: number;
+  comissao: number;
+  premios: number;
+  saques: number;
+  total: number;
+  liquido: number;
+}
+
+export async function getUsersFinancialsBatch(userIds: string[]): Promise<Record<string, UserFinancialRow>> {
+  try {
+    await requireAdmin();
+    if (userIds.length === 0) return {};
+    const supabase = await createClient();
+    const platformId = await getPlatformId();
+
+    const [depRes, premRes, saqRes, comRes] = await Promise.all([
+      supabase.from('pagamentos').select('user_id, valor').eq('tipo', 'deposito').eq('status', 'PAID').eq('platform_id', platformId).in('user_id', userIds),
+      supabase.from('apostas').select('user_id, premio_valor').eq('status', 'ganhou').eq('platform_id', platformId).in('user_id', userIds),
+      supabase.from('saques').select('user_id, valor').eq('status', 'PAID').eq('platform_id', platformId).in('user_id', userIds),
+      supabase.from('promotor_comissoes').select('user_id, valor_comissao').eq('platform_id', platformId).in('user_id', userIds),
+    ]);
+
+    const result: Record<string, UserFinancialRow> = {};
+    for (const uid of userIds) {
+      result[uid] = { user_id: uid, depositos: 0, comissao: 0, premios: 0, saques: 0, total: 0, liquido: 0 };
+    }
+
+    depRes.data?.forEach(r => { if (result[r.user_id]) result[r.user_id].depositos += Number(r.valor) || 0; });
+    premRes.data?.forEach(r => { if (result[r.user_id]) result[r.user_id].premios += Number(r.premio_valor) || 0; });
+    saqRes.data?.forEach(r => { if (result[r.user_id]) result[r.user_id].saques += Number(r.valor) || 0; });
+    comRes.data?.forEach(r => { if (result[r.user_id]) result[r.user_id].comissao += Number(r.valor_comissao) || 0; });
+
+    for (const uid of userIds) {
+      const row = result[uid];
+      row.total = row.depositos - row.premios - row.saques;
+      row.liquido = row.total - row.comissao;
+    }
+
+    return result;
+  } catch (e) {
+    console.error('getUsersFinancialsBatch error:', e);
+    return {};
+  }
+}
+
 export async function exportAllUsers(params: {
   search?: string;
   ultimoLoginFiltro?: UsersListParams['ultimoLoginFiltro'];

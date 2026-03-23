@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils/format-currency';
-import { getUsers, getUserById, updateUserProfile, exportAllUsers, type UserProfile, type UpdateUserProfileData, type UsersListParams } from '@/lib/admin/actions/users';
+import { getUsers, getUserById, updateUserProfile, exportAllUsers, getUsersFinancialsBatch, type UserProfile, type UpdateUserProfileData, type UsersListParams, type UserFinancialRow } from '@/lib/admin/actions/users';
 import { Eye, Edit, X, ChevronLeft, ChevronRight, Search, Loader2, User, Wallet, Trophy, Phone, Lock, CreditCard, Filter, ChevronDown, Gamepad2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -386,6 +386,7 @@ export default function AdminClientesPage() {
   const [statusFiltro, setStatusFiltro] = useState<UsersListParams['statusFiltro']>('todos');
 
   const [isExporting, setIsExporting] = useState(false);
+  const [financials, setFinancials] = useState<Record<string, UserFinancialRow>>({});
 
   const hasActiveFilters = ultimoLoginFiltro !== 'todos' || ultimaApostaFiltro !== 'todos' || statusFiltro !== 'todos';
 
@@ -402,6 +403,11 @@ export default function AdminClientesPage() {
       });
       setUsers(result.users);
       setTotal(result.total);
+      // Fetch financials in batch
+      if (result.users.length > 0) {
+        const ids = result.users.map(u => u.id);
+        getUsersFinancialsBatch(ids).then(setFinancials).catch(() => {});
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -634,65 +640,108 @@ export default function AdminClientesPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-zinc-800">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-12">#</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Nome</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">CPF</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Saldo Principal</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Saldo Cassino</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Nº Apostas</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Ganhos</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Cód. Afiliado</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-24">Ações</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-10">#</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider">Unidade</th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-300 uppercase tracking-wider">Vendas</th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-300 uppercase tracking-wider">Comissão</th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-300 uppercase tracking-wider">Prêmios</th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-300 uppercase tracking-wider">Total</th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-300 uppercase tracking-wider">Líquido</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider w-20">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-700/40">
-                  {users.map((user, index) => (
-                    <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-zinc-300">
-                        {((page - 1) * pageSize) + index + 1}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="font-medium text-white">{user.nome}</span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-zinc-300">
-                        {formatCPF(user.cpf)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-zinc-300">
-                        {formatCurrency(user.saldo)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-purple-400">
-                        {formatCurrency(user.saldo_cassino)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-zinc-300">
-                        {user.total_apostas.toLocaleString('pt-BR')}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="text-green-400">{formatCurrency(user.total_ganhos)}</span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-zinc-300">
-                        {user.codigo_convite || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleView(user)}
-                            className="p-1.5 rounded-xl hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
-                            title="Ver detalhes"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(user)}
-                            className="p-1.5 rounded-xl hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {users.map((user, index) => {
+                    const f = financials[user.id];
+                    return (
+                        <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors">
+                          <td className="px-3 py-3 text-sm text-zinc-400">
+                            {((page - 1) * pageSize) + index + 1}
+                          </td>
+                          <td className="px-3 py-3 text-sm">
+                            <div>
+                              <span className="font-medium text-white">{user.nome}</span>
+                              <p className="text-xs text-zinc-500">{formatCPF(user.cpf)}</p>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-sm text-right">
+                            <span className="text-green-400 font-medium">{f ? `(+) ${formatCurrency(f.depositos)}` : '-'}</span>
+                          </td>
+                          <td className="px-3 py-3 text-sm text-right">
+                            <span className="text-zinc-300">{f ? formatCurrency(f.comissao) : '-'}</span>
+                          </td>
+                          <td className="px-3 py-3 text-sm text-right">
+                            <span className="text-red-400">{f ? formatCurrency(f.premios) : '-'}</span>
+                          </td>
+                          <td className="px-3 py-3 text-sm text-right">
+                            <span className={f && f.total >= 0 ? 'text-green-400 font-semibold' : 'text-red-400 font-semibold'}>
+                              {f ? formatCurrency(f.total) : '-'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-sm text-right">
+                            <span className={f && f.liquido >= 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                              {f ? formatCurrency(f.liquido) : '-'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-sm">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleView(user)}
+                                className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleEdit(user)}
+                                className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                title="Editar"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                    );
+                  })}
                 </tbody>
+                {users.length > 0 && Object.keys(financials).length > 0 && (
+                  <tfoot>
+                    <tr className="bg-zinc-800/80 border-t border-zinc-600">
+                      <td className="px-3 py-3" colSpan={2}>
+                        <span className="text-xs font-bold text-zinc-300 uppercase">Totais da página</span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <span className="text-green-400 font-bold text-sm">
+                          (+) {formatCurrency(users.reduce((s, u) => s + (financials[u.id]?.depositos || 0), 0))}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <span className="text-zinc-300 font-bold text-sm">
+                          {formatCurrency(users.reduce((s, u) => s + (financials[u.id]?.comissao || 0), 0))}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <span className="text-red-400 font-bold text-sm">
+                          {formatCurrency(users.reduce((s, u) => s + (financials[u.id]?.premios || 0), 0))}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        {(() => {
+                          const totalVal = users.reduce((s, u) => s + (financials[u.id]?.total || 0), 0);
+                          return <span className={`font-bold text-sm ${totalVal >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(totalVal)}</span>;
+                        })()}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        {(() => {
+                          const liqVal = users.reduce((s, u) => s + (financials[u.id]?.liquido || 0), 0);
+                          return <span className={`font-bold text-sm ${liqVal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatCurrency(liqVal)}</span>;
+                        })()}
+                      </td>
+                      <td className="px-3 py-3" />
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>
