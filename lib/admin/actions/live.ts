@@ -277,72 +277,68 @@ export interface LocationDataPoint {
 }
 
 export async function getLocationData(dateFrom?: string, dateTo?: string): Promise<LocationDataPoint[]> {
-  await requireAdmin();
+  try {
+    await requireAdmin();
 
-  const platformId = await getPlatformId();
-  const isAll = platformId === ALL_PLATFORMS_ID;
-  const supabase = isAll ? createAdminClient() : await createClient();
+    const platformId = await getPlatformId();
+    const isAll = platformId === ALL_PLATFORMS_ID;
+    const supabase = isAll ? createAdminClient() : await createClient();
 
-  let query = supabase
-    .from('profiles')
-    .select('last_location, last_login')
-    .not('last_location', 'is', null);
+    let query = supabase
+      .from('profiles')
+      .select('last_location, last_login')
+      .not('last_location', 'is', null)
+      .neq('last_location', '{}');
 
-  if (dateFrom) {
-    query = query.gte('last_login', `${dateFrom}T00:00:00`);
-  }
-  if (dateTo) {
-    query = query.lte('last_login', `${dateTo}T23:59:59`);
-  }
-  if (!isAll) {
-    query = query.eq('platform_id', platformId);
-  }
-
-  const { data } = await query;
-
-  if (!data || data.length === 0) return [];
-
-  // Group by city+region
-  const groups: Record<string, { city: string; region: string; count: number }> = {};
-
-  for (const row of data) {
-    const loc = row.last_location as string;
-    if (!loc) continue;
-
-    // Expect format "City" or "City - State" or "City, State"
-    const parts = loc.split(/\s*[-,]\s*/);
-    const city = parts[0]?.trim();
-    const region = parts[1]?.trim() || '';
-
-    if (!city) continue;
-
-    const key = `${city}|${region}`;
-    if (!groups[key]) {
-      groups[key] = { city, region, count: 0 };
+    if (dateFrom) {
+      query = query.gte('last_login', `${dateFrom}T00:00:00`);
     }
-    groups[key].count++;
-  }
-
-  // Map to coords and filter
-  const result: LocationDataPoint[] = [];
-
-  for (const g of Object.values(groups)) {
-    const coords = findCityCoords(g.city);
-    if (coords) {
-      result.push({
-        city: g.city,
-        region: g.region,
-        count: g.count,
-        lat: coords.lat,
-        lng: coords.lng,
-      });
+    if (dateTo) {
+      query = query.lte('last_login', `${dateTo}T23:59:59`);
     }
+    if (!isAll) {
+      query = query.eq('platform_id', platformId);
+    }
+
+    const { data } = await query;
+
+    if (!data || data.length === 0) return [];
+
+    // Group by city+region — last_location is JSONB: { city, region, country, countryCode, isp }
+    const groups: Record<string, { city: string; region: string; count: number }> = {};
+
+    for (const row of data) {
+      const loc = row.last_location as { city?: string; region?: string } | null;
+      if (!loc || typeof loc !== 'object') continue;
+
+      const city = loc.city?.trim();
+      const region = loc.region?.trim() || '';
+
+      if (!city || city === 'Desconhecida') continue;
+
+      const key = `${city}|${region}`;
+      if (!groups[key]) {
+        groups[key] = { city, region, count: 0 };
+      }
+      groups[key].count++;
+    }
+
+    // Map to coords and filter
+    const result: LocationDataPoint[] = [];
+
+    for (const g of Object.values(groups)) {
+      const coords = findCityCoords(g.city);
+      if (coords) {
+        result.push({ city: g.city, region: g.region, count: g.count, lat: coords.lat, lng: coords.lng });
+      }
+    }
+
+    result.sort((a, b) => b.count - a.count);
+    return result;
+  } catch (e) {
+    console.error('getLocationData error:', e);
+    return [];
   }
-
-  // Sort by count desc
-  result.sort((a, b) => b.count - a.count);
-
-  return result;
 }
 
 // ============================================================================
@@ -358,6 +354,7 @@ export interface InsightData {
 }
 
 export async function getInsightsData(): Promise<InsightData> {
+  try {
   await requireAdmin();
 
   const platformId = await getPlatformId();
@@ -458,9 +455,9 @@ export async function getInsightsData(): Promise<InsightData> {
   if (profilesData.length > 0) {
     const cityCounts: Record<string, number> = {};
     for (const row of profilesData) {
-      const loc = row.last_location as string;
-      if (!loc) continue;
-      const city = loc.split(/\s*[-,]\s*/)[0]?.trim();
+      const loc = row.last_location as { city?: string } | null;
+      if (!loc || typeof loc !== 'object') continue;
+      const city = loc.city?.trim();
       if (city) {
         cityCounts[city] = (cityCounts[city] || 0) + 1;
       }
@@ -478,11 +475,9 @@ export async function getInsightsData(): Promise<InsightData> {
     avgBetValue = totalValue / betsData.length;
   }
 
-  return {
-    topModalidade,
-    peakHour,
-    topCity,
-    avgBetValue,
-    totalBetsToday,
-  };
+  return { topModalidade, peakHour, topCity, avgBetValue, totalBetsToday };
+  } catch (e) {
+    console.error('getInsightsData error:', e);
+    return { topModalidade: null, peakHour: null, topCity: null, avgBetValue: 0, totalBetsToday: 0 };
+  }
 }
