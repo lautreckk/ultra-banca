@@ -178,13 +178,20 @@ export default function NovoSaquePage() {
     setError('');
 
     try {
-      // Force token refresh before calling Edge Function
-      const { error: refreshError } = await supabase.auth.getUser();
-      if (refreshError) {
+      // Force token refresh and get fresh session
+      const { data: { user: authUser }, error: refreshError } = await supabase.auth.getUser();
+      if (refreshError || !authUser) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
         throw new Error('Sessão expirada. Faça login novamente.');
       }
 
       const { data, error: fnError } = await supabase.functions.invoke('create-withdrawal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {
           valor: parseInt(amount),
           chavePix: chavePix.trim(),
