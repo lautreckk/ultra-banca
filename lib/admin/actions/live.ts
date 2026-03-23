@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from './auth';
 import { getPlatformId } from '@/lib/utils/platform';
 import { ALL_PLATFORMS_ID } from '@/lib/utils/platform-constants';
+import { findCityCoords } from '@/lib/utils/brazil-cities-coords';
 
 // ============================================================================
 // TIPOS
@@ -261,4 +262,227 @@ export async function getHourlyChartData(dateFrom?: string, dateTo?: string): Pr
     deposits_volume: Number(row.deposits_volume) || 0,
     unique_users: Number(row.unique_users) || 0,
   }));
+}
+
+// ============================================================================
+// DADOS DE LOCALIZAÇÃO (Mapa)
+// ============================================================================
+
+export interface LocationDataPoint {
+  city: string;
+  region: string;
+  count: number;
+  lat: number;
+  lng: number;
+}
+
+export async function getLocationData(dateFrom?: string, dateTo?: string): Promise<LocationDataPoint[]> {
+  await requireAdmin();
+
+  const platformId = await getPlatformId();
+  const isAll = platformId === ALL_PLATFORMS_ID;
+  const supabase = isAll ? createAdminClient() : await createClient();
+
+  let query = supabase
+    .from('profiles')
+    .select('last_location, last_login')
+    .not('last_location', 'is', null);
+
+  if (dateFrom) {
+    query = query.gte('last_login', `${dateFrom}T00:00:00`);
+  }
+  if (dateTo) {
+    query = query.lte('last_login', `${dateTo}T23:59:59`);
+  }
+  if (!isAll) {
+    query = query.eq('platform_id', platformId);
+  }
+
+  const { data } = await query;
+
+  if (!data || data.length === 0) return [];
+
+  // Group by city+region
+  const groups: Record<string, { city: string; region: string; count: number }> = {};
+
+  for (const row of data) {
+    const loc = row.last_location as string;
+    if (!loc) continue;
+
+    // Expect format "City" or "City - State" or "City, State"
+    const parts = loc.split(/\s*[-,]\s*/);
+    const city = parts[0]?.trim();
+    const region = parts[1]?.trim() || '';
+
+    if (!city) continue;
+
+    const key = `${city}|${region}`;
+    if (!groups[key]) {
+      groups[key] = { city, region, count: 0 };
+    }
+    groups[key].count++;
+  }
+
+  // Map to coords and filter
+  const result: LocationDataPoint[] = [];
+
+  for (const g of Object.values(groups)) {
+    const coords = findCityCoords(g.city);
+    if (coords) {
+      result.push({
+        city: g.city,
+        region: g.region,
+        count: g.count,
+        lat: coords.lat,
+        lng: coords.lng,
+      });
+    }
+  }
+
+  // Sort by count desc
+  result.sort((a, b) => b.count - a.count);
+
+  return result;
+}
+
+// ============================================================================
+// INSIGHTS DO DIA
+// ============================================================================
+
+export interface InsightData {
+  topModalidade: { name: string; count: number; percentage: number } | null;
+  peakHour: { hour: string; count: number } | null;
+  topCity: { name: string; count: number } | null;
+  avgBetValue: number;
+  totalBetsToday: number;
+}
+
+export async function getInsightsData(): Promise<InsightData> {
+  await requireAdmin();
+
+  const platformId = await getPlatformId();
+  const isAll = platformId === ALL_PLATFORMS_ID;
+  const supabase = isAll ? createAdminClient() : await createClient();
+
+  // Today start in BRT (UTC-3)
+  const now = new Date();
+  const brtOffset = -3 * 60;
+  const brtNow = new Date(now.getTime() + (brtOffset + now.getTimezoneOffset()) * 60000);
+  const todayStart = new Date(brtNow);
+  todayStart.setHours(0, 0, 0, 0);
+  // Convert back to UTC for querying
+  const todayStartUTC = new Date(todayStart.getTime() - (brtOffset + now.getTimezoneOffset()) * 60000);
+  const todayISO = todayStartUTC.toISOString();
+
+  // Parallel queries
+  const [betsRes, hourlyRes, profilesRes] = await Promise.all([
+    // Apostas today
+    (() => {
+      let q = supabase
+        .from('apostas')
+        .select('modalidade, valor_total')
+        .gte('created_at', todayISO);
+      if (!isAll) q = q.eq('platform_id', platformId);
+      return q;
+    })(),
+
+    // Hourly metrics today
+    (() => {
+      let q = supabase
+        .from('hourly_metrics')
+        .select('hour_bucket, bets_count')
+        .gte('hour_bucket', todayISO);
+      if (!isAll) q = q.eq('platform_id', platformId);
+      return q;
+    })(),
+
+    // Profiles with last_login today + location
+    (() => {
+      let q = supabase
+        .from('profiles')
+        .select('last_location')
+        .gte('last_login', todayISO)
+        .not('last_location', 'is', null);
+      if (!isAll) q = q.eq('platform_id', platformId);
+      return q;
+    })(),
+  ]);
+
+  // Process top modalidade
+  const betsData = betsRes.data || [];
+  const totalBetsToday = betsData.length;
+  let topModalidade: InsightData['topModalidade'] = null;
+
+  if (betsData.length > 0) {
+    const modCounts: Record<string, number> = {};
+    for (const bet of betsData) {
+      const mod = (bet.modalidade as string) || 'Outros';
+      modCounts[mod] = (modCounts[mod] || 0) + 1;
+    }
+    const sorted = Object.entries(modCounts).sort((a, b) => b[1] - a[1]);
+    if (sorted.length > 0) {
+      const [name, count] = sorted[0];
+      topModalidade = {
+        name,
+        count,
+        percentage: (count / totalBetsToday) * 100,
+      };
+    }
+  }
+
+  // Process peak hour
+  let peakHour: InsightData['peakHour'] = null;
+  const hourlyData = hourlyRes.data || [];
+  if (hourlyData.length > 0) {
+    let maxBets = 0;
+    let maxHourBucket = '';
+    for (const row of hourlyData) {
+      const bc = Number(row.bets_count) || 0;
+      if (bc > maxBets) {
+        maxBets = bc;
+        maxHourBucket = row.hour_bucket;
+      }
+    }
+    if (maxBets > 0 && maxHourBucket) {
+      const hourLabel = new Date(maxHourBucket).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      peakHour = { hour: hourLabel, count: maxBets };
+    }
+  }
+
+  // Process top city
+  let topCity: InsightData['topCity'] = null;
+  const profilesData = profilesRes.data || [];
+  if (profilesData.length > 0) {
+    const cityCounts: Record<string, number> = {};
+    for (const row of profilesData) {
+      const loc = row.last_location as string;
+      if (!loc) continue;
+      const city = loc.split(/\s*[-,]\s*/)[0]?.trim();
+      if (city) {
+        cityCounts[city] = (cityCounts[city] || 0) + 1;
+      }
+    }
+    const sorted = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]);
+    if (sorted.length > 0) {
+      topCity = { name: sorted[0][0], count: sorted[0][1] };
+    }
+  }
+
+  // Calculate avg bet value
+  let avgBetValue = 0;
+  if (betsData.length > 0) {
+    const totalValue = betsData.reduce((sum, b) => sum + (Number(b.valor_total) || 0), 0);
+    avgBetValue = totalValue / betsData.length;
+  }
+
+  return {
+    topModalidade,
+    peakHour,
+    topCity,
+    avgBetValue,
+    totalBetsToday,
+  };
 }

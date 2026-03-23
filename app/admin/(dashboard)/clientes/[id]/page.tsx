@@ -2,11 +2,11 @@
 
 import { useState, useEffect, use } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getUserById, updateUserBalance, type UserProfile } from '@/lib/admin/actions/users';
+import { getUserById, getUserFinancials, updateUserBalance, type UserProfile, type UserFinancials } from '@/lib/admin/actions/users';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, User, Wallet, Receipt, Calendar, Save, X, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, User, Wallet, Receipt, Calendar, Save, X, Gamepad2, DollarSign, Users as UsersIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 import { getUrlWithUtm } from '@/lib/utm';
 
@@ -24,13 +24,18 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
   const [editedSaldoCassino, setEditedSaldoCassino] = useState('');
   const [editedSaldoBonusCassino, setEditedSaldoBonusCassino] = useState('');
   const [error, setError] = useState('');
+  const [financials, setFinancials] = useState<UserFinancials | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       setIsLoading(true);
       try {
-        const data = await getUserById(id);
+        const [data, fin] = await Promise.all([
+          getUserById(id),
+          getUserFinancials(id),
+        ]);
         setUser(data);
+        setFinancials(fin);
         if (data) {
           setEditedSaldo(data.saldo.toString());
           setEditedSaldoBonus(data.saldo_bonus.toString());
@@ -301,6 +306,97 @@ export default function AdminClienteDetailPage({ params }: { params: Promise<{ i
             </div>
           </div>
         </div>
+
+        {/* Resumo Financeiro */}
+        {financials && (
+          <div className="bg-[#374151] rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-zinc-700 rounded-lg">
+                <DollarSign className="h-5 w-5 text-yellow-400" />
+              </div>
+              <h2 className="text-lg font-semibold text-white">Resumo Financeiro</h2>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm text-zinc-500">Total Depositado</label>
+                <p className="text-xl font-semibold text-green-400">
+                  {formatCurrency(financials.total_depositado)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Total Apostado</label>
+                <p className="text-xl font-semibold text-white">
+                  {formatCurrency(financials.total_apostado)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Total Ganhos</label>
+                <p className="text-xl font-semibold text-cyan-400">
+                  {formatCurrency(financials.total_ganhos)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Total Saques</label>
+                <p className="text-xl font-semibold text-orange-400">
+                  {formatCurrency(financials.total_saques)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Lucro da Casa</label>
+                <div className="flex items-center gap-2">
+                  {financials.lucro_casa >= 0 ? (
+                    <TrendingUp className="h-5 w-5 text-green-400" />
+                  ) : (
+                    <TrendingDown className="h-5 w-5 text-red-400" />
+                  )}
+                  <p className={`text-xl font-semibold ${financials.lucro_casa >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatCurrency(financials.lucro_casa)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Promotor Indicador */}
+        {financials?.promotor && (
+          <div className="bg-[#374151] rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-zinc-700 rounded-lg">
+                <UsersIcon className="h-5 w-5 text-indigo-400" />
+              </div>
+              <h2 className="text-lg font-semibold text-white">Promotor</h2>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm text-zinc-500">Promotor</label>
+                <p className="text-white">{financials.promotor.nome}</p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Código</label>
+                <p className="text-white">{financials.promotor.codigo_afiliado}</p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Comissão Depósito</label>
+                <p className="text-xl font-semibold text-white">
+                  {financials.promotor.comissao_deposito_pct != null ? `${financials.promotor.comissao_deposito_pct}%` : '-'}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Comissão Perda</label>
+                <p className="text-xl font-semibold text-white">
+                  {financials.promotor.comissao_perda_pct != null ? `${financials.promotor.comissao_perda_pct}%` : '-'}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-500">Total Comissão</label>
+                <p className="text-xl font-semibold text-green-400">
+                  {formatCurrency(financials.promotor.total_comissao_gerada)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Actions */}
