@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getLiveMetrics, getActiveUsers, getHourlyChartData, getRecentActivities, getLocationData, getInsightsData } from '@/lib/admin/actions/live';
-import type { LiveMetrics, ActiveUser, HourlyMetric, RecentActivity, LocationDataPoint, InsightData } from '@/lib/admin/actions/live';
+import { getLiveMetrics, getActiveUsers, getHourlyChartData, getRecentActivities } from '@/lib/admin/actions/live';
+import type { LiveMetrics, ActiveUser, HourlyMetric, RecentActivity } from '@/lib/admin/actions/live';
 import { LiveStatCards } from './live-stat-cards';
 import { ActiveUsersTable } from './active-users-table';
 import { LiveActivityFeed } from './live-activity-feed';
@@ -12,17 +12,12 @@ import { HourlyUsersChart } from './charts/hourly-users-chart';
 import { BetsVolumeChart } from './charts/bets-volume-chart';
 import { BetsCountChart } from './charts/bets-count-chart';
 import { DepositsChart } from './charts/deposits-chart';
-import { BrazilMap } from './brazil-map';
-import { InsightsPanel } from './insights-panel';
-
 interface Props {
   initialMetrics: LiveMetrics;
   initialUsers: ActiveUser[];
   initialUsersTotal: number;
   initialChartData: HourlyMetric[];
   initialActivities: RecentActivity[];
-  initialLocationData: LocationDataPoint[];
-  initialInsights: InsightData;
   platformId: string;
 }
 
@@ -32,8 +27,6 @@ export function LiveDashboardContent({
   initialUsersTotal,
   initialChartData,
   initialActivities,
-  initialLocationData,
-  initialInsights,
   platformId,
 }: Props) {
   // State
@@ -43,13 +36,9 @@ export function LiveDashboardContent({
   const [usersPage, setUsersPage] = useState(1);
   const [chartData, setChartData] = useState<HourlyMetric[]>(initialChartData);
   const [activities, setActivities] = useState<RecentActivity[]>(initialActivities);
-  const [locationData, setLocationData] = useState<LocationDataPoint[]>(initialLocationData);
-  const [insights, setInsights] = useState<InsightData>(initialInsights);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
-  const [mapLoading, setMapLoading] = useState(false);
-  const [insightsLoading, setInsightsLoading] = useState(false);
 
   // Filters
   const [dateFrom, setDateFrom] = useState('');
@@ -107,46 +96,18 @@ export function LiveDashboardContent({
     }
   }, []);
 
-  // Refresh location data
-  const refreshLocationData = useCallback(async (from?: string, to?: string) => {
-    setMapLoading(true);
-    try {
-      const data = await getLocationData(from, to);
-      setLocationData(data);
-    } catch (e) {
-      console.debug('Location data refresh error:', e);
-    } finally {
-      setMapLoading(false);
-    }
-  }, []);
-
-  // Refresh insights
-  const refreshInsights = useCallback(async () => {
-    setInsightsLoading(true);
-    try {
-      const data = await getInsightsData();
-      setInsights(data);
-    } catch (e) {
-      console.debug('Insights refresh error:', e);
-    } finally {
-      setInsightsLoading(false);
-    }
-  }, []);
-
   // Polling: refresh metrics every 30s
   useEffect(() => {
     pollRef.current = setInterval(() => {
       refreshMetrics();
       refreshUsers(usersPage);
       refreshActivities();
-      refreshLocationData(hasFilter ? dateFrom || undefined : undefined, hasFilter ? dateTo || undefined : undefined);
-      refreshInsights();
     }, 30000);
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [refreshMetrics, refreshUsers, refreshActivities, refreshLocationData, refreshInsights, usersPage, hasFilter, dateFrom, dateTo]);
+  }, [refreshMetrics, refreshUsers, refreshActivities, usersPage]);
 
   // Escutar evento de refresh global do header
   useEffect(() => {
@@ -155,12 +116,10 @@ export function LiveDashboardContent({
       refreshUsers(usersPage);
       refreshActivities();
       refreshChartData(hasFilter ? dateFrom || undefined : undefined, hasFilter ? dateTo || undefined : undefined);
-      refreshLocationData(hasFilter ? dateFrom || undefined : undefined, hasFilter ? dateTo || undefined : undefined);
-      refreshInsights();
     };
     window.addEventListener('admin-refresh', handleAdminRefresh);
     return () => window.removeEventListener('admin-refresh', handleAdminRefresh);
-  }, [refreshMetrics, refreshUsers, refreshActivities, refreshChartData, refreshLocationData, refreshInsights, usersPage, hasFilter, dateFrom, dateTo]);
+  }, [refreshMetrics, refreshUsers, refreshActivities, refreshChartData, usersPage, hasFilter, dateFrom, dateTo]);
 
   // Supabase Realtime: listen for new activity events
   useEffect(() => {
@@ -204,7 +163,6 @@ export function LiveDashboardContent({
     if (dateFrom || dateTo) {
       setHasFilter(true);
       refreshChartData(dateFrom || undefined, dateTo || undefined);
-      refreshLocationData(dateFrom || undefined, dateTo || undefined);
     }
   };
 
@@ -213,7 +171,6 @@ export function LiveDashboardContent({
     setDateTo('');
     setHasFilter(false);
     refreshChartData();
-    refreshLocationData();
   };
 
   return (
@@ -292,11 +249,6 @@ export function LiveDashboardContent({
         </div>
       )}
 
-      {/* Map + Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <BrazilMap data={locationData} loading={mapLoading} />
-        <InsightsPanel data={insights} loading={insightsLoading} />
-      </div>
     </div>
   );
 }

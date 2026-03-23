@@ -68,6 +68,11 @@ const navItems: NavItem[] = [
     href: '/admin/live',
     icon: <Activity className="h-5 w-5" />,
   },
+  {
+    label: 'Globo',
+    href: '/admin/globo',
+    icon: <Globe className="h-5 w-5" />,
+  },
 
   // ========== GESTÃO DE USUÁRIOS ==========
   {

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { getLiveMetrics, getActiveUsers, getHourlyChartData, getRecentActivities, getLocationData, getInsightsData } from '@/lib/admin/actions/live';
+import { getLiveMetrics, getActiveUsers, getHourlyChartData, getRecentActivities } from '@/lib/admin/actions/live';
 import { getPlatformId } from '@/lib/utils/platform';
 import { ALL_PLATFORMS_ID } from '@/lib/utils/platform-constants';
 import { LiveDashboardContent } from '@/components/admin/live/live-dashboard-content';
@@ -15,13 +15,11 @@ function LoadingFallback() {
 }
 
 async function LiveContent() {
-  const [metrics, activeUsers, chartData, activities, locationData, insightsData, platformId] = await Promise.all([
+  const [metrics, activeUsers, chartData, activities, platformId] = await Promise.all([
     getLiveMetrics(),
     getActiveUsers(1, 20),
     getHourlyChartData(),
     getRecentActivities(15),
-    getLocationData(),
-    getInsightsData(),
     getPlatformId(),
   ]);
 
@@ -32,8 +30,6 @@ async function LiveContent() {
       initialUsersTotal={activeUsers.total}
       initialChartData={chartData}
       initialActivities={activities}
-      initialLocationData={locationData}
-      initialInsights={insightsData}
       platformId={platformId === ALL_PLATFORMS_ID ? 'all' : platformId}
     />
   );
