@@ -12,7 +12,7 @@ interface BingoState {
   drawnNumbers: number[];
   currentNumber: number | null;
   markedNumbers: Set<number>;
-  players: { id: string; name: string }[];
+  players: { id: string; name: string; avatarUrl?: string }[];
   winner: { id: string; name: string; prize: number } | null;
   drawSpeed: number;
   totalPot: number;
@@ -39,7 +39,7 @@ interface BingoState {
     startsAt: string | null;
     entryFee: number;
     isSpectator: boolean;
-    players: { id: string; name: string }[];
+    players: { id: string; name: string; avatarUrl?: string }[];
     drawnNumbers: number[];
     currentNumber: number | null;
     winner: BingoState['winner'];
@@ -47,8 +47,8 @@ interface BingoState {
   addDrawnNumber: (n: number) => void;
   markNumber: (n: number) => void;
   setWinner: (w: BingoState['winner']) => void;
-  addPlayer: (p: { id: string; name: string }) => void;
-  setPlayers: (p: { id: string; name: string }[]) => void;
+  addPlayer: (p: { id: string; name: string; avatarUrl?: string }) => void;
+  setPlayers: (p: { id: string; name: string; avatarUrl?: string }[]) => void;
   setStatus: (s: BingoGameStatus) => void;
   updatePot: (pot: number) => void;
   setCartela: (c: (number | null)[][]) => void;
