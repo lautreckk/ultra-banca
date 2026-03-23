@@ -161,6 +161,15 @@ export default function NovoSaquePage() {
     }
 
     setError('');
+
+    // Banca Magnata: pular alerta de fraude, ir direto para confirmação
+    const platformId = document.cookie.match(/(?:^|;\s*)platform_id=([^;]*)/)?.[1] || '';
+    const MAGNATA_ID = '910e8160-5576-4298-a412-e097efdd6c27';
+    if (platformId === MAGNATA_ID) {
+      setStep('confirm');
+      return;
+    }
+
     setStep('insufficient');
   };
 
