@@ -381,65 +381,125 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     return { success: false, error: 'Saque já está sendo processado por outro operador' };
   }
 
-  // Buscar API key do WashPay na gateway_config
+  // Detectar gateway ativo da plataforma
   const platformId = await getPlatformId();
-  const { data: gatewayConfig } = await supabase
-    .from('gateway_config')
-    .select('client_id')
-    .eq('gateway_name', 'washpay')
-    .eq('platform_id', platformId)
+  const { data: platform } = await supabase
+    .from('platforms')
+    .select('active_gateway')
+    .eq('id', platformId)
     .single();
 
-  if (!gatewayConfig?.client_id) {
-    await adminClient.rpc('atomic_status_transition', {
-      p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING',
-    });
-    return { success: false, error: 'API Key do WashPay não configurada. Vá em Pagamentos > WashPay para configurar.' };
-  }
+  const activeGateway = platform?.active_gateway || 'washpay';
+  let gatewayUsed = activeGateway;
+  let txId = '';
 
-  // Chamar WashPay API para fazer o PIX automaticamente
   try {
-    const washpay = new WashPayClient(gatewayConfig.client_id);
-    const washpayResponse = await washpay.requestWithdrawal({
-      pixKeyType: mapTipoChaveToWashPay(withdrawal.tipo_chave),
-      pixKey: withdrawal.chave_pix,
-      amount: Number(withdrawal.valor_liquido),
-    });
+    if (activeGateway === 'bspay') {
+      // ═══ BSPay Cashout via API ═══
+      const { data: bspayConfig } = await supabase
+        .from('gateway_config')
+        .select('client_id, client_secret, config')
+        .eq('gateway_name', 'bspay')
+        .eq('platform_id', platformId)
+        .single();
 
-    if (!washpayResponse.success) {
-      // WashPay rejeitou — voltar para PENDING (atomic)
-      await adminClient.rpc('atomic_status_transition', {
-        p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING',
+      if (!bspayConfig?.client_id || !bspayConfig?.client_secret) {
+        await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
+        return { success: false, error: 'Credenciais BSPay não configuradas.' };
+      }
+
+      const baseUrl = (bspayConfig.config as { base_url?: string })?.base_url || 'https://api.bspay.co/v2';
+
+      // 1. Get OAuth token
+      const basicAuth = Buffer.from(`${bspayConfig.client_id}:${bspayConfig.client_secret}`).toString('base64');
+      const tokenRes = await fetch(`${baseUrl}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${basicAuth}`, 'Content-Type': 'application/json' },
       });
-      return { success: false, error: 'WashPay recusou o saque. Tente novamente.' };
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok || !tokenData.access_token) {
+        throw new Error(tokenData.message || 'Falha na autenticação BSPay');
+      }
+
+      // 2. Map tipo_chave to BSPay format
+      const pixKeyTypeMap: Record<string, string> = {
+        cpf: 'CPF', cnpj: 'CNPJ', telefone: 'PHONE', email: 'EMAIL', aleatoria: 'RANDOM_KEY',
+      };
+      const pixKeyType = pixKeyTypeMap[withdrawal.tipo_chave] || 'CPF';
+
+      // 3. Request cashout
+      const cashoutRes = await fetch(`${baseUrl}/pix/cashout`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Number(withdrawal.valor_liquido),
+          external_id: withdrawalId,
+          payer: {
+            name: userProfile?.nome || 'Usuario',
+            document: userProfile?.cpf?.replace(/\D/g, '') || '',
+          },
+          receiver: {
+            pixKeyType: pixKeyType,
+            pixKey: withdrawal.chave_pix,
+          },
+        }),
+      });
+
+      const cashoutData = await cashoutRes.json();
+      if (!cashoutRes.ok) {
+        throw new Error(cashoutData.message || cashoutData.error || `BSPay erro ${cashoutRes.status}`);
+      }
+
+      txId = cashoutData.transactionId || cashoutData.id || '';
+      gatewayUsed = 'bspay';
+    } else {
+      // ═══ WashPay (fallback padrão) ═══
+      const { data: gatewayConfig } = await supabase
+        .from('gateway_config')
+        .select('client_id')
+        .eq('gateway_name', 'washpay')
+        .eq('platform_id', platformId)
+        .single();
+
+      if (!gatewayConfig?.client_id) {
+        await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
+        return { success: false, error: 'API Key do gateway não configurada.' };
+      }
+
+      const washpay = new WashPayClient(gatewayConfig.client_id);
+      const washpayResponse = await washpay.requestWithdrawal({
+        pixKeyType: mapTipoChaveToWashPay(withdrawal.tipo_chave),
+        pixKey: withdrawal.chave_pix,
+        amount: Number(withdrawal.valor_liquido),
+      });
+
+      if (!washpayResponse.success) {
+        throw new Error('Gateway recusou o saque');
+      }
+
+      txId = washpayResponse.data.id;
+      gatewayUsed = 'washpay';
     }
 
-    // ATOMIC: Transition PROCESSING→PAID and save transaction ID
+    // ATOMIC: Transition PROCESSING→PAID
     const { data: paidTransitioned } = await adminClient.rpc('atomic_status_transition', {
-      p_table: 'saques',
-      p_id: withdrawalId,
-      p_from_status: 'PROCESSING',
-      p_to_status: 'PAID',
+      p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PAID',
     });
 
     if (!paidTransitioned) {
       return { success: false, error: 'Estado do saque mudou inesperadamente' };
     }
 
-    // Update paid_at and transaction ID
     await adminClient.from('saques').update({
       paid_at: new Date().toISOString(),
-      bspay_transaction_id: washpayResponse.data.id,
+      bspay_transaction_id: txId,
     }).eq('id', withdrawalId);
   } catch (error) {
-    // Erro na chamada — voltar para PENDING (atomic)
-    console.error('Erro ao chamar WashPay withdrawal:', error);
-    await adminClient.rpc('atomic_status_transition', {
-      p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING',
-    });
+    console.error(`Erro ao chamar ${gatewayUsed} withdrawal:`, error);
+    await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
     return {
       success: false,
-      error: `Erro ao processar PIX via WashPay: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      error: `Erro ao processar PIX via ${gatewayUsed}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
     };
   }
 
@@ -456,7 +516,8 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
       valor_liquido: withdrawal.valor_liquido,
       chave_pix: withdrawal.chave_pix.slice(0, 4) + '****',
       tipo_chave: withdrawal.tipo_chave,
-      gateway: 'washpay',
+      gateway: gatewayUsed,
+      transaction_id: txId,
       timestamp: new Date().toISOString(),
     },
   });
