@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { QrCode, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { QrCode, Sparkles, ChevronLeft, ChevronRight, Headphones } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatformConfig } from '@/contexts/platform-config-context';
 
@@ -33,15 +33,15 @@ export function ElitePixButton() {
 // ============================================================================
 const PROMO_SLIDES = [
   {
-    gradient: 'linear-gradient(135deg, #1a3a1a 0%, #0d200d 50%, #2a1a0a 100%)',
+    gradient: 'linear-gradient(135deg, #1B2440 0%, #0C1020 50%, #2A1A0A 100%)',
     badge: 'Promoção',
-    badgeStyle: { backgroundColor: 'rgba(255,215,0,0.15)', borderColor: 'rgba(255,215,0,0.3)', color: '#FFD700' },
+    badgeStyle: { backgroundColor: 'rgba(200,149,26,0.15)', borderColor: 'rgba(200,149,26,0.3)', color: '#C8951A' },
     title: 'GANHE 100%\nNO PRIMEIRO PIX',
     cta: 'APROVEITAR',
     href: '/recarga-pix',
   },
   {
-    gradient: 'linear-gradient(135deg, #2a1a0a 0%, #1a0d00 50%, #1a2a0a 100%)',
+    gradient: 'linear-gradient(135deg, #2A1A0A 0%, #1A0D00 50%, #1B2440 100%)',
     badge: 'Especial',
     badgeStyle: { backgroundColor: 'rgba(255,165,0,0.15)', borderColor: 'rgba(255,165,0,0.3)', color: '#FFA500' },
     title: 'INDIQUE AMIGOS\nE GANHE BÔNUS',
@@ -49,9 +49,9 @@ const PROMO_SLIDES = [
     href: '/amigos',
   },
   {
-    gradient: 'linear-gradient(135deg, #0d2a0d 0%, #1a3a1a 50%, #0d150d 100%)',
+    gradient: 'linear-gradient(135deg, #0F1A30 0%, #1B2440 50%, #0C0E14 100%)',
     badge: 'Novo',
-    badgeStyle: { backgroundColor: 'rgba(50,205,50,0.15)', borderColor: 'rgba(50,205,50,0.3)', color: '#32CD32' },
+    badgeStyle: { backgroundColor: 'rgba(200,149,26,0.15)', borderColor: 'rgba(200,149,26,0.3)', color: '#C8951A' },
     title: 'APOSTE E\nGANHE PRÊMIOS',
     cta: 'APOSTAR',
     href: '/loterias',
@@ -109,7 +109,7 @@ export function ElitePromoCarousel() {
             className="h-1.5 rounded-full transition-all duration-300"
             style={{
               width: i === current ? '24px' : '6px',
-              backgroundColor: i === current ? '#FFD700' : '#2a3a2a',
+              backgroundColor: i === current ? '#FFD700' : '#2a2e3a',
             }}
           />
         ))}
@@ -176,7 +176,7 @@ export function EliteJogosSection() {
         </Link>
 
         <Link
-          href="#"
+          href="/bingo"
           className="relative overflow-hidden rounded-2xl shadow-lg active:scale-[0.95] transition-transform"
         >
           <div className="relative aspect-square">
@@ -186,9 +186,6 @@ export function EliteJogosSection() {
               fill
               className="object-cover rounded-2xl"
             />
-          </div>
-          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/90 text-[9px] font-bold text-black">
-            EM BREVE
           </div>
         </Link>
       </div>
@@ -297,7 +294,7 @@ interface EliteQuickActionsProps {
   onOpenPalpites?: () => void;
 }
 
-export function EliteQuickActions({ onOpenSupport, onOpenPalpites }: EliteQuickActionsProps) {
+export function EliteQuickActions({ onOpenSupport }: EliteQuickActionsProps) {
   const linkItems = [
     { label: 'Resultados', emoji: '📊', href: '/resultados' },
     { label: 'Cotações', emoji: '💰', href: '/relatorios/cotacoes' },
@@ -307,31 +304,23 @@ export function EliteQuickActions({ onOpenSupport, onOpenPalpites }: EliteQuickA
 
   return (
     <div className="px-5 mt-6 space-y-3">
-      {/* Suporte IA + Palpites ao Vivo */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={onOpenSupport}
-          className="flex items-center gap-3 p-4 rounded-2xl active:scale-[0.95] transition-all"
-          style={{ backgroundColor: '#131f13', border: '1px solid rgba(255,215,0,0.15)' }}
-        >
-          <span className="text-2xl">🤖</span>
-          <div className="text-left">
-            <p className="text-sm font-bold text-white">Suporte IA</p>
-            <p className="text-[10px] font-medium" style={{ color: '#8a9a7a' }}>Atendimento 24h</p>
-          </div>
-        </button>
-        <button
-          onClick={onOpenPalpites}
-          className="flex items-center gap-3 p-4 rounded-2xl active:scale-[0.95] transition-all"
-          style={{ backgroundColor: '#131f13', border: '1px solid rgba(255,215,0,0.15)' }}
-        >
-          <span className="text-2xl">💬</span>
-          <div className="text-left">
-            <p className="text-sm font-bold text-white">Palpites</p>
-            <p className="text-[10px] font-medium" style={{ color: '#8a9a7a' }}>Grupo ao vivo</p>
-          </div>
-        </button>
-      </div>
+      {/* Suporte Humano - botão full width */}
+      <button
+        onClick={onOpenSupport}
+        className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl active:scale-[0.97] transition-all"
+        style={{
+          background: 'linear-gradient(135deg, #1B2440 0%, #141828 100%)',
+          border: '1px solid rgba(200,149,26,0.25)',
+          boxShadow: '0 2px 12px rgba(200,149,26,0.08)',
+        }}
+      >
+        <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #C8951A, #9A7214)' }}>
+          <Headphones className="h-5 w-5 text-white" />
+        </div>
+        <div className="text-left">
+          <p className="text-sm font-bold text-white">Suporte Humanizado 24h</p>
+        </div>
+      </button>
 
       {/* Links rápidos */}
       <div className="grid grid-cols-4 gap-2">
@@ -340,10 +329,10 @@ export function EliteQuickActions({ onOpenSupport, onOpenPalpites }: EliteQuickA
             key={item.label}
             href={item.href}
             className="flex flex-col items-center gap-1.5 py-3 rounded-2xl active:scale-[0.93] transition-all"
-            style={{ backgroundColor: '#131f13', border: '1px solid rgba(255,215,0,0.1)' }}
+            style={{ backgroundColor: '#141828', border: '1px solid rgba(255,215,0,0.1)' }}
           >
             <span className="text-xl">{item.emoji}</span>
-            <span className="text-[10px] font-bold" style={{ color: '#8a9a7a' }}>{item.label}</span>
+            <span className="text-[10px] font-bold" style={{ color: '#7a839a' }}>{item.label}</span>
           </Link>
         ))}
       </div>

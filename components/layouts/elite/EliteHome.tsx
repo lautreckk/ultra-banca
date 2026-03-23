@@ -27,7 +27,6 @@ export function EliteHome() {
         <EliteGrupoPalpites onOpen={() => setCommunityOpen(true)} />
         <EliteQuickActions
           onOpenSupport={() => setChatOpen(true)}
-          onOpenPalpites={() => setCommunityOpen(true)}
         />
         <div className="h-6" />
       </div>
@@ -36,7 +35,7 @@ export function EliteHome() {
       <button
         onClick={() => setChatOpen(true)}
         className="fixed bottom-20 right-4 z-40 h-12 w-12 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-        style={{ background: 'linear-gradient(135deg, #FFD700, #DAA520)', boxShadow: '0 4px 15px rgba(255,215,0,0.3)' }}
+        style={{ background: 'linear-gradient(135deg, #C8951A, #9A7214)', boxShadow: '0 4px 15px rgba(200,149,26,0.3)' }}
       >
         <Headphones className="h-5 w-5 text-black" />
       </button>

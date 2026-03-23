@@ -139,7 +139,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: config.favicon_url,
-      apple: '/icons/icon-192x192.png',
+      apple: config.favicon_url || '/icons/icon-192x192.png',
     },
   };
 }

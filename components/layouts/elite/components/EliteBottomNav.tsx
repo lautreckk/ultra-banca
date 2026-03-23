@@ -20,7 +20,7 @@ export function EliteBottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl border-t"
       style={{
-        backgroundColor: 'rgba(13, 21, 13, 0.95)',
+        backgroundColor: 'rgba(12, 14, 20, 0.95)',
         borderColor: 'rgba(255, 215, 0, 0.1)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
@@ -37,7 +37,7 @@ export function EliteBottomNav() {
                   className="h-14 w-14 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform border-4"
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
-                    borderColor: '#0d150d',
+                    borderColor: '#0C0E14',
                     boxShadow: '0 4px 20px rgba(255, 215, 0, 0.3)',
                   }}
                 >
@@ -53,11 +53,11 @@ export function EliteBottomNav() {
             <Link key={item.label} href={item.href} className="flex flex-col items-center py-2 px-3 min-w-[56px]">
               <Icon
                 className="h-5 w-5 transition-colors"
-                style={{ color: isActive ? '#FFD700' : '#4a5a4a' }}
+                style={{ color: isActive ? '#FFD700' : '#4a5068' }}
               />
               <span
                 className="text-[10px] font-semibold mt-1 transition-colors"
-                style={{ color: isActive ? '#FFD700' : '#4a5a4a' }}
+                style={{ color: isActive ? '#FFD700' : '#4a5068' }}
               >
                 {item.label}
               </span>

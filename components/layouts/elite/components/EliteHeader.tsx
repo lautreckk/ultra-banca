@@ -12,13 +12,13 @@ export function EliteHeader({ saldo }: EliteHeaderProps) {
   const { logo_url, site_name } = usePlatformConfig();
 
   return (
-    <header className="px-5 pt-safe pt-4 pb-3" style={{ background: 'linear-gradient(180deg, #1a2e1a 0%, #111a11 100%)' }}>
+    <header className="px-5 pt-safe pt-4 pb-3" style={{ background: 'linear-gradient(180deg, #141828 0%, #0C0E14 100%)' }}>
       {/* Top row: Logo | Saldo + Profile */}
       <div className="flex items-center justify-between">
         {/* Logo grande */}
         <Link href="/home" className="flex-shrink-0">
           {logo_url ? (
-            <img src={logo_url} alt={site_name} className="h-14 w-auto object-contain drop-shadow-lg" />
+            <img src={logo_url} alt={site_name} className="h-20 w-auto object-contain drop-shadow-lg" />
           ) : (
             <div className="h-14 w-14 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
               <span className="text-2xl font-black text-amber-400">{site_name.charAt(0)}</span>
