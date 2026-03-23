@@ -130,7 +130,7 @@ export async function getDashboardStats(dateFrom?: string, dateTo?: string): Pro
   };
 
   // Queries com filtro de data
-  const ganhosQuery = buildQuery('apostas', 'premio_valor').in('status', ['ganhou']);
+  const ganhosQuery = buildQuery('apostas', 'premio_valor').in('status', ['premiada', 'ganhou']);
   const apostasQuery = buildQuery('apostas', 'id');
   const depositosQuery = buildQuery('pagamentos', 'valor').eq('tipo', 'deposito').eq('status', 'PAID');
   const saquesQuery = buildQuery('saques', 'valor_liquido').eq('status', 'PAID');
@@ -289,7 +289,7 @@ export async function getRecentBets(limit = 7): Promise<RecentBet[]> {
       profiles!inner(nome)
     `)
     .eq('platform_id', platformId)  // MULTI-TENANT: Filtro por plataforma
-    .in('status', ['ganhou', 'perdeu'])
+    .in('status', ['premiada', 'ganhou', 'perdeu'])
     .order('created_at', { ascending: false })
     .limit(limit);
 

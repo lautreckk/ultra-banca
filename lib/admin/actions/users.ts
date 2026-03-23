@@ -224,7 +224,7 @@ export async function getUsers(params: UsersListParams = {}): Promise<UsersListR
       .from('apostas')
       .select('user_id, premio_valor')
       .in('user_id', userIds)
-      .eq('status', 'ganhou'),
+      .in('status', ['premiada', 'ganhou']),
   ]);
 
   // ============================================================================
@@ -308,7 +308,7 @@ export async function getUserById(id: string): Promise<UserProfile | null> {
       .from('apostas')
       .select('premio_valor')
       .eq('user_id', user.id)
-      .eq('status', 'ganhou'),
+      .in('status', ['premiada', 'ganhou']),
   ]);
 
   const totalGanhos = ganhosResult.data?.reduce(
@@ -356,7 +356,7 @@ export async function getUserFinancials(userId: string): Promise<UserFinancials 
     const [depositosResult, apostasResult, ganhosResult, saquesResult, promotorResult] = await Promise.all([
       supabase.from('pagamentos').select('valor').eq('user_id', userId).eq('tipo', 'deposito').eq('status', 'PAID').eq('platform_id', platformId),
       supabase.from('apostas').select('valor_total').eq('user_id', userId).eq('platform_id', platformId),
-      supabase.from('apostas').select('premio_valor').eq('user_id', userId).eq('status', 'ganhou').eq('platform_id', platformId),
+      supabase.from('apostas').select('premio_valor').eq('user_id', userId).in('status', ['premiada', 'ganhou']).eq('platform_id', platformId),
       supabase.from('saques').select('valor').eq('user_id', userId).eq('status', 'PAID').eq('platform_id', platformId),
       supabase.from('promotor_referidos').select('promotor_id, promotores(nome, codigo_afiliado, comissao_deposito_percentual, comissao_perda_percentual)').eq('user_id', userId).maybeSingle(),
     ]);
@@ -413,7 +413,7 @@ export async function getUsersFinancialsBatch(userIds: string[]): Promise<Record
 
     const [depRes, premRes, saqRes, comRes] = await Promise.all([
       supabase.from('pagamentos').select('user_id, valor').eq('tipo', 'deposito').eq('status', 'PAID').eq('platform_id', platformId).in('user_id', userIds),
-      supabase.from('apostas').select('user_id, premio_valor').eq('status', 'ganhou').eq('platform_id', platformId).in('user_id', userIds),
+      supabase.from('apostas').select('user_id, premio_valor').in('status', ['premiada', 'ganhou']).eq('platform_id', platformId).in('user_id', userIds),
       supabase.from('saques').select('user_id, valor').eq('status', 'PAID').eq('platform_id', platformId).in('user_id', userIds),
       supabase.from('promotor_comissoes').select('user_id, valor_comissao').eq('platform_id', platformId).in('user_id', userIds),
     ]);

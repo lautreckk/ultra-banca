@@ -115,7 +115,7 @@ export async function getSuspeitos(params: SuspeitosListParams = {}): Promise<Su
       .from('apostas')
       .select('user_id, premio_valor')
       .in('user_id', userIds)
-      .eq('status', 'ganhou'),
+      .in('status', ['premiada', 'ganhou']),
   ]);
 
   const apostasCountMap = new Map<string, number>();
@@ -294,7 +294,7 @@ export async function getSuspeitoDetails(userId: string): Promise<{
       .from('apostas')
       .select('id, pule, tipo, modalidade, valor_total, premio_valor, status, created_at, palpites, horarios, loterias')
       .eq('user_id', userId)
-      .eq('status', 'ganhou')
+      .in('status', ['premiada', 'ganhou'])
       .order('created_at', { ascending: false })
       .limit(20),
 

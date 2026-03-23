@@ -200,7 +200,7 @@ export async function getHouseProfitData(): Promise<HouseProfitData> {
       .from('apostas')
       .select('valor_total, premio_valor, status')
       .eq('platform_id', platformId)
-      .in('status', ['ganhou', 'perdeu']);
+      .in('status', ['premiada', 'ganhou', 'perdeu']);
 
     if (startDate) {
       betsQuery = betsQuery.gte('created_at', startDate.toISOString());
@@ -213,7 +213,7 @@ export async function getHouseProfitData(): Promise<HouseProfitData> {
 
     bets?.forEach(bet => {
       totalBets += Number(bet.valor_total) || 0;
-      if (bet.status === 'ganhou' && bet.premio_valor) {
+      if ((bet.status === 'premiada' || bet.status === 'ganhou') && bet.premio_valor) {
         totalPrizesPaid += Number(bet.premio_valor) || 0;
       }
     });
