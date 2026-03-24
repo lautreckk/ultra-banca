@@ -12,6 +12,34 @@ import { getPlatformId } from '@/lib/utils/platform';
 import { WashPayClient, type WashPayPixKeyType } from '@/lib/washpay/client';
 import { sanitizeSearchParam } from '@/lib/utils/sanitize';
 
+// Proxy com IP fixo para gateways que exigem IP whitelist
+const PAYMENT_PROXY_URL = process.env.PAYMENT_PROXY_URL || '';
+const PAYMENT_PROXY_SECRET = process.env.PAYMENT_PROXY_SECRET || '';
+
+async function proxyFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  if (PAYMENT_PROXY_URL && PAYMENT_PROXY_SECRET) {
+    let bodyParsed: unknown = undefined;
+    if (options.body && typeof options.body === 'string') {
+      try { bodyParsed = JSON.parse(options.body); } catch { bodyParsed = options.body; }
+    }
+    const headersObj: Record<string, string> = {};
+    if (options.headers) {
+      const entries = options.headers instanceof Headers
+        ? Array.from(options.headers.entries())
+        : Object.entries(options.headers as Record<string, string>);
+      for (const [k, v] of entries) { headersObj[k] = v; }
+    }
+    const proxyResp = await fetch(`${PAYMENT_PROXY_URL}/proxy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-secret': PAYMENT_PROXY_SECRET },
+      body: JSON.stringify({ url, method: options.method || 'POST', headers: headersObj, body: bodyParsed }),
+    });
+    const text = await proxyResp.text();
+    return new Response(text, { status: proxyResp.status, headers: { 'Content-Type': 'application/json' } });
+  }
+  return fetch(url, options);
+}
+
 // =============================================
 // DEPOSITS
 // =============================================
@@ -410,9 +438,9 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
 
       const baseUrl = (bspayConfig.config as { base_url?: string })?.base_url || 'https://api.bspay.co/v2';
 
-      // 1. Get OAuth token
+      // 1. Get OAuth token (via proxy com IP fixo)
       const basicAuth = Buffer.from(`${bspayConfig.client_id}:${bspayConfig.client_secret}`).toString('base64');
-      const tokenRes = await fetch(`${baseUrl}/oauth/token`, {
+      const tokenRes = await proxyFetch(`${baseUrl}/oauth/token`, {
         method: 'POST',
         headers: { 'Authorization': `Basic ${basicAuth}`, 'Content-Type': 'application/json' },
       });
@@ -427,8 +455,8 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
       };
       const pixKeyType = pixKeyTypeMap[withdrawal.tipo_chave] || 'CPF';
 
-      // 3. Request cashout
-      const cashoutRes = await fetch(`${baseUrl}/pix/cashout`, {
+      // 3. Request cashout (via proxy com IP fixo)
+      const cashoutRes = await proxyFetch(`${baseUrl}/pix/cashout`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${tokenData.access_token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
