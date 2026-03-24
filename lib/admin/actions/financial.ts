@@ -431,54 +431,45 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
         .eq('platform_id', platformId)
         .single();
 
-      if (!bspayConfig?.client_id || !bspayConfig?.client_secret) {
+      if (!bspayConfig?.client_secret) {
         await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
         return { success: false, error: 'Credenciais BSPay não configuradas.' };
       }
 
       const baseUrl = (bspayConfig.config as { base_url?: string })?.base_url || 'https://api.bspay.co/v2';
 
-      // 1. Get OAuth token (via proxy com IP fixo)
-      const basicAuth = Buffer.from(`${bspayConfig.client_id}:${bspayConfig.client_secret}`).toString('base64');
-      const tokenRes = await proxyFetch(`${baseUrl}/oauth/token`, {
-        method: 'POST',
-        headers: { 'Authorization': `Basic ${basicAuth}`, 'Content-Type': 'application/json' },
-      });
-      const tokenData = await tokenRes.json();
-      if (!tokenRes.ok || !tokenData.access_token) {
-        throw new Error(tokenData.message || 'Falha na autenticação BSPay');
-      }
-
-      // 2. Map tipo_chave to BSPay format
+      // 1. Map tipo_chave to BSPay format (português)
       const pixKeyTypeMap: Record<string, string> = {
-        cpf: 'CPF', cnpj: 'CNPJ', telefone: 'PHONE', email: 'EMAIL', aleatoria: 'RANDOM_KEY',
+        cpf: 'cpf', cnpj: 'cnpj', telefone: 'telefone', phone: 'telefone', email: 'email', aleatoria: 'aleatoria',
       };
-      const pixKeyType = pixKeyTypeMap[withdrawal.tipo_chave] || 'CPF';
+      const pixKeyType = pixKeyTypeMap[withdrawal.tipo_chave] || 'cpf';
 
-      // 3. Request cashout (via proxy com IP fixo)
-      const cashoutRes = await proxyFetch(`${baseUrl}/pix/cashout`, {
+      // 2. Request payment via PIX (via proxy com IP fixo)
+      const paymentRes = await proxyFetch(`${baseUrl}/pix/payment`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${tokenData.access_token}`, 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${bspayConfig.client_secret}`,
+          'Content-Type': 'application/json',
+          'accept': 'application/json',
+        },
         body: JSON.stringify({
           amount: Number(withdrawal.valor_liquido),
           external_id: withdrawalId,
-          payer: {
+          creditParty: {
             name: userProfile?.nome || 'Usuario',
-            document: userProfile?.cpf?.replace(/\D/g, '') || '',
-          },
-          receiver: {
-            pixKeyType: pixKeyType,
-            pixKey: withdrawal.chave_pix,
+            keyType: pixKeyType,
+            key: withdrawal.chave_pix,
+            taxId: userProfile?.cpf?.replace(/\D/g, '') || '',
           },
         }),
       });
 
-      const cashoutData = await cashoutRes.json();
-      if (!cashoutRes.ok) {
-        throw new Error(cashoutData.message || cashoutData.error || `BSPay erro ${cashoutRes.status}`);
+      const paymentData = await paymentRes.json();
+      if (!paymentRes.ok) {
+        throw new Error(paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`);
       }
 
-      txId = cashoutData.transactionId || cashoutData.id || '';
+      txId = paymentData.transactionId || paymentData.id || '';
       gatewayUsed = 'bspay';
     } else {
       // ═══ WashPay (fallback padrão) ═══
