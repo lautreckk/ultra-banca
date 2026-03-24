@@ -477,7 +477,9 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
 
       const paymentData = await paymentRes.json();
       if (!paymentRes.ok) {
-        throw new Error(paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`);
+        const proxyUsed = PAYMENT_PROXY_URL ? `proxy=${PAYMENT_PROXY_URL}` : 'SEM_PROXY';
+        const secretSet = PAYMENT_PROXY_SECRET ? 'secret=OK' : 'secret=VAZIO';
+        throw new Error(`${paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`} [${proxyUsed}, ${secretSet}]`);
       }
 
       txId = paymentData.transactionId || paymentData.id || '';
