@@ -431,24 +431,35 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
         .eq('platform_id', platformId)
         .single();
 
-      if (!bspayConfig?.client_secret) {
+      if (!bspayConfig?.client_id || !bspayConfig?.client_secret) {
         await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
         return { success: false, error: 'Credenciais BSPay não configuradas.' };
       }
 
       const baseUrl = (bspayConfig.config as { base_url?: string })?.base_url || 'https://api.bspay.co/v2';
 
-      // 1. Map tipo_chave to BSPay format (português)
+      // 1. Get OAuth token via Basic Auth (chamada direta — sem proxy, não precisa IP fixo)
+      const basicAuth = Buffer.from(`${bspayConfig.client_id}:${bspayConfig.client_secret}`).toString('base64');
+      const tokenRes = await fetch(`${baseUrl}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${basicAuth}`, 'Content-Type': 'application/json' },
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok || !tokenData.access_token) {
+        throw new Error(tokenData.message || 'Falha na autenticação BSPay');
+      }
+
+      // 2. Map tipo_chave to BSPay format (português)
       const pixKeyTypeMap: Record<string, string> = {
         cpf: 'cpf', cnpj: 'cnpj', telefone: 'telefone', phone: 'telefone', email: 'email', aleatoria: 'aleatoria',
       };
       const pixKeyType = pixKeyTypeMap[withdrawal.tipo_chave] || 'cpf';
 
-      // 2. Request payment via PIX (via proxy com IP fixo)
+      // 3. Request payment via PIX (via proxy com IP fixo)
       const paymentRes = await proxyFetch(`${baseUrl}/pix/payment`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${bspayConfig.client_secret}`,
+          'Authorization': `Bearer ${tokenData.access_token}`,
           'Content-Type': 'application/json',
           'accept': 'application/json',
         },
