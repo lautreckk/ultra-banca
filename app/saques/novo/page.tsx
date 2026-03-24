@@ -39,6 +39,7 @@ export default function NovoSaquePage() {
     valorLiquido: number;
     taxa: number;
     chavePix: string;
+    status?: string;
   } | null>(null);
 
   // PIX titularidade state
@@ -220,6 +221,7 @@ export default function NovoSaquePage() {
         valorLiquido: data.saque.valorLiquido,
         taxa: data.saque.taxa,
         chavePix: data.saque.chavePix,
+        status: data.saque.status,
       });
       setStep('success');
     } catch (err) {
@@ -406,14 +408,19 @@ export default function NovoSaquePage() {
 
   // Success screen
   if (step === 'success' && result) {
+    const isAutoApproved = result.status === 'PROCESSING' || result.status === 'PAID';
     return (
-      <PageLayout title="Saque Solicitado" showBack>
+      <PageLayout title={isAutoApproved ? "Saque Enviado" : "Saque Solicitado"} showBack>
         <div className="bg-[#111318] min-h-screen p-4">
           <div className="text-center py-12">
-            <CheckCircle className="h-20 w-20 text-amber-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">Saque Pendente</h2>
+            <CheckCircle className={`h-20 w-20 mx-auto mb-4 ${isAutoApproved ? 'text-green-500' : 'text-amber-500'}`} />
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {isAutoApproved ? 'PIX Enviado!' : 'Saque Pendente'}
+            </h2>
             <p className="text-zinc-400 mb-6">
-              Seu saque foi registrado e está aguardando aprovação. Você será notificado assim que for processado.
+              {isAutoApproved
+                ? 'Seu saque foi aprovado automaticamente e o PIX está sendo enviado para sua chave.'
+                : 'Seu saque foi registrado e está aguardando aprovação. Você será notificado assim que for processado.'}
             </p>
 
             <div className="bg-[#1A1F2B] border border-zinc-700/40 rounded-xl p-4 mb-6 text-left max-w-sm mx-auto">
