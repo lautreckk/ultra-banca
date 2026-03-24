@@ -575,6 +575,185 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
   return { success: true };
 }
 
+// Versão interna para auto-aprovação (chamada via API route, sem sessão admin)
+export async function approveWithdrawalInternal(withdrawalId: string, platformId: string): Promise<{ success: boolean; error?: string }> {
+  const adminClient = createAdminClient();
+
+  const { data: withdrawal, error: fetchError } = await adminClient
+    .from('saques')
+    .select('user_id, valor, valor_liquido, chave_pix, tipo_chave, status')
+    .eq('id', withdrawalId)
+    .single();
+
+  if (fetchError || !withdrawal) {
+    return { success: false, error: 'Saque não encontrado' };
+  }
+
+  if (withdrawal.status !== 'PENDING') {
+    return { success: false, error: 'Saque já foi processado' };
+  }
+
+  const { data: userProfile } = await adminClient
+    .from('profiles')
+    .select('nome, cpf, telefone')
+    .eq('id', withdrawal.user_id)
+    .single();
+
+  const { data: transitioned } = await adminClient.rpc('atomic_status_transition', {
+    p_table: 'saques', p_id: withdrawalId, p_from_status: 'PENDING', p_to_status: 'PROCESSING',
+  });
+
+  if (!transitioned) {
+    return { success: false, error: 'Saque já está sendo processado' };
+  }
+
+  const { data: platform } = await adminClient
+    .from('platforms')
+    .select('active_gateway')
+    .eq('id', platformId)
+    .single();
+
+  const activeGateway = platform?.active_gateway || 'washpay';
+  let gatewayUsed = activeGateway;
+  let txId = '';
+
+  try {
+    if (activeGateway === 'bspay') {
+      const { data: bspayConfig } = await adminClient
+        .from('gateway_config')
+        .select('client_id, client_secret, config')
+        .eq('gateway_name', 'bspay')
+        .eq('platform_id', platformId)
+        .single();
+
+      if (!bspayConfig?.client_id || !bspayConfig?.client_secret) {
+        await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
+        return { success: false, error: 'Credenciais BSPay não configuradas.' };
+      }
+
+      const baseUrl = (bspayConfig.config as { base_url?: string })?.base_url || 'https://api.bspay.co/v2';
+
+      const basicAuth = Buffer.from(`${bspayConfig.client_id}:${bspayConfig.client_secret}`).toString('base64');
+      const tokenRes = await fetch(`${baseUrl}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${basicAuth}`, 'Content-Type': 'application/json' },
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenRes.ok || !tokenData.access_token) {
+        throw new Error(tokenData.message || 'Falha na autenticação BSPay');
+      }
+
+      const pixKeyTypeMap: Record<string, string> = {
+        cpf: 'cpf', cnpj: 'cnpj', telefone: 'telefone', phone: 'telefone', email: 'email', aleatoria: 'aleatoria',
+      };
+      const pixKeyType = pixKeyTypeMap[withdrawal.tipo_chave] || 'cpf';
+
+      const paymentRes = await proxyFetch(`${baseUrl}/pix/payment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Content-Type': 'application/json',
+          'accept': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Number(withdrawal.valor_liquido),
+          external_id: withdrawalId,
+          creditParty: {
+            name: userProfile?.nome || 'Usuario',
+            keyType: pixKeyType,
+            key: withdrawal.chave_pix,
+            taxId: userProfile?.cpf?.replace(/\D/g, '') || '',
+          },
+        }),
+      });
+
+      const paymentData = await paymentRes.json();
+      if (!paymentRes.ok) {
+        throw new Error(paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`);
+      }
+
+      txId = paymentData.transactionId || paymentData.id || '';
+      gatewayUsed = 'bspay';
+    } else {
+      const { data: gatewayConfig } = await adminClient
+        .from('gateway_config')
+        .select('client_id')
+        .eq('gateway_name', 'washpay')
+        .eq('platform_id', platformId)
+        .single();
+
+      if (!gatewayConfig?.client_id) {
+        await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
+        return { success: false, error: 'API Key do gateway não configurada.' };
+      }
+
+      const washpay = new WashPayClient(gatewayConfig.client_id);
+      const washpayResponse = await washpay.requestWithdrawal({
+        pixKeyType: mapTipoChaveToWashPay(withdrawal.tipo_chave),
+        pixKey: withdrawal.chave_pix,
+        amount: Number(withdrawal.valor_liquido),
+      });
+
+      if (!washpayResponse.success) {
+        throw new Error('Gateway recusou o saque');
+      }
+
+      txId = washpayResponse.data.id;
+      gatewayUsed = 'washpay';
+    }
+
+    const { data: paidTransitioned } = await adminClient.rpc('atomic_status_transition', {
+      p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PAID',
+    });
+
+    if (!paidTransitioned) {
+      return { success: false, error: 'Estado do saque mudou inesperadamente' };
+    }
+
+    await adminClient.from('saques').update({
+      paid_at: new Date().toISOString(),
+      bspay_transaction_id: txId,
+    }).eq('id', withdrawalId);
+  } catch (error) {
+    console.error(`[AUTO-APPROVE] Erro ao chamar ${gatewayUsed}:`, error);
+    await adminClient.rpc('atomic_status_transition', { p_table: 'saques', p_id: withdrawalId, p_from_status: 'PROCESSING', p_to_status: 'PENDING' });
+    return {
+      success: false,
+      error: `Erro ao processar PIX via ${gatewayUsed}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+    };
+  }
+
+  // Audit log (auto-approve)
+  await logAudit({
+    actorId: null,
+    action: AuditActions.WITHDRAWAL_APPROVED,
+    entity: `withdrawal:${withdrawalId}`,
+    details: {
+      auto_approved: true,
+      user_id: withdrawal.user_id,
+      valor: withdrawal.valor,
+      valor_liquido: withdrawal.valor_liquido,
+      gateway: gatewayUsed,
+      transaction_id: txId,
+    },
+  });
+
+  // WhatsApp trigger
+  try {
+    if (userProfile?.telefone) {
+      await executeTrigger('saque', {
+        nome: userProfile.nome || 'Cliente',
+        telefone: userProfile.telefone,
+        valor: Number(withdrawal.valor_liquido),
+      });
+    }
+  } catch {
+    // Não falha se trigger falhar
+  }
+
+  return { success: true };
+}
+
 export async function rejectWithdrawal(
   withdrawalId: string,
   reason?: string
