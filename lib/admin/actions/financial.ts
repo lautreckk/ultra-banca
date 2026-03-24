@@ -17,7 +17,6 @@ const PAYMENT_PROXY_URL = process.env.PAYMENT_PROXY_URL || '';
 const PAYMENT_PROXY_SECRET = process.env.PAYMENT_PROXY_SECRET || '';
 
 async function proxyFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  console.log('[proxyFetch] PROXY_URL:', PAYMENT_PROXY_URL ? `${PAYMENT_PROXY_URL.substring(0, 20)}...` : 'NOT SET', 'PROXY_SECRET:', PAYMENT_PROXY_SECRET ? 'SET' : 'NOT SET');
   if (PAYMENT_PROXY_URL && PAYMENT_PROXY_SECRET) {
     let bodyParsed: unknown = undefined;
     if (options.body && typeof options.body === 'string') {
@@ -477,10 +476,8 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
       });
 
       const paymentData = await paymentRes.json();
-      console.log('[BSPay] Payment response:', paymentRes.status, JSON.stringify(paymentData));
       if (!paymentRes.ok) {
-        const proxyInfo = PAYMENT_PROXY_URL ? `[proxy: ${PAYMENT_PROXY_URL}]` : '[SEM PROXY]';
-        throw new Error(`${paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`} ${proxyInfo}`);
+        throw new Error(paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`);
       }
 
       txId = paymentData.transactionId || paymentData.id || '';
