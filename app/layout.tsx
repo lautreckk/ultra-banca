@@ -18,8 +18,8 @@ import { UtmPersister } from '@/components/shared/utm-persister';
  */
 function sanitizeTrackingId(id: string | null | undefined): string | null {
   if (!id) return null;
-  // Apenas letras, números, hífens e underscores são permitidos
-  const sanitized = id.replace(/[^a-zA-Z0-9_-]/g, '');
+  // Apenas letras, números, hífens, underscores e vírgulas são permitidos
+  const sanitized = id.replace(/[^a-zA-Z0-9_,\- ]/g, '');
   // Verificar se o ID parece válido (não vazio após sanitização)
   return sanitized.length > 0 ? sanitized : null;
 }
