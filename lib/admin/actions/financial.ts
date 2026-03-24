@@ -387,15 +387,15 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
     return { success: false, error: 'Saque já foi processado' };
   }
 
-  // Obter dados do usuário
-  const { data: userProfile } = await supabase
+  // SECURITY: Use service_role client for atomic operations and cross-user queries
+  const adminClient = createAdminClient();
+
+  // Obter dados do usuário (via adminClient para bypass de RLS)
+  const { data: userProfile } = await adminClient
     .from('profiles')
     .select('nome, cpf')
     .eq('id', withdrawal.user_id)
     .single();
-
-  // SECURITY: Use service_role client for atomic operations
-  const adminClient = createAdminClient();
 
   // ATOMIC: Transition status PENDING→PROCESSING (prevents double-approve race condition)
   const { data: transitioned } = await adminClient.rpc('atomic_status_transition', {
@@ -465,6 +465,7 @@ export async function approveWithdrawal(withdrawalId: string): Promise<{ success
       });
 
       const paymentData = await paymentRes.json();
+      console.log('[BSPay] Payment response:', paymentRes.status, JSON.stringify(paymentData));
       if (!paymentRes.ok) {
         throw new Error(paymentData.message || paymentData.error || `BSPay erro ${paymentRes.status}`);
       }
