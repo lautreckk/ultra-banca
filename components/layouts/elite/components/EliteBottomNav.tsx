@@ -44,7 +44,7 @@ export function EliteBottomNav({ isLoggedIn = true }: EliteBottomNavProps) {
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <div className="max-w-md mx-auto flex items-end justify-around px-2 pt-1 pb-2">
+      <div className="max-w-3xl mx-auto flex items-end justify-around px-2 pt-1 pb-2">
         {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const isCenter = item.icon === null;

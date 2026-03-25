@@ -48,19 +48,17 @@ export function EliteLayout({
         <EliteHeader saldo={totalSaldo} isLoggedIn={isLoggedIn} />
       </div>
 
-      {/* Main: wide for home/casino, centered card for utility pages */}
+      {/* Main: wide for home/casino, wider centered for utility pages */}
       <main className={
         isWidePage
-          ? 'pb-20 lg:pb-8'
-          : 'pb-20 lg:pb-8 max-w-2xl mx-auto'
+          ? 'pb-24'
+          : 'pb-24 max-w-3xl mx-auto px-4 lg:px-0'
       }>
         {children}
       </main>
 
-      {/* Bottom nav: fixed on mobile, hidden on desktop */}
-      <div className="lg:hidden">
-        <EliteBottomNav isLoggedIn={isLoggedIn} />
-      </div>
+      {/* Bottom nav: always visible */}
+      <EliteBottomNav isLoggedIn={isLoggedIn} />
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
