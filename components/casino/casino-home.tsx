@@ -246,7 +246,7 @@ export function CasinoHome() {
 
       {/* Bonus Popup — appears when user closes auth modal */}
       {bonusPopupOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center">
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleBonusCancel} />
           <div className="relative w-full max-w-sm mx-4 rounded-2xl overflow-hidden border" style={{ backgroundColor: '#0C0E14', borderColor: 'rgba(255, 215, 0, 0.15)' }}>
             {/* Banner */}
