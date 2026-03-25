@@ -746,112 +746,31 @@ export async function getPromotorStats(
   dateTo?: string,
 ): Promise<PromotorStats | null> {
   await requireAdmin();
-  const supabase = await createClient();
+  const adminClient = createAdminClient();
 
-  const startDate = dateFrom ? `${dateFrom}T00:00:00` : undefined;
-  const endDate = dateTo ? `${dateTo}T23:59:59` : undefined;
+  const startDate = dateFrom ? `${dateFrom}T00:00:00` : null;
+  const endDate = dateTo ? `${dateTo}T23:59:59` : null;
 
-  // Buscar promotor
-  const { data: promotor } = await supabase
-    .from('promotores')
-    .select('saldo')
-    .eq('id', promotorId)
-    .single();
+  // Usar RPC para evitar limite do PostgREST com muitos IDs no IN()
+  const { data, error } = await adminClient.rpc('get_promotor_stats', {
+    p_promotor_id: promotorId,
+    p_date_from: startDate,
+    p_date_to: endDate,
+  });
 
-  if (!promotor) {
+  if (error || !data) {
+    console.error('getPromotorStats RPC error:', error?.message);
     return null;
   }
 
-  // Buscar referidos (com filtro de data opcional no cadastro)
-  let refQuery = supabase
-    .from('promotor_referidos')
-    .select('user_id', { count: 'exact' })
-    .eq('promotor_id', promotorId);
-  if (startDate) refQuery = refQuery.gte('created_at', startDate);
-  if (endDate) refQuery = refQuery.lte('created_at', endDate);
-
-  const { data: referidos, count: totalIndicados } = await refQuery;
-
-  // Para depósitos e apostas, buscar TODOS os referidos (sem filtro de data)
-  // pois queremos os depósitos/apostas no período de todos os indicados
-  const { data: allReferidos } = await supabase
-    .from('promotor_referidos')
-    .select('user_id')
-    .eq('promotor_id', promotorId);
-
-  const allUserIds = allReferidos?.map((r) => r.user_id) || [];
-
-  // Buscar totais em paralelo (com filtro de data)
-  const buildDepQuery = () => {
-    if (allUserIds.length === 0) return { data: [] };
-    let q = supabase
-      .from('pagamentos')
-      .select('valor')
-      .in('user_id', allUserIds)
-      .eq('tipo', 'deposito')
-      .eq('status', 'PAID');
-    if (startDate) q = q.gte('created_at', startDate);
-    if (endDate) q = q.lte('created_at', endDate);
-    return q;
-  };
-
-  const buildApostasQuery = () => {
-    if (allUserIds.length === 0) return { data: [] };
-    let q = supabase
-      .from('apostas')
-      .select('valor_total')
-      .in('user_id', allUserIds);
-    if (startDate) q = q.gte('created_at', startDate);
-    if (endDate) q = q.lte('created_at', endDate);
-    return q;
-  };
-
-  const buildComissoesQuery = () => {
-    let q = supabase
-      .from('promotor_comissoes')
-      .select('tipo, valor_comissao')
-      .eq('promotor_id', promotorId);
-    if (startDate) q = q.gte('created_at', startDate);
-    if (endDate) q = q.lte('created_at', endDate);
-    return q;
-  };
-
-  const [depositosResult, apostasResult, comissoesResult] = await Promise.all([
-    buildDepQuery(),
-    buildApostasQuery(),
-    buildComissoesQuery(),
-  ]);
-
-  const totalDepositado = depositosResult.data?.reduce(
-    (sum, d) => sum + Number(d.valor),
-    0
-  ) || 0;
-
-  const totalApostado = apostasResult.data?.reduce(
-    (sum, a) => sum + Number(a.valor_total),
-    0
-  ) || 0;
-
-  // Agregar comissões por tipo
-  let comissoesDeposito = 0;
-  let comissoesPerda = 0;
-  let comissoesBonus = 0;
-
-  comissoesResult.data?.forEach((c) => {
-    const valor = Number(c.valor_comissao);
-    if (c.tipo === 'deposito') comissoesDeposito += valor;
-    else if (c.tipo === 'perda') comissoesPerda += valor;
-    else if (c.tipo === 'bonus') comissoesBonus += valor;
-  });
-
   return {
-    total_indicados: totalIndicados || 0,
-    total_depositado: totalDepositado,
-    total_apostado: totalApostado,
-    total_comissoes_deposito: comissoesDeposito,
-    total_comissoes_perda: comissoesPerda,
-    total_comissoes_bonus: comissoesBonus,
-    saldo_atual: Number(promotor.saldo) || 0,
+    total_indicados: Number(data.total_indicados) || 0,
+    total_depositado: Number(data.total_depositado) || 0,
+    total_apostado: Number(data.total_apostado) || 0,
+    total_comissoes_deposito: Number(data.comissao_deposito) || 0,
+    total_comissoes_perda: Number(data.comissao_perda) || 0,
+    total_comissoes_bonus: Number(data.comissao_bonus) || 0,
+    saldo_atual: Number(data.saldo_atual) || 0,
   };
 }
 
