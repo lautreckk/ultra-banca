@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Search, Loader2, ArrowLeft, Gamepad2, Flame, Star, Zap } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, Loader2, ArrowLeft, Gamepad2, Flame, Star, Zap, X } from 'lucide-react';
 import { GameCard } from './game-card';
 import { getGames } from '@/lib/actions/casino';
 import type { CasinoGame } from '@/lib/actions/casino';
@@ -9,11 +9,6 @@ import { AuthModal } from '@/components/auth/auth-modal';
 import { WinnersTicker } from './winners-ticker';
 import { createClient } from '@/lib/supabase/client';
 
-/**
- * CasinoHome — Home page for casino-only platforms (44x.site).
- * Elite design (dark navy + gold). Responsive for mobile AND desktop.
- * Shows game grid immediately, no auth required to browse.
- */
 export function CasinoHome() {
   const [games, setGames] = useState<CasinoGame[]>([]);
   const [search, setSearch] = useState('');
@@ -21,15 +16,20 @@ export function CasinoHome() {
   const [launchingGame, setLaunchingGame] = useState<string | null>(null);
   const [activeGame, setActiveGame] = useState<{ url: string; name: string } | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [bonusPopupOpen, setBonusPopupOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [authShownOnce, setAuthShownOnce] = useState(false);
 
   useEffect(() => {
     loadData();
     checkAuth().then((loggedIn) => {
-      // Auto-show auth modal for non-logged users after games load
       if (!loggedIn) {
-        const timer = setTimeout(() => setAuthModalOpen(true), 1500);
+        // Show auth popup after 10 seconds
+        const timer = setTimeout(() => {
+          setAuthModalOpen(true);
+          setAuthShownOnce(true);
+        }, 10000);
         return () => clearTimeout(timer);
       }
     });
@@ -66,7 +66,6 @@ export function CasinoHome() {
       setAuthModalOpen(true);
       return;
     }
-
     setLaunchingGame(gameCode);
     const { launchGame } = await import('@/lib/actions/casino');
     const result = await launchGame(gameCode, provider, original);
@@ -79,21 +78,26 @@ export function CasinoHome() {
     setLaunchingGame(null);
   }
 
-  function handleCloseGame() {
-    setActiveGame(null);
-  }
-
-  function handleAuthModalClose() {
+  // When user closes auth modal → show bonus popup
+  const handleAuthModalClose = useCallback(() => {
     setAuthModalOpen(false);
-    checkAuth();
+    checkAuth().then((loggedIn) => {
+      if (!loggedIn && authShownOnce) {
+        setBonusPopupOpen(true);
+      }
+    });
+  }, [authShownOnce]);
+
+  // Bonus popup: "Continuar" goes back to auth, "Cancelar" closes all
+  function handleBonusContinue() {
+    setBonusPopupOpen(false);
+    setAuthModalOpen(true);
+  }
+  function handleBonusCancel() {
+    setBonusPopupOpen(false);
   }
 
-  // Get unique providers for categories
-  const providers = useMemo(() => {
-    const provs = [...new Set(games.map(g => g.provider))].sort();
-    return provs;
-  }, [games]);
-
+  const providers = useMemo(() => [...new Set(games.map(g => g.provider))].sort(), [games]);
   const featuredGames = useMemo(() => games.filter(g => g.featured), [games]);
 
   const filteredGames = useMemo(() => {
@@ -116,18 +120,18 @@ export function CasinoHome() {
 
   const CATEGORIES = [
     { id: 'all', label: 'Todos', icon: Gamepad2 },
-    { id: 'featured', label: 'Destaques', icon: Star },
+    { id: 'featured', label: 'Populares', icon: Star },
     ...providers.slice(0, 8).map(p => ({ id: p, label: p, icon: Zap })),
   ];
 
   return (
     <>
-      {/* Winners Ticker — full width, outside padding */}
+      {/* Winners Ticker */}
       <WinnersTicker />
 
-      <div className="px-4 py-4 space-y-5">
-        {/* Search Bar */}
-        <div className="relative">
+      <div className="px-4 md:px-6 lg:px-8 py-4 space-y-5 max-w-7xl mx-auto">
+        {/* Search */}
+        <div className="relative max-w-xl">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
             <Search className="h-5 w-5" style={{ color: '#4a5068' }} />
           </div>
@@ -140,8 +144,6 @@ export function CasinoHome() {
             style={{
               backgroundColor: '#141828',
               borderColor: 'rgba(255, 215, 0, 0.1)',
-              // @ts-ignore
-              '--tw-ring-color': 'rgba(255, 215, 0, 0.2)',
             }}
           />
         </div>
@@ -172,40 +174,31 @@ export function CasinoHome() {
           })}
         </div>
 
-        {/* Featured Section */}
+        {/* Featured / "Mais Jogados" */}
         {activeCategory === 'all' && featuredGames.length > 0 && !search && (
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="h-5 w-1 rounded-full" style={{ backgroundColor: '#FFD700' }} />
               <Flame className="h-4 w-4" style={{ color: '#FFD700' }} />
-              <h2 className="text-sm font-black text-white uppercase tracking-wider">Destaques</h2>
+              <h2 className="text-sm font-black text-white uppercase tracking-wider">Mais Jogados da Semana</h2>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
               {featuredGames.map((game) => (
-                <GameCard
-                  key={`feat-${game.game_code}`}
-                  game={game}
-                  onLaunch={handleLaunch}
-                  isLaunching={launchingGame === game.game_code}
-                />
+                <GameCard key={`feat-${game.game_code}`} game={game} onLaunch={handleLaunch} isLaunching={launchingGame === game.game_code} />
               ))}
             </div>
           </div>
         )}
 
-        {/* All Games / Filtered */}
+        {/* All Games */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="h-5 w-1 rounded-full" style={{ backgroundColor: '#FFD700' }} />
             <Gamepad2 className="h-4 w-4" style={{ color: '#FFD700' }} />
             <h2 className="text-sm font-black text-white uppercase tracking-wider">
-              {activeCategory === 'all' ? 'Todos os Jogos' :
-               activeCategory === 'featured' ? 'Destaques' :
-               activeCategory}
+              {activeCategory === 'all' ? 'Todos os Jogos' : activeCategory === 'featured' ? 'Populares' : activeCategory}
             </h2>
-            <span className="text-xs font-semibold ml-auto" style={{ color: '#4a5068' }}>
-              {filteredGames.length} jogos
-            </span>
+            <span className="text-xs font-semibold ml-auto" style={{ color: '#4a5068' }}>{filteredGames.length} jogos</span>
           </div>
 
           {loading ? (
@@ -215,28 +208,13 @@ export function CasinoHome() {
           ) : filteredGames.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[200px] gap-3">
               <Gamepad2 className="h-12 w-12" style={{ color: '#1B2440' }} />
-              <p className="text-sm" style={{ color: '#4a5068' }}>
-                {search ? 'Nenhum jogo encontrado' : 'Nenhum jogo disponível'}
-              </p>
-              {search && (
-                <button
-                  onClick={() => setSearch('')}
-                  className="text-sm font-bold"
-                  style={{ color: '#FFD700' }}
-                >
-                  Limpar busca
-                </button>
-              )}
+              <p className="text-sm" style={{ color: '#4a5068' }}>{search ? 'Nenhum jogo encontrado' : 'Nenhum jogo disponível'}</p>
+              {search && <button onClick={() => setSearch('')} className="text-sm font-bold" style={{ color: '#FFD700' }}>Limpar busca</button>}
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
-              {filteredGames.slice(0, 120).map((game) => (
-                <GameCard
-                  key={game.game_code}
-                  game={game}
-                  onLaunch={handleLaunch}
-                  isLaunching={launchingGame === game.game_code}
-                />
+              {filteredGames.slice(0, 150).map((game) => (
+                <GameCard key={game.game_code} game={game} onLaunch={handleLaunch} isLaunching={launchingGame === game.game_code} />
               ))}
             </div>
           )}
@@ -244,12 +222,8 @@ export function CasinoHome() {
 
         {/* Footer */}
         <div className="pt-8 pb-4 text-center space-y-2">
-          <p className="text-xs" style={{ color: '#4a5068' }}>
-            Jogue com responsabilidade. Apenas maiores de 18 anos.
-          </p>
-          <p className="text-xs" style={{ color: '#2a2f3d' }}>
-            &copy; 2026 44X Casino. Todos os direitos reservados.
-          </p>
+          <p className="text-xs" style={{ color: '#4a5068' }}>Jogue com responsabilidade. Apenas maiores de 18 anos.</p>
+          <p className="text-xs" style={{ color: '#2a2f3d' }}>&copy; 2026 44X Casino. Todos os direitos reservados.</p>
         </div>
       </div>
 
@@ -257,30 +231,65 @@ export function CasinoHome() {
       {activeGame && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
           <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ backgroundColor: '#0C0E14', borderColor: 'rgba(255, 215, 0, 0.1)' }}>
-            <button
-              onClick={handleCloseGame}
-              className="flex items-center gap-2 text-white rounded-xl px-4 py-2 transition-colors"
-              style={{ backgroundColor: 'rgba(255, 215, 0, 0.1)' }}
-            >
+            <button onClick={() => setActiveGame(null)} className="flex items-center gap-2 text-white rounded-xl px-4 py-2 transition-colors" style={{ backgroundColor: 'rgba(255, 215, 0, 0.1)' }}>
               <ArrowLeft className="h-4 w-4" style={{ color: '#FFD700' }} />
               <span className="text-sm font-bold" style={{ color: '#FFD700' }}>Voltar</span>
             </button>
             <span className="text-sm truncate mx-4" style={{ color: '#7a839a' }}>{activeGame.name}</span>
           </div>
-          <iframe
-            src={activeGame.url}
-            className="flex-1 w-full border-0"
-            allow="autoplay; fullscreen"
-          />
+          <iframe src={activeGame.url} className="flex-1 w-full border-0" allow="autoplay; fullscreen" />
         </div>
       )}
 
-      {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onClose={handleAuthModalClose}
-        defaultTab="cadastro"
-      />
+      {/* Auth Modal — appears after 10s or when clicking a game */}
+      <AuthModal open={authModalOpen} onClose={handleAuthModalClose} defaultTab="cadastro" />
+
+      {/* Bonus Popup — appears when user closes auth modal */}
+      {bonusPopupOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleBonusCancel} />
+          <div className="relative w-full max-w-sm mx-4 rounded-2xl overflow-hidden border" style={{ backgroundColor: '#0C0E14', borderColor: 'rgba(255, 215, 0, 0.15)' }}>
+            {/* Banner */}
+            <div className="relative w-full h-44 flex items-center justify-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #1B2440 0%, #0C0E14 100%)' }}>
+              <button onClick={handleBonusCancel} className="absolute top-3 right-3 h-7 w-7 rounded-full bg-black/50 flex items-center justify-center z-10">
+                <X className="h-4 w-4 text-white/70" />
+              </button>
+              <div className="text-center px-6">
+                <p className="text-4xl font-black text-white leading-none">NÃO PARE</p>
+                <p className="text-4xl font-black leading-none" style={{ color: '#FFD700' }}>AGORA!</p>
+                <p className="text-xs mt-2" style={{ color: '#7a839a' }}>🎰 Jogue com responsabilidade</p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-6 text-center space-y-4">
+              <h3 className="text-lg font-black text-white">44X Casino</h3>
+              <p className="text-sm" style={{ color: '#7a839a' }}>
+                Tem certeza de que deseja cancelar seu registro?
+              </p>
+              <p className="text-xs" style={{ color: '#FFD700' }}>
+                🎁 Bônus de até R$ 500 no primeiro depósito!
+              </p>
+
+              <button
+                onClick={handleBonusContinue}
+                className="w-full py-3.5 rounded-xl text-sm font-black text-black tracking-wide active:scale-[0.98] transition-transform"
+                style={{ background: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)' }}
+              >
+                Continuar
+              </button>
+
+              <button
+                onClick={handleBonusCancel}
+                className="w-full text-sm font-medium transition-colors"
+                style={{ color: '#4a5068' }}
+              >
+                Sim, quero cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
