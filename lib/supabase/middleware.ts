@@ -540,7 +540,8 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    if (!adminDomainAccess) {
+    // Casino-only platforms can access admin from their own domain
+    if (!adminDomainAccess && !isCasinoOnly) {
       await supabase.auth.signOut();
       return redirect(request, '/login');
     }
