@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-25T00:24:36.462Z"
+last_updated: "2026-03-25T00:29:16.860Z"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Usuarios acessam jogos de cassino instantaneamente sem barreira de login
-**Current focus:** Phase 01 — middleware-roteamento
+**Current focus:** Phase 02 — home-casino-auth-modal
 
 ## Phase Status
 
