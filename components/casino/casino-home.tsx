@@ -6,6 +6,7 @@ import { GameCard } from './game-card';
 import { getGames } from '@/lib/actions/casino';
 import type { CasinoGame } from '@/lib/actions/casino';
 import { AuthModal } from '@/components/auth/auth-modal';
+import { WinnersTicker } from './winners-ticker';
 import { createClient } from '@/lib/supabase/client';
 
 /**
@@ -121,6 +122,9 @@ export function CasinoHome() {
 
   return (
     <>
+      {/* Winners Ticker — full width, outside padding */}
+      <WinnersTicker />
+
       <div className="px-4 py-4 space-y-5">
         {/* Search Bar */}
         <div className="relative">
