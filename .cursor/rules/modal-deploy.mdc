@@ -1,0 +1,34 @@
+---
+description: Deploy do app Modal (scraper) pelo chat — comando e pré-requisitos
+alwaysApply: true
+---
+
+# Deploy do Modal (Ultra Banca Scraper)
+
+## Quando o usuário pedir
+- "faz deploy do modal" / "deploy do scraper" / "publicar no modal" / "conectar modal para deploy"
+- Execute o deploy a partir da pasta **ultra-banca** (raiz do app Next.js).
+
+## Comando de deploy
+Na raiz do projeto **ultra-banca**:
+```bash
+cd /Users/lautreck/Desktop/Ultra\ Banca/ultra-banca && modal deploy modal_scraper_v2.py
+```
+
+Se o CLI `modal` não estiver no PATH, tente:
+```bash
+cd /Users/lautreck/Desktop/Ultra\ Banca/ultra-banca && python3 -m modal deploy modal_scraper_v2.py
+```
+(Requer: `pip install modal` e `modal setup` já feitos no seu ambiente.)
+
+## Pré-requisitos (uma vez)
+O usuário precisa ter autenticado o Modal no ambiente:
+- No terminal: `modal setup` (abre browser para login)
+- Ou variáveis de ambiente: `MODAL_TOKEN_ID` e `MODAL_TOKEN_SECRET`
+
+Se o deploy falhar por "not authenticated" ou "modal: command not found", informe que é preciso instalar e autenticar: `pip install modal` e `modal setup`.
+
+## App deployado
+- **Nome no Modal:** `ultra-banca-scraper-v2`
+- **Arquivo:** `modal_scraper_v2.py`
+- **Secrets no Modal Dashboard:** `supabase-ultra-banca`, `firecrawl-key` (para scrape completo)

@@ -295,10 +295,15 @@ export async function updateSession(request: NextRequest) {
     platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
     isCasinoOnly = platformResult?.platform?.casino_only === true;
 
+    console.log('[MULTI-TENANT] Platform resolved:', { host, platformId, isCasinoOnly, slug: platformResult?.platform?.slug });
+
     // Setar cookies no REQUEST para que server components possam lê-los
     // durante esta mesma requisição (via cookies() do next/headers)
     request.cookies.set('platform_id', platformId);
     request.cookies.set('platform_slug', platformResult?.platform?.slug || '');
+    if (isCasinoOnly) {
+      request.cookies.set('casino_only', 'true');
+    }
   }
 
   // ============================================================================
