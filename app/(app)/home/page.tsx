@@ -21,6 +21,7 @@ import { AdPopup } from '@/components/shared/ad-popup';
 import { SupportChat } from '@/components/shared/support-chat';
 import { CommunityChat } from '@/components/shared/community-chat';
 import { EliteHome } from '@/components/layouts/elite/EliteHome';
+import { CasinoHome } from '@/components/casino/casino-home';
 
 interface UltimoGanhador {
   unidade: string;
@@ -141,6 +142,11 @@ export default function DashboardPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Casino-only: renderiza home de cassino (sem loteria, acesso público)
+  if (config.casino_only) {
+    return <CasinoHome />;
+  }
 
   // Layout Elite (layout_id === 3) - renderiza home diferente
   if (config.layout_id === 3) {

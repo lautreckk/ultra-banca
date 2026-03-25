@@ -1,8 +1,9 @@
 'use client';
 
-import { Home, Trophy, Plus, Wallet, User } from 'lucide-react';
+import { Home, Trophy, Plus, Wallet, User, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { usePlatformConfig } from '@/contexts/platform-config-context';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -13,8 +14,26 @@ const NAV_ITEMS = [
   { icon: User, label: 'Perfil', href: '/perfil' },
 ];
 
-export function EliteBottomNav() {
+const CASINO_NAV_ITEMS = [
+  { icon: Home, label: 'Início', href: '/home' },
+  { icon: Gamepad2, label: 'Cassino', href: '/cassino' },
+  { icon: null, label: 'Depositar', href: '/recarga-pix' },
+  { icon: Wallet, label: 'Carteira', href: '/saques' },
+  { icon: User, label: 'Perfil', href: '/perfil' },
+];
+
+interface EliteBottomNavProps {
+  isLoggedIn?: boolean;
+}
+
+export function EliteBottomNav({ isLoggedIn = true }: EliteBottomNavProps) {
   const pathname = usePathname();
+  const { casino_only } = usePlatformConfig();
+
+  // Casino-only: hide bottom nav for unauthenticated users
+  if (casino_only && !isLoggedIn) return null;
+
+  const items = casino_only ? CASINO_NAV_ITEMS : NAV_ITEMS;
 
   return (
     <nav
@@ -26,7 +45,7 @@ export function EliteBottomNav() {
       }}
     >
       <div className="max-w-md mx-auto flex items-end justify-around px-2 pt-1 pb-2">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const isCenter = item.icon === null;
 

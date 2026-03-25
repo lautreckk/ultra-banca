@@ -69,6 +69,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
       utmify_pixel_id: platform.utmify_pixel_id || null,
       production_mode: platform.production_mode ?? defaultConfig.production_mode,
       layout_id: (platform.layout_id as 1 | 2 | 3) || 1,
+      casino_only: platform.casino_only ?? false,
     };
   }
 
@@ -121,6 +122,7 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
     utmify_pixel_id: null,
     production_mode: data.production_mode ?? defaultConfig.production_mode,
     layout_id: defaultConfig.layout_id,
+    casino_only: false,
   };
 }
 

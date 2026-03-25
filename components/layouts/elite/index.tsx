@@ -12,6 +12,7 @@ export function EliteLayout({
   saldoBonus,
   saldoCassino,
   saldoBonusCassino,
+  isLoggedIn = true,
 }: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const totalSaldo = saldo + saldoBonus + saldoCassino + saldoBonusCassino;
@@ -19,9 +20,9 @@ export function EliteLayout({
   return (
     <div className="min-h-screen flex justify-center" style={{ backgroundColor: '#0C0E14' }}>
       <div className="w-full max-w-md min-h-screen" style={{ backgroundColor: '#0C0E14' }}>
-        <EliteHeader saldo={totalSaldo} />
+        <EliteHeader saldo={totalSaldo} isLoggedIn={isLoggedIn} />
         <main className="pb-24">{children}</main>
-        <EliteBottomNav />
+        <EliteBottomNav isLoggedIn={isLoggedIn} />
         <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </div>
     </div>

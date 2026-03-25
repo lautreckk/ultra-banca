@@ -48,4 +48,5 @@ export interface LayoutProps {
   unidade: string;
   onRefresh: () => void;
   loading: boolean;
+  isLoggedIn?: boolean;
 }

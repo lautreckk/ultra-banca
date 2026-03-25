@@ -144,6 +144,7 @@ export default function AppLayout({
       unidade={profile.unidade}
       onRefresh={handleRefresh}
       loading={loading}
+      isLoggedIn={!!userId}
     >
       {children}
     </LayoutWrapper>

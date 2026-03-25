@@ -55,6 +55,9 @@ export interface PlatformConfig {
 
   // Layout
   layout_id: 1 | 2 | 3;
+
+  // Modo
+  casino_only: boolean;
 }
 
 export const defaultConfig: PlatformConfig = {
@@ -94,6 +97,7 @@ export const defaultConfig: PlatformConfig = {
   utmify_pixel_id: null,
   production_mode: false,
   layout_id: 1,
+  casino_only: false,
 };
 
 const ConfigContext = createContext<PlatformConfig>(defaultConfig);
