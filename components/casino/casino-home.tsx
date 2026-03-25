@@ -5,7 +5,9 @@ import { Search, Loader2, ArrowLeft, Gamepad2, Flame, Star, Zap, X } from 'lucid
 import { GameCard } from './game-card';
 import { getGames } from '@/lib/actions/casino';
 import type { CasinoGame } from '@/lib/actions/casino';
+import { getBanners, type PlatformBanner } from '@/lib/actions/banners';
 import { AuthModal } from '@/components/auth/auth-modal';
+import { BannerCarousel } from './banner-carousel';
 import { WinnersTicker } from './winners-ticker';
 import { createClient } from '@/lib/supabase/client';
 
@@ -20,9 +22,11 @@ export function CasinoHome() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [authShownOnce, setAuthShownOnce] = useState(false);
+  const [banners, setBanners] = useState<PlatformBanner[]>([]);
 
   useEffect(() => {
     loadData();
+    loadBanners();
     checkAuth().then((loggedIn) => {
       if (!loggedIn) {
         // Show auth popup after 10 seconds
@@ -50,6 +54,11 @@ export function CasinoHome() {
     const loggedIn = !!user;
     setIsLoggedIn(loggedIn);
     return loggedIn;
+  }
+
+  async function loadBanners() {
+    const b = await getBanners();
+    setBanners(b);
   }
 
   async function loadData() {
@@ -147,6 +156,9 @@ export function CasinoHome() {
             }}
           />
         </div>
+
+        {/* Banner Carousel */}
+        {banners.length > 0 && <BannerCarousel banners={banners} />}
 
         {/* Categories */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
