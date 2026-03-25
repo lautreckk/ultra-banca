@@ -76,6 +76,15 @@ const BANCA_PROTECTED_ROUTES = [
   '/perfil',
 ];
 
+// Rotas de LOTERIA (bloqueadas em plataformas casino_only)
+const LOTTERY_ROUTES = [
+  '/loterias',
+  '/fazendinha',
+  '/lotinha',
+  '/quininha',
+  '/seninha',
+];
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -126,6 +135,12 @@ function isBancaAuthRoute(pathname: string): boolean {
   return pathname === '/login' || pathname === '/cadastro';
 }
 
+function isLotteryRoute(pathname: string): boolean {
+  return LOTTERY_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  );
+}
+
 function isAdminDomain(host: string): boolean {
   const domain = host.split(':')[0].toLowerCase().replace(/^www\./, '');
   return ADMIN_ALLOWED_DOMAINS.some(d =>
@@ -155,6 +170,7 @@ interface PlatformResult {
     slug: string;
     name: string;
     ativo: boolean;
+    casino_only: boolean;
   };
 }
 
@@ -176,7 +192,7 @@ async function resolvePlatformByDomain(
   const domainWithWww = `www.${domain}`;
   const { data: platform, error } = await supabase
     .from('platforms')
-    .select('id, domain, slug, name, ativo')
+    .select('id, domain, slug, name, ativo, casino_only')
     .or(`domain.eq.${domain},domain.eq.${domainWithWww}`)
     .eq('ativo', true)
     .limit(1)
@@ -198,7 +214,7 @@ async function resolvePlatformByDomain(
   const subdomain = domain.split('.')[0];
   const { data: platformBySlug } = await supabase
     .from('platforms')
-    .select('id, domain, slug, name, ativo')
+    .select('id, domain, slug, name, ativo, casino_only')
     .eq('slug', subdomain)
     .eq('ativo', true)
     .single();
@@ -211,7 +227,7 @@ async function resolvePlatformByDomain(
   if (domain === 'localhost' || domain === '127.0.0.1') {
     const { data: defaultPlatform } = await supabase
       .from('platforms')
-      .select('id, domain, slug, name, ativo')
+      .select('id, domain, slug, name, ativo, casino_only')
       .eq('id', DEFAULT_PLATFORM_ID)
       .single();
 
@@ -294,6 +310,7 @@ export async function updateSession(request: NextRequest) {
   const isAdminPath = pathname.startsWith('/admin');
 
   let platformId: string;
+  let isCasinoOnly = false;
 
   if (existingPlatformId && adminDomainAccess) {
     // Domínio admin: reusar cookie (admin pode trocar plataforma manualmente)
@@ -307,6 +324,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     platformId = platformResult?.platformId || DEFAULT_PLATFORM_ID;
+    isCasinoOnly = platformResult?.platform?.casino_only === true;
 
     // Setar cookies no REQUEST para que server components possam lê-los
     // durante esta mesma requisição (via cookies() do next/headers)
@@ -362,6 +380,14 @@ export async function updateSession(request: NextRequest) {
 
     // A2: Tentando acessar rotas protegidas da Banca -> Redirecionar para /login
     if (isBancaProtectedRoute(pathname)) {
+      // Casino-only: permitir acesso público a /home e /cassino sem login
+      if (isCasinoOnly && (pathname === '/home' || pathname.startsWith('/cassino'))) {
+        return supabaseResponse;
+      }
+      // Casino-only: bloquear rotas de loteria -> redirect para /home
+      if (isCasinoOnly && isLotteryRoute(pathname)) {
+        return redirect(request, '/home');
+      }
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       // Preservar código de convite (tanto ?p= quanto ?ref=)
@@ -376,7 +402,11 @@ export async function updateSession(request: NextRequest) {
     // A Cupula só pode ser acessada pelo domínio admin (gabrielsena.net)
     // Domínios de banca devem ir direto para o login
     // Em dev (localhost), também redireciona para /login para simular banca
+    // EXCEÇÃO: casino_only redireciona / para /home (acesso público)
     if ((!adminDomainAccess || devDomain) && pathname === '/') {
+      if (isCasinoOnly) {
+        return redirect(request, '/home');
+      }
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       // Preservar código de convite/afiliado (tanto ?p= quanto ?ref=)
@@ -413,6 +443,11 @@ export async function updateSession(request: NextRequest) {
     if (profile?.platform_id && profile.platform_id !== platformId) {
       await supabase.auth.signOut();
       return redirect(request, '/login');
+    }
+
+    // Casino-only: bloquear rotas de loteria mesmo logado
+    if (isCasinoOnly && isLotteryRoute(pathname)) {
+      return redirect(request, '/home');
     }
 
     // Jogador logado tentando acessar login/cadastro -> home
