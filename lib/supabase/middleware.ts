@@ -267,46 +267,15 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // ============================================================================
-  // SEGREGAÇÃO DE DOMÍNIOS: ADMIN vs BANCA
-  // ============================================================================
   const host = request.headers.get('host') || 'localhost';
   const pathname = request.nextUrl.pathname;
   const adminDomainAccess = isAdminDomain(host);
-
-  // SEGURANÇA: Bloquear acesso a rotas admin em domínios de banca
-  if (!adminDomainAccess && (isAdminRoute(pathname) || isAdminMasterRoute(pathname))) {
-    console.warn('[SECURITY] Tentativa de acesso admin bloqueada:', { host, pathname });
-    // Redirecionar para o login da banca (não para / que pode causar loop com admins)
-    return redirect(request, '/login');
-  }
-
-  // SEGURANÇA: No domínio admin, bloquear acesso à banca (opcional - redireciona para admin)
-  // Permitir rotas de promotor no domínio admin (promotores acessam pelo mesmo domínio)
-  // EXCEÇÃO: localhost/127.0.0.1 funciona como domínio dual (admin + banca) para desenvolvimento
   const devDomain = host.split(':')[0] === 'localhost' || host.split(':')[0] === '127.0.0.1';
-  if (adminDomainAccess && !devDomain && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && !isPromotorRoute(pathname) && pathname !== '/') {
-    // Se está no domínio admin mas tentando acessar área da banca
-    // Redirecionar para o login do admin
-    if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
-      console.log('[SECURITY] Domínio admin, redirecionando para área admin:', { host, pathname });
-      return redirect(request, '/admin/login');
-    }
-  }
-
-  // Raiz do domínio admin -> redirecionar para admin login (exceto dev)
-  if (adminDomainAccess && !devDomain && pathname === '/') {
-    return redirect(request, '/admin/login');
-  }
 
   // ============================================================================
-  // MULTI-TENANT: RESOLVER PLATAFORMA PELO DOMÍNIO
+  // MULTI-TENANT: RESOLVER PLATAFORMA PELO DOMÍNIO (antes dos checks de admin)
   // ============================================================================
   const existingPlatformId = request.cookies.get('platform_id')?.value;
-
-  // Para rotas de ADMIN: respeitar o cookie existente (admin pode escolher plataforma)
-  // Para banca (domínios não-admin): SEMPRE resolver pelo domínio para evitar
-  // que um cookie de outra plataforma mostre a banca errada
   const isAdminPath = pathname.startsWith('/admin');
 
   let platformId: string;
@@ -330,6 +299,32 @@ export async function updateSession(request: NextRequest) {
     // durante esta mesma requisição (via cookies() do next/headers)
     request.cookies.set('platform_id', platformId);
     request.cookies.set('platform_slug', platformResult?.platform?.slug || '');
+  }
+
+  // ============================================================================
+  // SEGREGAÇÃO DE DOMÍNIOS: ADMIN vs BANCA
+  // ============================================================================
+  // Casino-only platforms can access /admin/* from their own domain
+  const hasAdminAccess = adminDomainAccess || isCasinoOnly;
+
+  // SEGURANÇA: Bloquear acesso a rotas admin em domínios de banca (exceto casino_only)
+  if (!hasAdminAccess && (isAdminRoute(pathname) || isAdminMasterRoute(pathname))) {
+    console.warn('[SECURITY] Tentativa de acesso admin bloqueada:', { host, pathname });
+    return redirect(request, '/login');
+  }
+
+  // SEGURANÇA: No domínio admin puro, bloquear acesso à banca (redireciona para admin)
+  // NÃO se aplica a casino_only (que é domínio dual: banca + admin)
+  if (adminDomainAccess && !isCasinoOnly && !devDomain && !isAdminRoute(pathname) && !isAdminMasterRoute(pathname) && !isPromotorRoute(pathname) && pathname !== '/') {
+    if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
+      console.log('[SECURITY] Domínio admin, redirecionando para área admin:', { host, pathname });
+      return redirect(request, '/admin/login');
+    }
+  }
+
+  // Raiz do domínio admin puro -> redirecionar para admin login (exceto dev e casino_only)
+  if (adminDomainAccess && !isCasinoOnly && !devDomain && pathname === '/') {
+    return redirect(request, '/admin/login');
   }
 
   // IMPORTANTE: getUser() pode chamar setAll() que recria supabaseResponse.
