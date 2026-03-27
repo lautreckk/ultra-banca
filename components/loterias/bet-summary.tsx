@@ -158,7 +158,11 @@ export function BetSummary({
               <span className="font-bold text-white">
                 R$ {totalAtual.toFixed(2).replace('.', ',')}
               </span>
-              <span className="text-zinc-500 text-sm">{valorFormatted} / {valorMode === 'todos' ? 'CADA (TOTAL)' : 'CADA'}</span>
+              {valorMode === 'todos' ? (
+                <span className="text-emerald-400 text-sm font-medium">TODOS</span>
+              ) : (
+                <span className="text-zinc-500 text-sm">{valorFormatted} / CADA</span>
+              )}
             </div>
           </div>
         </div>
