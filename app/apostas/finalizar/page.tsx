@@ -29,14 +29,24 @@ export default function FinalizarApostaPage() {
 
   const saldoDisponivel = saldo + saldoBonus;
 
+  // Limpar apostas com data passada
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const validItems = items.filter((item) => item.data >= today);
+
+  // Se tinha itens expirados, limpa o carrinho
+  if (validItems.length !== items.length) {
+    // Remove expirados silenciosamente
+    items.filter((item) => item.data < today).forEach((item) => removeItem(item.id));
+  }
+
   // Redirect if no items
-  if (items.length === 0) {
+  if (validItems.length === 0) {
     router.push(getUrlWithUtm('/'));
     return null;
   }
 
   // Get date from first item for display
-  const firstItem = items[0];
+  const firstItem = validItems[0];
   const dateObj = new Date(firstItem.data + 'T00:00:00');
   const formattedDate = dateObj.toLocaleDateString('pt-BR');
 
