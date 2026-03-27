@@ -1,15 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Moon, Calculator, Clock, Dog, Loader2, X, Repeat } from 'lucide-react';
 import { getRecentBets, buildRepeatBetUrl, type BetSummary } from '@/lib/actions/apostas';
+import { useBetStore } from '@/stores/bet-store';
 import { getUrlWithUtm } from '@/lib/utm';
 
 export default function LoteriasPage() {
   const router = useRouter();
+  const { clearCart } = useBetStore();
+
+  // Limpar carrinho e pendentes ao entrar na página de loterias (ponto de entrada)
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);

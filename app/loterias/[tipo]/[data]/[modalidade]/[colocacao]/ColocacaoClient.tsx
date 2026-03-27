@@ -37,13 +37,14 @@ export function ColocacaoClient({
   const [valorMode, setValorMode] = useState<'todos' | 'cada'>('todos');
   const [selectedLotteries, setSelectedLotteries] = useState<string[]>([]);
 
-  // Limpar pendentes de outras datas/modalidades ao entrar
-  // Só mantém pendentes que são do mesmo dia e fluxo atual
+  // Limpar pendentes de datas passadas
   useEffect(() => {
-    const stale = pendingItems.filter((p) => p.data !== data);
+    const today = new Date().toLocaleDateString('en-CA');
+    const stale = pendingItems.filter((p) => p.data < today);
     if (stale.length > 0) {
       stale.forEach((p) => removePendingItem(p.id));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fallback para hardcoded se não encontrar no banco
