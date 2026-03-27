@@ -147,6 +147,16 @@ export function ColocacaoClient({
     setStep('resumo');
   };
 
+  // Calcula o valor unitário real baseado no modo selecionado
+  const getValorUnitarioReal = () => {
+    if (valorMode === 'todos' && palpites.length > 0) {
+      // "Todos": o valor digitado é o total, dividir pelos palpites
+      return Number((valorUnitario / palpites.length).toFixed(2)) || 0.01;
+    }
+    // "Cada": o valor digitado já é por palpite
+    return valorUnitario;
+  };
+
   // Adiciona aposta atual aos pendentes e navega para adicionar mais
   const handleMaisApostas = () => {
     if (palpites.length === 0) return;
@@ -158,7 +168,7 @@ export function ColocacaoClient({
       modalidade,
       colocacao,
       palpites,
-      valorUnitario,
+      valorUnitario: getValorUnitarioReal(),
       multiplicador: multiplicadorEfetivo,
     });
 
@@ -177,7 +187,7 @@ export function ColocacaoClient({
       modalidade,
       colocacao,
       palpites,
-      valorUnitario,
+      valorUnitario: getValorUnitarioReal(),
       multiplicador: multiplicadorEfetivo,
     });
 
