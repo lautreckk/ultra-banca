@@ -1,5 +1,5 @@
 import { getModalidadesByJogo } from '@/lib/actions/modalidades';
-import { LotinhaClient } from './client';
+import { LotinhaWizardClient } from './wizard-client';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -7,5 +7,5 @@ export const revalidate = 0;
 export default async function LotinhaPage() {
   const modalidades = await getModalidadesByJogo('lotinha');
 
-  return <LotinhaClient modalidades={modalidades} />;
+  return <LotinhaWizardClient modalidades={modalidades} />;
 }

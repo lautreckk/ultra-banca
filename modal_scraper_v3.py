@@ -33,7 +33,7 @@ image = modal.Image.debian_slim(python_version="3.11").pip_install(
 
 # Secrets
 supabase_secret = modal.Secret.from_name("supabase-ultra-banca")
-firecrawl_secret = modal.Secret.from_name("firecrawl-key")
+firecrawl_secret = modal.Secret.from_dict({})
 
 # =============================================================================
 # CONFIGURACAO DAS BANCAS - MULTIPLAS FONTES
@@ -2437,6 +2437,22 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
         except Exception as e:
             print(f"  [AVISO] Falha ao buscar odds dinâmicas: {e}")
 
+        # Cache de limites por plataforma (max_payout_per_bet)
+        platform_limits_cache: dict[str, float] = {}
+        def get_max_payout(pid: Optional[str]) -> float:
+            if not pid:
+                return 50000.0
+            if pid in platform_limits_cache:
+                return platform_limits_cache[pid]
+            try:
+                r = supabase.table("platforms").select("max_payout_per_bet").eq("id", pid).single().execute()
+                limit = float((r.data or {}).get("max_payout_per_bet") or 50000)
+                platform_limits_cache[pid] = limit
+                return limit
+            except Exception:
+                platform_limits_cache[pid] = 50000.0
+                return 50000.0
+
         loteria_ids_com_resultado = set()
         for lid, (mb, mh, ml) in LOTERIA_TO_BANCA.items():
             key = f"{mh}_{mb}_{ml}"
@@ -2685,7 +2701,12 @@ def verificar_premios_v2(data: Optional[str] = None) -> dict:
                         float(aposta.get("multiplicador", 0) or 0),
                         dynamic_odds
                     )
-                valor_premio = valor_aposta * multiplicador
+                valor_premio_bruto = valor_aposta * multiplicador
+                # CAP: Limitar premio ao max_payout_per_bet da plataforma
+                max_payout = get_max_payout(platform_id)
+                valor_premio = min(valor_premio_bruto, max_payout)
+                if valor_premio < valor_premio_bruto:
+                    print(f"  CAP APLICADO: R${valor_premio_bruto:.2f} -> R${valor_premio:.2f} (limite plataforma: R${max_payout:.2f})")
                 ganhou += 1
                 print(f"  Aposta {aposta['id'][:8]} GANHOU! Premio: R${valor_premio:.2f} (mult={multiplicador}, valor={valor_aposta})")
                 if user_id and valor_premio > 0:

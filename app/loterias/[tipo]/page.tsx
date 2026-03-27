@@ -1,4 +1,9 @@
 import { DateSelector } from '@/components/loterias';
+import { getModalidadesAtivas } from '@/lib/actions/modalidades';
+import { LoteriasWizardClient } from '../wizard-client';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface TipoPageProps {
   params: Promise<{ tipo: string }>;
@@ -13,6 +18,14 @@ const tipoNames: Record<string, string> = {
 
 export default async function TipoPage({ params }: TipoPageProps) {
   const { tipo } = await params;
+
+  // Para tipo "loterias", renderiza o wizard
+  if (tipo === 'loterias') {
+    const modalidades = await getModalidadesAtivas();
+    return <LoteriasWizardClient modalidades={modalidades} />;
+  }
+
+  // Fallback para outros tipos (caso acessem via rota antiga)
   const tipoName = tipoNames[tipo] || tipo;
 
   return (
