@@ -366,6 +366,7 @@ export function ColocacaoClient({
           colocacao={colocacaoInfo?.nome || colocacao}
           palpites={palpites}
           valorUnitario={valorUnitario}
+          valorMode={valorMode}
           pendingItems={pendingItems}
           onRemovePendingItem={handleRemovePendingItem}
           onEditPendingItem={handleEditPendingItem}

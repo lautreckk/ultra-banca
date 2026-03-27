@@ -10,6 +10,7 @@ interface BetSummaryProps {
   colocacao: string;
   palpites: string[];
   valorUnitario: number;
+  valorMode?: 'todos' | 'cada';
   pendingItems?: PendingBet[];
   onRemoveBet?: () => void;
   onRemovePendingItem?: (id: string) => void;
@@ -25,6 +26,7 @@ export function BetSummary({
   palpites,
   valorUnitario,
   pendingItems = [],
+  valorMode = 'cada',
   onRemoveBet,
   onRemovePendingItem,
   onEditPendingItem,
@@ -32,8 +34,11 @@ export function BetSummary({
   onAvancar,
   className,
 }: BetSummaryProps) {
-  const totalAtual = palpites.length * valorUnitario;
-  const valorFormatted = valorUnitario.toFixed(2).replace('.', ',');
+  const valorUnitarioReal = valorMode === 'todos' && palpites.length > 0
+    ? valorUnitario / palpites.length
+    : valorUnitario;
+  const totalAtual = valorMode === 'todos' ? valorUnitario : palpites.length * valorUnitario;
+  const valorFormatted = valorUnitarioReal.toFixed(2).replace('.', ',');
 
   // Calcula total de todas as apostas (pendentes + atual)
   const totalPendentes = pendingItems.reduce(
@@ -153,7 +158,7 @@ export function BetSummary({
               <span className="font-bold text-white">
                 R$ {totalAtual.toFixed(2).replace('.', ',')}
               </span>
-              <span className="text-zinc-500 text-sm">{valorFormatted} / CADA</span>
+              <span className="text-zinc-500 text-sm">{valorFormatted} / {valorMode === 'todos' ? 'CADA (TOTAL)' : 'CADA'}</span>
             </div>
           </div>
         </div>
