@@ -37,6 +37,15 @@ export function ColocacaoClient({
   const [valorMode, setValorMode] = useState<'todos' | 'cada'>('todos');
   const [selectedLotteries, setSelectedLotteries] = useState<string[]>([]);
 
+  // Limpar pendentes de outras datas/modalidades ao entrar
+  // Só mantém pendentes que são do mesmo dia e fluxo atual
+  useEffect(() => {
+    const stale = pendingItems.filter((p) => p.data !== data);
+    if (stale.length > 0) {
+      stale.forEach((p) => removePendingItem(p.id));
+    }
+  }, []);
+
   // Fallback para hardcoded se não encontrar no banco
   const modalidadeInfo = getModalidadeById(modalidade);
   const colocacaoInfo = getColocacaoById(colocacao);
