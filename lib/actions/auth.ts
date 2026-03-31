@@ -108,15 +108,46 @@ async function vincularPromotor(userId: string, codigoConvite: string, platformI
   // Usar adminClient para bypassar RLS (promotor_referidos e profiles.indicado_por)
   const supabase = createAdminClient();
 
-  // Aguardar profile ser criado pelo trigger (pode ter delay)
-  for (let i = 0; i < 5; i++) {
+  // Aguardar profile ser criado pelo trigger (pode ter delay de até 3s)
+  let profileExists = false;
+  for (let i = 0; i < 6; i++) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', userId)
       .maybeSingle();
-    if (profile) break;
-    await new Promise(r => setTimeout(r, 500)); // espera 500ms
+    if (profile) { profileExists = true; break; }
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  // Se trigger não criou o profile, criar manualmente (fallback)
+  if (!profileExists) {
+    console.warn(`[vincularPromotor] Profile not found for ${userId}, creating manually`);
+    // Buscar user metadata do auth
+    const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+    const meta = user?.user_metadata || {};
+
+    // Gerar código de convite único
+    let codigo = '';
+    for (let i = 0; i < 10; i++) {
+      codigo = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+      const { data: dup } = await supabase.from('profiles').select('id').eq('codigo_convite', codigo).maybeSingle();
+      if (!dup) break;
+    }
+
+    await supabase.from('profiles').insert({
+      id: userId,
+      cpf: meta.cpf || '',
+      nome: meta.nome || 'Sem nome',
+      telefone: meta.telefone || null,
+      platform_id: platformId || meta.platform_id || 'ff61b7a2-1098-4bc4-99c5-5afb600fbc57',
+      codigo_convite: codigo,
+      saldo: 0,
+      saldo_bonus: 0,
+      saldo_cassino: 0,
+      saldo_bonus_cassino: 0,
+    });
+    profileExists = true;
   }
 
   // Verificar se já está vinculado (idempotente)
