@@ -134,7 +134,8 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
         return;
       }
 
-      trackSignup().catch(() => {});
+      // IMPORTANTE: await garante que vincularPromotor() completa antes do redirect
+      await trackSignup().catch(() => {});
       trackCompleteRegistration();
       trackLead();
       trackLeadCAPI({
