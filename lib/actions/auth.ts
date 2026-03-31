@@ -108,6 +108,17 @@ async function vincularPromotor(userId: string, codigoConvite: string, platformI
   // Usar adminClient para bypassar RLS (promotor_referidos e profiles.indicado_por)
   const supabase = createAdminClient();
 
+  // Aguardar profile ser criado pelo trigger (pode ter delay)
+  for (let i = 0; i < 5; i++) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+    if (profile) break;
+    await new Promise(r => setTimeout(r, 500)); // espera 500ms
+  }
+
   // Verificar se já está vinculado (idempotente)
   const { data: existingRef } = await supabase
     .from('promotor_referidos')
