@@ -112,10 +112,17 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
       });
 
       if (authError) {
+        console.error('[Cadastro] Supabase auth error:', authError.message, authError);
         if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
           setError('CPF já cadastrado');
+        } else if (authError.message.includes('email rate limit') || authError.message.includes('rate limit')) {
+          setError('Muitas tentativas. Aguarde alguns minutos.');
+        } else if (authError.message.includes('not authorized') || authError.message.includes('Signups not allowed')) {
+          setError('Cadastro temporariamente indisponível.');
+        } else if (authError.message.includes('weak_password') || authError.message.includes('password')) {
+          setError('Senha muito fraca. Use pelo menos 6 caracteres.');
         } else {
-          setError('Erro ao criar conta. Tente novamente.');
+          setError(`Erro ao criar conta: ${authError.message}`);
         }
         setLoading(false);
         return;
@@ -135,8 +142,9 @@ export function RegisterForm({ initialCodigoConvite = '' }: RegisterFormProps) {
         phone: formData.telefone.replace(/\D/g, '') || undefined,
       }).catch(() => {});
       window.location.replace(getUrlWithUtm('/login?cadastro=sucesso'));
-    } catch {
-      setError('Erro ao criar conta. Tente novamente.');
+    } catch (err) {
+      console.error('[Cadastro] Unexpected error:', err);
+      setError(`Erro ao criar conta: ${err instanceof Error ? err.message : 'Tente novamente.'}`);
       setLoading(false);
     }
   };

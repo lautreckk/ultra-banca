@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Trophy,
   FileText,
@@ -22,6 +23,7 @@ import { SupportChat } from '@/components/shared/support-chat';
 import { CommunityChat } from '@/components/shared/community-chat';
 import { EliteHome } from '@/components/layouts/elite/EliteHome';
 import { CasinoHome } from '@/components/casino/casino-home';
+import { AuthModal } from '@/components/auth/auth-modal';
 
 interface UltimoGanhador {
   unidade: string;
@@ -41,8 +43,12 @@ export default function DashboardPage() {
   const [ultimoGanhador, setUltimoGanhador] = useState<UltimoGanhador | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [communityOpen, setCommunityOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const config = usePlatformConfig();
   const { currentAd, isVisible, showAd, closeAd } = useAdPopup('login');
+  const searchParams = useSearchParams();
+  const inviteCodeFromUrl = searchParams.get('p') || searchParams.get('ref') || '';
 
   useEffect(() => {
     const supabase = createClient();
@@ -50,6 +56,7 @@ export default function DashboardPage() {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setIsLoggedIn(true);
         const { data } = await supabase
           .from('profiles')
           .select('codigo_convite')
@@ -143,6 +150,15 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Helper: intercepta clique se não logado, abre modal de cadastro
+  const requireAuth = (e: React.MouseEvent) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      e.stopPropagation();
+      setAuthModalOpen(true);
+    }
+  };
+
   // Casino-only: renderiza home de cassino (sem loteria, acesso público)
   if (config.casino_only) {
     return <CasinoHome />;
@@ -154,30 +170,38 @@ export default function DashboardPage() {
       <>
         <EliteHome />
         {currentAd && <AdPopup ad={currentAd} onClose={closeAd} />}
+        <AuthModal
+          open={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          defaultTab="cadastro"
+          initialCodigoConvite={inviteCodeFromUrl}
+        />
       </>
     );
   }
 
   return (
     <div className="space-y-6 px-4 py-4">
-      {/* Invite Link */}
-      <div className="flex items-center gap-2 rounded-xl border border-zinc-700/40 px-3 py-2.5" style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}>
-        <span className="text-sm text-zinc-400 shrink-0">Convidar:</span>
-        <div className="flex flex-1 items-center gap-2 rounded-lg bg-zinc-900/80 px-3 py-1.5 min-w-0">
-          <span className="flex-1 truncate text-sm text-zinc-300">{inviteUrl}</span>
-          <button
-            onClick={handleCopyLink}
-            className="shrink-0 p-1 rounded active:bg-white/10"
-            aria-label="Copiar link"
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-400" />
-            ) : (
-              <Copy className="h-4 w-4 text-zinc-400" />
-            )}
-          </button>
+      {/* Invite Link - só mostra para logados */}
+      {isLoggedIn && (
+        <div className="flex items-center gap-2 rounded-xl border border-zinc-700/40 px-3 py-2.5" style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}>
+          <span className="text-sm text-zinc-400 shrink-0">Convidar:</span>
+          <div className="flex flex-1 items-center gap-2 rounded-lg bg-zinc-900/80 px-3 py-1.5 min-w-0">
+            <span className="flex-1 truncate text-sm text-zinc-300">{inviteUrl}</span>
+            <button
+              onClick={handleCopyLink}
+              className="shrink-0 p-1 rounded active:bg-white/10"
+              aria-label="Copiar link"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <Copy className="h-4 w-4 text-zinc-400" />
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Último Ganhador */}
       {ultimoGanhador && (
@@ -223,6 +247,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-3">
           <Link
             href="/loterias"
+            onClick={requireAuth}
             className="relative overflow-hidden rounded-xl shadow-lg active:scale-[0.97] transition-transform"
           >
             <div className="relative aspect-[4/3]">
@@ -238,6 +263,7 @@ export default function DashboardPage() {
 
           <Link
             href="/fazendinha"
+            onClick={requireAuth}
             className="relative overflow-hidden rounded-xl shadow-lg active:scale-[0.97] transition-transform"
           >
             <div className="relative aspect-[4/3]">
@@ -254,7 +280,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Cassino Online - Full width */}
-      <Link href="/cassino" className="block">
+      <Link href="/cassino" onClick={requireAuth} className="block">
         <div className="relative overflow-hidden rounded-xl shadow-lg active:scale-[0.98] transition-transform">
           <Image
             src="/images/cassino-banner.webp"
@@ -270,7 +296,7 @@ export default function DashboardPage() {
       {/* Quick Actions Row */}
       <div className="grid grid-cols-3 gap-3">
         <button
-          onClick={() => setChatOpen(true)}
+          onClick={(e) => { if (!isLoggedIn) { requireAuth(e); return; } setChatOpen(true); }}
           className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
@@ -280,6 +306,7 @@ export default function DashboardPage() {
 
         <Link
           href="/relatorios/cotacoes"
+          onClick={requireAuth}
           className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
@@ -289,6 +316,7 @@ export default function DashboardPage() {
 
         <Link
           href="/amigos"
+          onClick={requireAuth}
           className="flex flex-col items-center gap-2 rounded-xl border border-zinc-700/40 py-4 min-h-[68px] active:scale-[0.95] transition-transform"
           style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
         >
@@ -299,7 +327,7 @@ export default function DashboardPage() {
 
       {/* Grupo de Palpites */}
       <button
-        onClick={() => setCommunityOpen(true)}
+        onClick={(e) => { if (!isLoggedIn) { requireAuth(e); return; } setCommunityOpen(true); }}
         className="w-full rounded-xl overflow-hidden active:scale-[0.98] transition-transform"
       >
         <img
@@ -310,7 +338,7 @@ export default function DashboardPage() {
       </button>
 
       {/* Recarga PIX - Prominent */}
-      <Link href="/recarga-pix" className="block">
+      <Link href="/recarga-pix" onClick={requireAuth} className="block">
         <div className="flex items-center justify-center gap-3 rounded-xl bg-emerald-500 py-5 shadow-lg active:scale-[0.98] transition-transform">
           <Droplets className="h-7 w-7 text-white" />
           <span className="text-xl font-bold text-white">Recarga PIX</span>
@@ -319,7 +347,7 @@ export default function DashboardPage() {
 
       {/* Bottom Grid - Saques, Premiadas, Relatórios */}
       <div className="grid grid-cols-3 gap-3">
-        <Link href="/saques" className="block">
+        <Link href="/saques" onClick={requireAuth} className="block">
           <div
             className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 min-h-[72px] active:scale-[0.97] transition-transform"
             style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
@@ -329,7 +357,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/premiadas" className="block">
+        <Link href="/premiadas" onClick={requireAuth} className="block">
           <div
             className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 min-h-[72px] active:scale-[0.97] transition-transform"
             style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
@@ -339,7 +367,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <Link href="/relatorios" className="block">
+        <Link href="/relatorios" onClick={requireAuth} className="block">
           <div
             className="flex flex-col items-center justify-center gap-2 rounded-xl border border-zinc-700/40 py-5 min-h-[72px] active:scale-[0.97] transition-transform"
             style={{ backgroundColor: 'var(--color-surface, #1A1F2B)' }}
@@ -365,6 +393,14 @@ export default function DashboardPage() {
 
       {/* Community Chat */}
       <CommunityChat open={communityOpen} onClose={() => setCommunityOpen(false)} />
+
+      {/* Auth Modal para visitantes não logados */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultTab="cadastro"
+        initialCodigoConvite={inviteCodeFromUrl}
+      />
     </div>
   );
 }

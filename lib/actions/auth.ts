@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { logAudit, trackUserLogin, trackUserSignup } from '@/lib/security/tracker';
 import { AuditActions } from '@/lib/security/audit-actions';
 import { dispatchLeadWebhook, dispatchWithdrawalWebhook } from '@/lib/webhooks/dispatcher';
@@ -68,6 +68,14 @@ export async function trackSignup(): Promise<{ success: boolean }> {
       },
     });
 
+    // Vincular promotor (promotor_referidos) se veio por código de convite
+    const codigoConvite = user.user_metadata?.codigo_convite;
+    if (codigoConvite) {
+      await vincularPromotor(user.id, codigoConvite.trim(), user.user_metadata?.platform_id).catch((err) => {
+        console.error('[Signup] Error linking promoter:', err);
+      });
+    }
+
     // Disparar webhook de lead (nao-bloqueante)
     dispatchLeadWebhook(user.id).catch((err) => {
       console.error('Error dispatching lead webhook:', err);
@@ -81,7 +89,6 @@ export async function trackSignup(): Promise<{ success: boolean }> {
       executeTrigger('cadastro', {
         nome: profile.nome || 'Novo Usuário',
         telefone: profile.telefone,
-        // Outros campos se necessário
       }).catch(err => console.error('Error executing signup trigger:', err));
     }
 
@@ -89,6 +96,87 @@ export async function trackSignup(): Promise<{ success: boolean }> {
   } catch (error) {
     console.error('Error tracking signup:', error);
     return { success: false };
+  }
+}
+
+/**
+ * Vincula um novo usuário ao promotor correspondente ao código de convite.
+ * Busca o código tanto em promotores.codigo_afiliado quanto em profiles.codigo_convite.
+ * Cria o registro em promotor_referidos e atualiza profiles.indicado_por.
+ */
+async function vincularPromotor(userId: string, codigoConvite: string, platformId?: string): Promise<void> {
+  // Usar adminClient para bypassar RLS (promotor_referidos e profiles.indicado_por)
+  const supabase = createAdminClient();
+
+  // Verificar se já está vinculado (idempotente)
+  const { data: existingRef } = await supabase
+    .from('promotor_referidos')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existingRef) return; // Já vinculado
+
+  // 1. Buscar promotor pelo codigo_afiliado (tabela promotores)
+  let promotorQuery = supabase
+    .from('promotores')
+    .select('id, user_id, ativo')
+    .eq('codigo_afiliado', codigoConvite)
+    .eq('ativo', true);
+
+  if (platformId) {
+    promotorQuery = promotorQuery.eq('platform_id', platformId);
+  }
+
+  const { data: promotor } = await promotorQuery.maybeSingle();
+
+  if (promotor) {
+    // Criar vínculo promotor_referidos
+    await supabase.from('promotor_referidos').insert({
+      promotor_id: promotor.id,
+      user_id: userId,
+    });
+
+    // Atualizar indicado_por se o user_id do promotor existe em profiles (FK constraint)
+    if (promotor.user_id) {
+      const { data: promotorProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', promotor.user_id)
+        .maybeSingle();
+
+      if (promotorProfile) {
+        await supabase
+          .from('profiles')
+          .update({ indicado_por: promotor.user_id })
+          .eq('id', userId);
+      }
+    }
+
+    console.log(`[Signup] User ${userId} linked to promotor ${promotor.id} (code: ${codigoConvite})`);
+    return;
+  }
+
+  // 2. Fallback: buscar por codigo_convite em profiles (indicação entre usuários)
+  let profileQuery = supabase
+    .from('profiles')
+    .select('id')
+    .eq('codigo_convite', codigoConvite);
+
+  if (platformId) {
+    profileQuery = profileQuery.eq('platform_id', platformId);
+  }
+
+  const { data: referrer } = await profileQuery.maybeSingle();
+
+  if (referrer) {
+    // Atualizar indicado_por no profile (indicação entre amigos, não promotor formal)
+    await supabase
+      .from('profiles')
+      .update({ indicado_por: referrer.id })
+      .eq('id', userId);
+
+    console.log(`[Signup] User ${userId} referred by user ${referrer.id} (code: ${codigoConvite})`);
   }
 }
 

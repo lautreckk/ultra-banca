@@ -380,8 +380,12 @@ export async function updateSession(request: NextRequest) {
 
     // A2: Tentando acessar rotas protegidas da Banca -> Redirecionar para /login
     if (isBancaProtectedRoute(pathname)) {
-      // Casino-only: permitir acesso público a /home e /cassino sem login
-      if (isCasinoOnly && (pathname === '/home' || pathname.startsWith('/cassino'))) {
+      // Permitir acesso público a /home sem login (vitrine de jogos)
+      if (pathname === '/home') {
+        return supabaseResponse;
+      }
+      // Casino-only: permitir acesso público a /cassino sem login
+      if (isCasinoOnly && pathname.startsWith('/cassino')) {
         return supabaseResponse;
       }
       // Casino-only: bloquear rotas de loteria -> redirect para /home
@@ -398,17 +402,12 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // A2.5: Em domínios de banca, a landing page (/) NÃO deve ser acessível
+    // A2.5: Em domínios de banca, a landing page (/) redireciona para /home (vitrine pública)
     // A Cupula só pode ser acessada pelo domínio admin (gabrielsena.net)
-    // Domínios de banca devem ir direto para o login
-    // Em dev (localhost), também redireciona para /login para simular banca
-    // EXCEÇÃO: casino_only redireciona / para /home (acesso público)
+    // Domínios de banca vão direto para /home com os jogos visíveis
     if ((!adminDomainAccess || devDomain) && pathname === '/') {
-      if (isCasinoOnly) {
-        return redirect(request, '/home');
-      }
       const url = request.nextUrl.clone();
-      url.pathname = '/login';
+      url.pathname = '/home';
       // Preservar código de convite/afiliado (tanto ?p= quanto ?ref=)
       const inviteCode = request.nextUrl.searchParams.get('p') || request.nextUrl.searchParams.get('ref');
       if (inviteCode) {

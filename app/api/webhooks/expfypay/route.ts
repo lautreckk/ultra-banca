@@ -135,6 +135,62 @@ export async function POST(req: NextRequest) {
       console.error('[EXPFY Webhook] Bonus error:', bonusErr);
     }
 
+    // Processar comissão de promotor (se usuário foi indicado)
+    try {
+      const { data: referido } = await supabase
+        .from('promotor_referidos')
+        .select(`
+          promotor_id,
+          promotores!inner(
+            id,
+            comissao_deposito_percentual,
+            ativo,
+            saldo
+          )
+        `)
+        .eq('user_id', pagamento.user_id)
+        .maybeSingle();
+
+      if (referido) {
+        const promotor = referido.promotores as unknown as {
+          id: string;
+          comissao_deposito_percentual: number | null;
+          ativo: boolean;
+          saldo: number;
+        };
+
+        if (promotor.ativo && promotor.comissao_deposito_percentual) {
+          const percentual = Number(promotor.comissao_deposito_percentual);
+          const valorComissao = (Number(pagamento.valor) * percentual) / 100;
+
+          if (valorComissao > 0) {
+            // Registrar comissão
+            await supabase.from('promotor_comissoes').insert({
+              promotor_id: promotor.id,
+              user_id: pagamento.user_id,
+              tipo: 'deposito',
+              referencia_id: external_id,
+              valor_base: pagamento.valor,
+              percentual_aplicado: percentual,
+              valor_comissao: valorComissao,
+            });
+
+            // Creditar saldo do promotor
+            const novoSaldo = Number(promotor.saldo) + valorComissao;
+            await supabase
+              .from('promotores')
+              .update({ saldo: novoSaldo })
+              .eq('id', promotor.id);
+
+            console.log(`[EXPFY Webhook] Commission R$${valorComissao.toFixed(2)} credited to promotor ${promotor.id}`);
+          }
+        }
+      }
+    } catch (comissaoErr) {
+      console.error('[EXPFY Webhook] Commission error:', comissaoErr);
+      // Não falha a operação se a comissão falhar
+    }
+
     console.log(`[EXPFY Webhook] Payment ${external_id} confirmed. User ${pagamento.user_id} credited R$${pagamento.valor}`);
 
     return NextResponse.json({ received: true, processed: true });

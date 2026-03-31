@@ -52,6 +52,12 @@ export default function AppLayout({
 
         setUserId(user.id);
 
+        // Vincular promotor (se veio por link de promotor e ainda não vinculado)
+        // Fire-and-forget — não bloqueia o carregamento da página
+        if (user.user_metadata?.codigo_convite) {
+          fetch('/api/auth/link-promoter', { method: 'POST' }).catch(() => {});
+        }
+
         // Fetch profile
         const { data, error } = await supabase
           .from('profiles')
